@@ -26,7 +26,7 @@ your music player database. It is usefull when the file has been renamed or if t
 now in another format (for example you wanted a better quality format and went from a mp3 to a flac file).
 
 
-`mixxx_to_rekordbox_xml` does what it says but YES IT EXPORTS THE CUE POINTS :-) 
+`mixxx_to_rekordbox_xml` does what it says but YES IT EXPORTS THE HOT CUES :-) 
 
 
 
