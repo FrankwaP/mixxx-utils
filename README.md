@@ -1,6 +1,6 @@
 # mixxx-utils
 
-This repo offers tools that I use with [Mixxx)(https://github.com/mixxxdj/mixxx) and its database.
+This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx) and its database.
 
 
 `mixxx_prepare.sh` uses the commands recommended in the [wiki](https://github.com/mixxxdj/mixxx/wiki/Adjusting%20Audio%20Latency)
@@ -26,7 +26,7 @@ your music player database. It is usefull when the file has been renamed or if t
 now in another format (for example you wanted a better quality format and went from a mp3 to a flac file).
 
 
-`mixxx_to_rekordbox_xml` does what it says but YES IT EXPORTS THE CUE POINTS :-) 
+`mixxx_to_rekordbox_xml` does what it says but YES IT EXPORTS THE HOT CUES :-) 
 
 
 
