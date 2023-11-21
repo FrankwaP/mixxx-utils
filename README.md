@@ -1,6 +1,6 @@
 # mixxx-utils
 
-This repo offers tools that I use with [Mixxx)(https://github.com/mixxxdj/mixxx) and its database.
+This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx) and its database.
 
 
 `mixxx_prepare.sh` uses the commands recommended in the [wiki](https://github.com/mixxxdj/mixxx/wiki/Adjusting%20Audio%20Latency)
