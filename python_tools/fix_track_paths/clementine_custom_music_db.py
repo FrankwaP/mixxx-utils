@@ -5,8 +5,7 @@ import pandas as pd
 
 import sys
 
-sys.path = ["/home/francois/Documents/mixxx-utils/python_tools/utils"] + sys.path
-# path.append("../utils")  # It works that's what matters :-p
+path.append("../utils")  # It works that's what matters :-p
 from music_db_utils import (
     MERGE_COLS,
     open_table_as_df,
