@@ -48,62 +48,22 @@ DELETE FROM PlaylistTracks WHERE track_id NOT IN (SELECT id FROM library);
 DELETE FROM track_analysis WHERE track_id NOT IN (SELECT id FROM track_locations);
 
 
-
-
-
-
 ---------------------------------------------------------------
--- Updating the tracks locations using the CustomMusicDb
+-- Updating the tracks locations using the CustomMusicDb (see user_parameters.py)
 -- track_location has the following fields:
 -- id|location|filename|directory|filesize|fs_deleted|needs_verification
 
 
 ATTACH DATABASE "custom_music_db.sqlite" AS CustomMusicDb;
 
--- merging the Music Player information with library 
-CREATE TEMPORARY TABLE merged_db AS
-SELECT * FROM
-library as lib1 INNER JOIN CustomMusicDb.library AS lib2
-ON  lib1.artist ==  lib2.artist 
-AND lib1.album  ==  lib2.album
-AND lib1.title  ==  lib2.title;
-
 UPDATE track_locations
-SET location = (SELECT file_path
-                  FROM merged_db
-                  WHERE track_locations.id = merged_db.location)
-                  WHERE  track_locations.id IN (SELECT location FROM merged_db)
-                  ;
+SET location = tmptable.PATH_MUSIC_PLAYER
+    FROM CustomMusicDb.library as tmptable
+    WHERE track_locations.id = tmptable.IDX_MIXXX_LIBRARY;
 
-
--- TO TEST: don't change them and see how Mixxx reacts  
--- UPDATE track_locations
--- SET filename = (SELECT file_name
-                  -- FROM merged_db
-                  -- WHERE track_locations.id = merged_db.location);
-
--- UPDATE track_locations
--- SET directory = (SELECT folder
-                  -- FROM merged_db
-                  -- WHERE track_locations.id = merged_db.location);
-
--- UPDATE track_locations
--- SET filesize = (SELECT file_size
-                  -- FROM merged_db
-                  -- WHERE track_locations.id = merged_db.location);
-
--- UPDATE track_locations 
--- SET fs_deleted = 0;
-
--- UPDATE track_locations 
--- SET needs_verification = 0;
-
-
-
-
-
-
-
+-- updating the file_name and directory column
+-- does not seem to have an effect (Mixxx still works)
+-- sooooo... hehe... guess we're done :-p
 
 -----------------------------------------------------------------------
 -- Post-cleanup maintenance                                          --

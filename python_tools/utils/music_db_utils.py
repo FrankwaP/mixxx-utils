@@ -22,10 +22,6 @@ MERGE_COLS = ["artist", "album", "title"]
 # it's just suboptimal and I hate that
 NOT_CRITICAL_DUP_COLS = ["artist", "title"]
 
-# the columns used in the final custom database that will be used
-# to fix the file paths in the Mixxx database
-CUSTOM_DB_COLUMNS = ["artist", "album", "title", "file_path"]
-
 
 def open_table_as_df(db_path: str, table_name: str) -> pd.DataFrame:
     return pd.read_sql_table(table_name, db_path_to_url(db_path))
