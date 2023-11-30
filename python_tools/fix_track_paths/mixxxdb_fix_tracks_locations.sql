@@ -58,7 +58,7 @@ DELETE FROM track_analysis WHERE track_id NOT IN (SELECT id FROM track_locations
 -- id|location|filename|directory|filesize|fs_deleted|needs_verification
 
 
-ATTACH DATABASE "/home/francois/Documents/mixxx-utils/custom_music_db.sqlite" AS CustomMusicDb;
+ATTACH DATABASE "custom_music_db.sqlite" AS CustomMusicDb;
 
 -- merging the Music Player information with library 
 CREATE TEMPORARY TABLE merged_db AS
