@@ -9,7 +9,7 @@ from urllib.parse import unquote
 from jellyfish import levenshtein_distance
 import pandas as pd
 
-from user_parameters import MIXXX_DB
+from .user_parameters import MIXXX_DB
 
 # columns used to relate the Mixxx and music player databases
 # also used to detect duplicate entries which would crash the database
@@ -51,7 +51,9 @@ def hint_duplicates(df: pd.DataFrame) -> None:
         print(df_dup[NOT_CRITICAL_DUP_COLS])
 
 
-def open_mixxx_library(keep_only_missing_track: bool)-> pd.DataFrame:
+def open_mixxx_library(
+    existing_tracks: bool = True, missing_tracks: bool = True
+) -> pd.DataFrame:
     # we add a check for duplicates because the will make
     # the final SQL fusion fail due to unique constraint
     # this can happen when there's both the correct and incorrect path for a track
@@ -60,19 +62,24 @@ def open_mixxx_library(keep_only_missing_track: bool)-> pd.DataFrame:
     df_lib = open_table_as_df(MIXXX_DB, "library")
     quit_if_duplicates(df_lib)
     hint_duplicates(df_lib)
-    if keep_only_missing_track:
+    if existing_tracks and missing_tracks:
+        return df_lib
+    # else we neee to know which tracks exist/miss
+    df_loc = open_table_as_df(MIXXX_DB, "track_locations")
+    if missing_tracks:
         print(f"Keeping the missing locations only.")
-        df_loc = open_table_as_df(MIXXX_DB, "track_locations")
-        id_loc_missing = df_loc['id'][~df_loc['location'].apply(exists)]
-        df_lib = df_lib[df_lib['location'].isin(id_loc_missing)]
-    return df_lib
+        id_loc = df_loc["id"][~df_loc["location"].apply(exists)]
+    elif existing_tracks:
+        print(f"Keeping the existing locations only.")
+        id_loc = df_loc["id"][df_loc["location"].apply(exists)]
+    return df_lib[df_lib["location"].isin(id_loc)]
 
 
 def open_mixxx_cues(only_hot_cues) -> pd.DataFrame:
     print(f"Openning the Mixxx cues {MIXXX_DB}.")
     df = open_table_as_df(MIXXX_DB, "cues")
     if only_hot_cues:
-        df = df[df['hotcue'] >= 0]
+        df = df[df["hotcue"] >= 0]
     return df
 
 

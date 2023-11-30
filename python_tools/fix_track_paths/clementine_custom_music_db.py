@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pandas as pd
 
-import sys
 
-path.append("../utils")  # It works that's what matters :-p
-from music_db_utils import (
+path.append(Path(__file__).parent.parent.as_posix())  # ugly tricks but works fine :-p
+
+from utils.music_db_utils import (
     MERGE_COLS,
     open_table_as_df,
     write_df_to_table,
@@ -14,7 +14,7 @@ from music_db_utils import (
     get_closest_matches_indices,
     open_mixxx_library,
 )
-from user_parameters import (
+from utils.user_parameters import (
     CLEM_DB,
     CUSTOM_DB,
     CUSTOM_DB_TABLE_NAME,
@@ -22,7 +22,13 @@ from user_parameters import (
     CUSTOM_DB_PATH_COLUMN,
 )
 
+
 if __name__ == "__main__":
+    df_mixxx = open_mixxx_library(existing_tracks=False)
+    if len(df_mixxx) == 0:
+        print("No missing tracks, congratulation!")
+        exit()
+
     answer = input("Did you refresh Clementine's library (y/*)? ")
     if answer != "y":
         print("Well do it <3")
@@ -43,11 +49,10 @@ if __name__ == "__main__":
     ]
 
     # %% Matching the tracks between Mixxx and the music player
-    df_mixxx = open_mixxx_library(keep_only_missing_track=True)
 
     # saving the original indices
 
-    df_mixxx[CUSTOM_DB_MIXXX_IDX_COLUMN] = df_mixxx['location']
+    df_mixxx[CUSTOM_DB_MIXXX_IDX_COLUMN] = df_mixxx["location"]
 
     IDX_MIXXX = "saved_index_mixxx"
     df_mixxx[IDX_MIXXX] = df_mixxx.index
