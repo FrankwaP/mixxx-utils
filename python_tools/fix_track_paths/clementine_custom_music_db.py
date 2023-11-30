@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
 
     # %% Matching the tracks between Mixxx and the music player
-    df_mixxx = open_mixxx_library()
+    df_mixxx = open_mixxx_library(keep_only_missing_track=True)
     df_mixxx = df_mixxx[MERGE_COLS]
 
     # saving the original indices

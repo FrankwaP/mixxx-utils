@@ -1,6 +1,6 @@
 from sys import exit
 from math import prod
-from os.path import expandvars
+from os.path import expandvars, exists
 from pathlib import Path
 import sqlite3
 from urllib.parse import unquote
@@ -55,16 +55,21 @@ def hint_duplicates(df: pd.DataFrame) -> None:
         print(df_dup[NOT_CRITICAL_DUP_COLS])
 
 
-def open_mixxx_library() -> pd.DataFrame:
+def open_mixxx_library(keep_only_missing_track: bool)-> pd.DataFrame:
     # we add a check for duplicates because the will make
     # the final SQL fusion fail due to unique constraint
     # this can happen when there's both the correct and incorrect path for a track
     # and after the correction we end up with twice the correct path (so... duplicate)
     print(f"Openning the Mixxx library {MIXXX_DB}.")
-    df = open_table_as_df(MIXXX_DB, "library")
-    quit_if_duplicates(df)
-    hint_duplicates(df)
-    return df
+    df_lib = open_table_as_df(MIXXX_DB, "library")
+    quit_if_duplicates(df_lib)
+    hint_duplicates(df_lib)
+    if keep_only_missing_track:
+        print(f"Keeping the missing locations only.")
+        df_loc = open_table_as_df(MIXXX_DB, "track_locations")
+        id_loc_missing = df_loc['id'][~df_loc['location'].apply(exists)]
+        df_lib = df_lib[df_lib['location'].isin(id_loc_missing)]
+    return df_lib
 
 
 def open_mixxx_cues(only_hot_cues) -> pd.DataFrame:
