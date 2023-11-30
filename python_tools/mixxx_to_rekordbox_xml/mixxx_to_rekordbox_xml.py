@@ -1,16 +1,21 @@
 from sys import path
+from pathlib import Path
 from urllib.parse import quote
 from xml.etree import ElementTree as ET
 
 import pandas as pd
 
-path.append('../utils')  # It works that's what matters :-p
-from music_db_utils import (
+
+path.append(Path(__file__).parent.parent.as_posix())  # ugly tricks but works fine :-p
+
+from utils.music_db_utils import (
     open_mixxx_library,
     open_mixxx_cues,
     open_mixxx_track_locations,
 )
 
+
+OUTPUT_FILE = 'rekordbox_output.xml'
 
 def get_root_xml() -> ET.Element:
     root = ET.Element("DJ_PLAYLISTS", attrib={"Version": "1.0.0"})
@@ -58,8 +63,8 @@ def mixxx_cue_row_to_rekbox_xml(row: pd.Series, samplerate) -> ET.Element:
     return ET.Element("POSITION_MARK", attrib=stringify_dict(attrib))
 
 
-if __name__ == "__main__":
-    mixxx_lib = open_mixxx_library()
+if __name__ == '__main__':
+    mixxx_lib = open_mixxx_library(missing_tracks=False)
     mixxx_tl = open_mixxx_track_locations()
     mixxx_cues = open_mixxx_cues(only_hot_cues=True)
 
@@ -83,6 +88,9 @@ if __name__ == "__main__":
     tree = ET.ElementTree(element=root_xml)
     ET.indent(tree, space="\t", level=0)
 
-    with open("test.xml", "w") as fxml:
+
+    with open(OUTPUT_FILE, "w") as fxml:
         fxml.write('<?xml version="1.0" encoding="UTF-8"?>')
-        tree.write("test.xml", encoding="unicode")
+    tree.write(OUTPUT_FILE, encoding="unicode")
+
+    print(f'==> {OUTPUT_FILE}')
