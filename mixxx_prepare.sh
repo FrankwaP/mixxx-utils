@@ -1,9 +1,16 @@
 #!/bin/bash
 
-# we use the recommendantions from this page:
+
+# stopping the network
+# so far I just stop NetworkManager activities (soft solution)
+msg="Stopping the network"
+nmcli networking off 2> /dev/null && echo $msg
+
+
+# now we use the recommendantions from this page:
 # https://github.com/mixxxdj/mixxx/wiki/Adjusting-Audio-Latency
 
-# the commands needs to be called with sudo
+# theses commands needs to be called with sudo
 [ "$UID" -eq 0 ] || exec sudo bash "$0" "$@"
 
 # CPU frequency scaling is a main cause of Mixxx skipping on laptops.
@@ -19,5 +26,3 @@ done
 i=/sys/devices/system/cpu/smt/control
 msg="Disabling hyperthreading" 
 test "$(cat $i)" = "on" && echo $msg && echo "off" > $i
-
-
