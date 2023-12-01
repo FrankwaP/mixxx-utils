@@ -57,13 +57,11 @@ DELETE FROM track_analysis WHERE track_id NOT IN (SELECT id FROM track_locations
 ATTACH DATABASE "custom_music_db.sqlite" AS CustomMusicDb;
 
 UPDATE track_locations
-SET location = tmptable.PATH_MUSIC_PLAYER
+SET location = tmptable.PATH_MUSIC_PLAYER,
+    filename = tmptable.FILENAME_MUSIC_PLAYER,
+    directory = tmptable.DIRECTORY_MUSIC_PLAYER
     FROM CustomMusicDb.library as tmptable
     WHERE track_locations.id = tmptable.IDX_MIXXX_LIBRARY;
-
--- updating the file_name and directory column
--- does not seem to have an effect (Mixxx still works)
--- sooooo... hehe... guess we're done :-p
 
 -----------------------------------------------------------------------
 -- Post-cleanup maintenance                                          --

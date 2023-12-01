@@ -20,6 +20,8 @@ from utils.user_parameters import (
     CUSTOM_DB_TABLE_NAME,
     CUSTOM_DB_MIXXX_IDX_COLUMN,
     CUSTOM_DB_PATH_COLUMN,
+    CUSTOM_DB_FILENAME_COLUMN,
+    CUSTOM_DB_DIRECTORY_COLUMN,
 )
 
 
@@ -122,6 +124,13 @@ if __name__ == "__main__":
     df_custom_final = df_custom_final[
         [CUSTOM_DB_MIXXX_IDX_COLUMN, CUSTOM_DB_PATH_COLUMN]
     ]
+    df_custom_final[CUSTOM_DB_FILENAME_COLUMN] = df_custom_final[
+        CUSTOM_DB_PATH_COLUMN
+    ].apply(lambda x: Path(x).name)
+    df_custom_final[CUSTOM_DB_DIRECTORY_COLUMN] = df_custom_final[
+        CUSTOM_DB_PATH_COLUMN
+    ].apply(lambda x: Path(x).parent.as_posix())
+
     write_df_to_table(
         df_custom_final,
         db_path=CUSTOM_DB,
