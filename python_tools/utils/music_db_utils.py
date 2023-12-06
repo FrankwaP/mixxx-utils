@@ -76,7 +76,7 @@ def open_mixxx_library(
 
 
 def open_mixxx_cues(only_hot_cues) -> pd.DataFrame:
-    print(f"Openning the Mixxx cues {MIXXX_DB}.")
+    print(f"Openning the Mixxx cues from {MIXXX_DB}.")
     df = open_table_as_df(MIXXX_DB, "cues")
     if only_hot_cues:
         df = df[df["hotcue"] >= 0]
@@ -84,8 +84,22 @@ def open_mixxx_cues(only_hot_cues) -> pd.DataFrame:
 
 
 def open_mixxx_track_locations() -> pd.DataFrame:
-    print(f"Openning the Mixxx track locations {MIXXX_DB}.")
+    print(f"Openning the Mixxx track locations from {MIXXX_DB}.")
     df = open_table_as_df(MIXXX_DB, "track_locations")
+    return df
+
+
+def open_mixxx_playlists(filter_hidden: bool) -> pd.DataFrame:
+    print(f"Openning the Mixxx playlists from {MIXXX_DB}.")
+    df = open_table_as_df(MIXXX_DB, "Playlists")
+    if filter_hidden:
+        df = df[df["hidden"] == 0]
+    return df
+
+
+def open_mixxx_playlist_tracks() -> pd.DataFrame:
+    print(f"Openning the Mixxx playlist tracks from {MIXXX_DB}.")
+    df = open_table_as_df(MIXXX_DB, "PlaylistTracks")
     return df
 
 
