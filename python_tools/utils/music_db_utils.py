@@ -61,7 +61,7 @@ def open_mixxx_library(
     print(f"Openning the Mixxx library {MIXXX_DB}.")
     df_lib = open_table_as_df(MIXXX_DB, "library")
     quit_if_duplicates(df_lib)
-    hint_duplicates(df_lib)
+    # hint_duplicates(df_lib)
     if existing_tracks and missing_tracks:
         return df_lib
     # else we neee to know which tracks exist/miss
