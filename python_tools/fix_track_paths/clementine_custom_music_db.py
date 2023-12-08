@@ -31,6 +31,8 @@ if __name__ == "__main__":
         print("No missing tracks, congratulation!")
         exit()
 
+    # TODO: separate the Clementine DB loading/preparation so the rest of the code
+    # can be used with any player (factory method?)
     answer = input("Did you refresh Clementine's library (y/*)? ")
     if answer != "y":
         print("Well do it <3")
@@ -96,15 +98,17 @@ if __name__ == "__main__":
 
             print(f"\nClosest match for Mixxx entry {row[MERGE_COLS].tolist()}:")
             for i, idx in enumerate(close_indices):
-                print(f"{i}:\t{df_custom.loc[idx, MERGE_COLS].tolist()}")
+                print(f"\t{i}:\t{df_custom.loc[idx, MERGE_COLS].tolist()}")
 
-            ans = None
-            while ans not in [""] + [str(i) for i, _ in enumerate(close_indices)]:
+            ans_check = [""] + [str(i) for i, _ in enumerate(close_indices)]
+            while True:
                 ans = input(
-                    "Please: choose an index or leave empty to skip the operation: "
+                    "Please choose an index or leave empty to skip the operation: "
                 )
+                if ans in ans_check:
+                    break
 
-            if ans == "":
+            if not ans:
                 print("Please fix it manually <3")
             else:
                 idx_custom = close_indices[int(ans)]
