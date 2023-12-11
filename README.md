@@ -2,8 +2,9 @@
 
 This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx) and its database.
 
-There are especially **Python tools**, with separate folders and README files.  
-Here's a summary:
+## Python tools
+
+They are stored, with separate folders and README files.  
 
 `fix_track_paths` is a Python tool to fix the tracks paths, using the informations from 
 your music player database. It is usefull when the file has been renamed or if the track is 
@@ -27,7 +28,7 @@ Now open a terminal (omg so scary :-p ) and:
 4. Execute the python tool  like explained in the README.md file.
 
 
-Other small scripts that I'm using:  
+## Other small scripts  
 
 `mixxx_prepare.sh` uses the commands recommended in the [wiki](https://github.com/mixxxdj/mixxx/wiki/Adjusting%20Audio%20Latency)
 in order to minimize the latency problems in Linux.  
