@@ -13,6 +13,7 @@ from utils.music_db_utils import (
     file_url_to_path,
     get_closest_matches_indices,
     open_mixxx_library,
+    remove_feat,
 )
 from utils.user_parameters import (
     CLEM_DB,
@@ -53,6 +54,11 @@ if __name__ == "__main__":
     ]
 
     # %% Matching the tracks between Mixxx and the music player
+
+    # removing the "feat."  (sometimes in the artist field of one track and the title field of the other)
+    for col in ["artist", "title"]:
+        df_mixxx[col] = df_mixxx[col].apply(remove_feat)
+        df_custom[col] = df_custom[col].apply(remove_feat)
 
     # saving the original indices
 

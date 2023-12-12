@@ -1,11 +1,11 @@
 from sys import exit
+from re import sub
 from math import prod
 from os.path import expandvars, exists
 from pathlib import Path
-import sqlite3
 from urllib.parse import unquote
 
-
+import sqlite3
 from jellyfish import levenshtein_distance
 import pandas as pd
 
@@ -149,6 +149,9 @@ def write_df_to_table(
     )
 
 
+def remove_feat(name:str) -> str:
+    return sub(r' \(*feat\. .+', '', name)
+
 def levenshtein_distance_sum(
     row1: pd.Series, row2: pd.Series, col_names: list[str]
 ) -> int:
@@ -159,7 +162,7 @@ def get_closest_matches_indices(
     row: pd.Series,
     search_df: pd.DataFrame,
     col_names: list[str],
-    n_results: int = 5,
+    n_results: int = 3,
 ) -> pd.Index:
     distance_serie = search_df.apply(
         lambda t: levenshtein_distance_sum(t, row, col_names), axis=1
