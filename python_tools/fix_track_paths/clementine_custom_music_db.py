@@ -32,7 +32,7 @@ if __name__ == "__main__":
         print("No missing tracks, congratulation!")
         exit()
 
-    # TODO: separate the Clementine DB loading/preparation so the rest of the code
+    # TODO (YAGNI?): separate the Clementine DB loading/preparation so the rest of the code
     # can be used with any player (factory method?)
     answer = input("Did you refresh Clementine's library (y/*)? ")
     if answer != "y":
@@ -134,10 +134,10 @@ if __name__ == "__main__":
     df_custom_final = df_custom_final[
         [CUSTOM_DB_MIXXX_IDX_COLUMN, CUSTOM_DB_PATH_COLUMN]
     ]
-    df_custom_final[CUSTOM_DB_FILENAME_COLUMN] = df_custom_final[
+    df_custom_final.loc[:, CUSTOM_DB_FILENAME_COLUMN] = df_custom_final[
         CUSTOM_DB_PATH_COLUMN
     ].apply(lambda x: Path(x).name)
-    df_custom_final[CUSTOM_DB_DIRECTORY_COLUMN] = df_custom_final[
+    df_custom_final[:, CUSTOM_DB_DIRECTORY_COLUMN] = df_custom_final[
         CUSTOM_DB_PATH_COLUMN
     ].apply(lambda x: Path(x).parent.as_posix())
 
