@@ -147,3 +147,8 @@ if __name__ == "__main__":
         table_name=CUSTOM_DB_TABLE_NAME,
         overwrite=True,
     )
+
+    print(
+        'I case of "UNIQUE CONSTRAINT FAILED", here is the database used to merge (check the index)df_custom_final'
+    )
+    print(df_custom_final)
