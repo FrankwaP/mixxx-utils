@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # finding the closest match (cm) for each Mixxx track
     if len(df_mixxx_nm):
         print(
-            f"{len(df_mixxx_nm)} tracks have not been found: "
+            f"\n\n{len(df_mixxx_nm)} tracks have not been found: "
             "we find the closest match for each one…"
         )
 
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     # %% Final filtering/output
     df_custom_final = df_custom_final[
         [CUSTOM_DB_MIXXX_IDX_COLUMN, CUSTOM_DB_PATH_COLUMN]
-    ]
+    ].reset_index(drop=True)
     df_custom_final.loc[:, CUSTOM_DB_FILENAME_COLUMN] = df_custom_final[
         CUSTOM_DB_PATH_COLUMN
     ].apply(lambda x: Path(x).name)
@@ -149,6 +149,7 @@ if __name__ == "__main__":
     )
 
     print(
-        'I case of "UNIQUE CONSTRAINT FAILED", here is the database used to merge (check the index)df_custom_final'
+        '\n\nIn case of "UNIQUE CONSTRAINT FAILED", here is the table used to merge '
+        "(do not forget to check the hidden tracks in Mixxx !):"
     )
     print(df_custom_final)
