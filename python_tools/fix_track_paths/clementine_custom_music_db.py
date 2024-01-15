@@ -137,7 +137,7 @@ if __name__ == "__main__":
     df_custom_final.loc[:, CUSTOM_DB_FILENAME_COLUMN] = df_custom_final[
         CUSTOM_DB_PATH_COLUMN
     ].apply(lambda x: Path(x).name)
-    df_custom_final[:, CUSTOM_DB_DIRECTORY_COLUMN] = df_custom_final[
+    df_custom_final.loc[:, CUSTOM_DB_DIRECTORY_COLUMN] = df_custom_final[
         CUSTOM_DB_PATH_COLUMN
     ].apply(lambda x: Path(x).parent.as_posix())
 
