@@ -1,6 +1,8 @@
 # mixxx-utils
 
-This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx) and its database.
+This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx) and its database.  
+
+They work on Linux. For Windows there might be a few adaptations needed to make it work… I can totally do it, but unless someone shows an interest, I'm going to play the [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it) card :-)
 
 ## Python tools
 
