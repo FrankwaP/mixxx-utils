@@ -1,6 +1,6 @@
 from sys import path, exit
 import configparser
-from typing import Optional, Callable, Generator, Mapping
+from typing import Optional, Generator, Mapping
 from pathlib import Path
 from urllib.parse import quote
 from xml.etree import ElementTree as ET
@@ -19,19 +19,6 @@ from utils.music_db_utils import (
 )
 
 AttribDict = Mapping[str, int | float | str]
-
-
-config_file = Path(__file__).parent / Path("config.ini")
-config = configparser.ConfigParser()
-config.read(config_file)
-params = config["Default"]
-
-ans = print(f"The following parameters are defined in {config_file}")
-for k, v in params.items():
-    print(f"  {k}: {v}")
-ans = input("Are you OK with that (y/*)? ")
-if ans != "y":
-    exit()
 
 
 def stringify_dict(d: AttribDict) -> dict[str, str]:
@@ -65,17 +52,17 @@ def get_node_xml(nb_playlists) -> ET.Element:
     return get_elem("NODE", attrib)
 
 
-def guess_inizio(bpm: float, some_hot_cue: float) -> float:
+def guess_inizio(bpm: float, some_hot_cue: float, beats_per_bar: int) -> float:
     beat_length = 60.0 / bpm
-    inizio = some_hot_cue % beat_length
+    inizio = some_hot_cue % (beat_length * beats_per_bar)
     if inizio > beat_length / 2:
         inizio -= beat_length
     return inizio
 
 
-def get_tempo_xml(bpm: float, some_hot_cue: float) -> ET.Element:
+def get_tempo_xml(bpm: float, some_hot_cue: float, beats_per_bar: int) -> ET.Element:
     attrib: AttribDict = {
-        "Inizio": guess_inizio(bpm, some_hot_cue),
+        "Inizio": guess_inizio(bpm, some_hot_cue, beats_per_bar),
         "Bpm": bpm,
         "Metro": "4/4",
         "Battito": "1",
@@ -139,6 +126,19 @@ def mixxx_playlist_track_to_rekordbox_xml(row: pd.Series) -> ET.Element:
 
 
 if __name__ == "__main__":
+    # reading the config file
+    config_file = Path(__file__).parent / Path("config.ini")
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    params = config["Default"]
+
+    ans = print(f"The following parameters are defined in {config_file}")
+    for k, v in params.items():
+        print(f"  {k}: {v}")
+    ans = input("Are you OK with that (y/*)? ")
+    if ans != "y":
+        exit()
+
     # collection
     mixxx_lib = open_mixxx_library(missing_tracks=False)
     mixxx_tl = open_mixxx_track_locations()
@@ -168,7 +168,9 @@ if __name__ == "__main__":
                 fbpm = float(bpm)
                 if fbpm > 0.0:  # ... and a bpm
                     fsome_hot_cue = float(some_hot_cue)
-                    tempo_xml = get_tempo_xml(fbpm, fsome_hot_cue)
+                    tempo_xml = get_tempo_xml(
+                        fbpm, fsome_hot_cue, int(params["beats_per_bar"])
+                    )
                     track_xml.append(tempo_xml)
         collection_xml.append(track_xml)
 
