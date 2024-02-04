@@ -1,4 +1,7 @@
-# Install Mixxx with libKeyFinder
+# Install Mixxx with libKeyFinder (Debian/Ubuntu)
+
+Since there is no Debian/Ubuntu package with libKeyFinder, we must install both from sources.  
+Here are instructions on how to do it.
 
 ## Why libKeyFinder?
 
