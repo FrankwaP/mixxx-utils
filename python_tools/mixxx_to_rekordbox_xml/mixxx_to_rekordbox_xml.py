@@ -55,8 +55,6 @@ def get_node_xml(nb_playlists) -> ET.Element:
 def guess_inizio(bpm: float, some_hot_cue: float, beats_per_bar: int) -> float:
     beat_length = 60.0 / bpm
     inizio = some_hot_cue % (beat_length * beats_per_bar)
-    if inizio > beat_length / 2:
-        inizio -= beat_length
     return inizio
 
 
@@ -64,7 +62,7 @@ def get_tempo_xml(bpm: float, some_hot_cue: float, beats_per_bar: int) -> ET.Ele
     attrib: AttribDict = {
         "Inizio": guess_inizio(bpm, some_hot_cue, beats_per_bar),
         "Bpm": bpm,
-        "Metro": "4/4",
+        "Metro": f"{beats_per_bar}/{beats_per_bar}",
         "Battito": "1",
     }
     return get_elem("TEMPO", attrib)
