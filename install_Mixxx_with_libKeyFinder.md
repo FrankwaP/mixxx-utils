@@ -1,6 +1,6 @@
 # Install Mixxx with libKeyFinder (Debian/Ubuntu)
 
-Since there is no Debian/Ubuntu package with libKeyFinder, we must install both from sources.  
+Since there is no Debian/Ubuntu package with libKeyFinder, we must install it from sources.  
 Here are instructions on how to do it.
 
 ## Why libKeyFinder?
@@ -11,48 +11,44 @@ From [KEY DETECTION COMPARISON 2020](https://www.reddit.com/r/DJs/comments/hwlzy
 
 Basicall you'll go from one of the worst to one of the best…
 
-## Install libKeyFinder
+## Install Mixxx from sources
 
-First let's download [the sources from github](https://github.com/mixxxdj/libKeyFinder):
+All these operations can be put in a script to ease the update process (as `apt update` will have no effect).  
 
-```bash
-zip_dl_keyfinder=libkeyfinder.zip
-wget --output-document=${zip_dl_keyfinder} https://github.com/mixxxdj/libkeyfinder/archive/refs/heads/main.zip
-unzip ${zip_dl_keyfinder} && rm -f ${zip_dl_keyfinder}
-cd libkeyfinder-main || exit
-```
-
-Then we use the [recommended commands](https://github.com/mixxxdj/libKeyFinder?tab=readme-ov-file#installation).  
-You need to set the number of CPU cores on your computer in the first line.
-
-```bash
-number_of_cpu_cores=4
-sudo apt install --yes cmake libfftw3-dev
-sudo cmake -DCMAKE_INSTALL_PREFIX=/where/you/want/to/install/to -S . -B build
-sudo cmake --build build --parallel ${number_of_cpu_cores}
-sudo cmake --install build
-```
-
-## (Re-)Install Mixxx from sources
-
-(If you already have Mixxx, uninstall it)
+### Download the sources
 
 Let's download [the sources from github](https://github.com/mixxxdj/mixxx):
 
 ```bash
-zip_dl_mixxx=mixxx.zip
-wget --output-document=${zip_dl_mixxx} https://github.com/mixxxdj/mixxx/archive/refs/heads/main.zip
+github_mixxx=https://github.com/mixxxdj/mixxx/archive/refs/heads/main.zip
+zip_mixxx=mixxx.zip
+dir_mixxx=mixxx-main
+wget --output-document=${zip_dl_mixxx} ${github_mixxx}
 unzip ${zip_dl_mixxx} && rm -f ${zip_dl_mixxx} 
-cd mixxx-main || exit
 ```
 
-Then we use the [recommended commands](https://github.com/mixxxdj/mixxx?tab=readme-ov-file#building-mixxx).  
-For the first line, select between `tools\windows_buildenv.bat`, `source tools/macos_buildenv.sh setup` or `source tools/debian_buildenv.sh setup` dependnig on your OS.
+### Prepare the installation
+
+Then we use the [recommended commands](https://github.com/mixxxdj/mixxx/wiki/Compiling-On-Linux).
 
 ```bash
+cd ${dir_mixxx} || exit
 source tools/debian_buildenv.sh setup
-mkdir build
-cd build || exit
-cmake ..
-cmake --build .
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local -S . -B build
+cmake --build build --parallel ${nproc}
+```
+
+We skip the final `make install` step and instead…
+
+### Generate a package to install it
+
+```bash
+cpack -G DEB
+sudo dpkg -i *.deb
+```
+
+We can then remove the sources folder:
+
+```bash
+rm -rf ${dir_mixxx}
 ```
