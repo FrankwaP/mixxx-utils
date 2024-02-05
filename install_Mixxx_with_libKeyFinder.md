@@ -11,6 +11,10 @@ From [KEY DETECTION COMPARISON 2020](https://www.reddit.com/r/DJs/comments/hwlzy
 
 Basicall you'll go from one of the worst to one of the best…
 
+*Note*: Here's a nice input from Mixed In Key's creator:
+> if you give the same song to 2 human musicians, they will agree with each other 75% of the time. If you give the same song to Mixed In Key and a musician, they will agree with each other 75% of the time too.
+> Mixed In Key & Human = 75% agreement, Human & Human = 75% agreement. They are the same. There is no such thing as 100% agreement because humans can't even agree with each other.
+
 ## Install Mixxx from sources
 
 All these operations can be put in a script to ease the update process (as `apt update` will have no effect).  
