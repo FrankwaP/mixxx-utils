@@ -27,8 +27,8 @@ Let's download [the sources from github](https://github.com/mixxxdj/mixxx):
 github_mixxx=https://github.com/mixxxdj/mixxx/archive/refs/heads/main.zip
 zip_mixxx=mixxx.zip
 dir_mixxx=mixxx-main
-wget --output-document=${zip_dl_mixxx} ${github_mixxx}
-unzip ${zip_dl_mixxx} && rm -f ${zip_dl_mixxx} 
+wget --output-document=${zip_mixxx} ${github_mixxx}
+unzip ${zip_mixxx} && rm -f ${zip_mixxx} 
 ```
 
 ### Prepare the installation
