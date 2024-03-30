@@ -47,6 +47,7 @@ We skip the final `make install` step and instead…
 ### Generate a package to install it
 
 ```bash
+cd build
 cpack -G DEB
 sudo dpkg -i *.deb
 ```
