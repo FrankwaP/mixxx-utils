@@ -14,7 +14,7 @@ They are stored in the `python_tools` folder.
 It works with Clementine's database so far, but it won't be hard to add other players' databases.
 
 `mixxx_to_rekordbox_xml` export your Mixxx library into the [Rekorbox XML format](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf) and **YES IT EXPORTS THE PLAYLISTS, HOT CUES AND BEATGRIDS** :-)  
-Then you can import the XML file in Rekordbox to prepare a USB key (Rekorbox is free for this use, and can probably run on Wine).
+Then you can import the XML file in Rekordbox to prepare a USB key. Rekorbox is free for this use, and can run on Wine [with a few tricks](https://erhan.es/blog/running-pioneer-rekordbox-on-linux/).
 
 **If you are a Git/Python noob**, here's what I suggest:
 
