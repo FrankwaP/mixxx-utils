@@ -60,11 +60,12 @@ def open_mixxx_library(
     # and after the correction we end up with twice the correct path (so... duplicate)
     print(f"Openning the Mixxx library {MIXXX_DB}.")
     df_lib = open_table_as_df(MIXXX_DB, "library")
+    df_lib[MERGE_COLS] = df_lib[MERGE_COLS].fillna("")
     quit_if_duplicates(df_lib)
-    # hint_duplicates(df_lib)
+    # hint_duplicates(df_lib)
     if existing_tracks and missing_tracks:
         return df_lib
-    # else we neee to know which tracks exist/miss
+    # else we need to know which tracks exist/miss
     df_loc = open_table_as_df(MIXXX_DB, "track_locations")
     if missing_tracks:
         print(f"Keeping the missing locations only.")
@@ -149,8 +150,9 @@ def write_df_to_table(
     )
 
 
-def remove_feat(name:str) -> str:
-    return sub(r' \(*feat\. .+', '', name)
+def remove_feat(name: str) -> str:
+    return sub(r" \(*feat\. .+", "", name)
+
 
 def levenshtein_distance_sum(
     row1: pd.Series, row2: pd.Series, col_names: list[str]
