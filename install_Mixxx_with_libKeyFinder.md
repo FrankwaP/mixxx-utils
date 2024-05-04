@@ -39,7 +39,7 @@ Then we use the [recommended commands](https://github.com/mixxxdj/mixxx/wiki/Com
 cd ${dir_mixxx} || exit
 source tools/debian_buildenv.sh setup
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -S . -B build
-cmake --build build --parallel ${nproc}
+cmake --build build --parallel $(nproc)
 ```
 
 We skip the final `make install` step and instead…
@@ -47,6 +47,7 @@ We skip the final `make install` step and instead…
 ### Generate a package to install it
 
 ```bash
+cd build
 cpack -G DEB
 sudo dpkg -i *.deb
 ```
