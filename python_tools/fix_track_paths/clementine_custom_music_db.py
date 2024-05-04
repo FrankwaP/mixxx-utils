@@ -15,7 +15,7 @@ from utils.music_db_utils import (
     open_mixxx_library,
     remove_feat,
 )
-from utils.user_parameters import (
+from config import (
     CLEM_DB,
     CUSTOM_DB,
     CUSTOM_DB_TABLE_NAME,

@@ -9,7 +9,7 @@ import sqlite3
 from jellyfish import levenshtein_distance
 import pandas as pd
 
-from .user_parameters import MIXXX_DB
+from .config import MIXXX_DB
 
 # columns used to relate the Mixxx and music player databases
 # also used to detect duplicate entries which would crash the database
