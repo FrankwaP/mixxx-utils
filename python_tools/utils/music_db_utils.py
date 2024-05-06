@@ -151,7 +151,7 @@ def write_df_to_table(
 
 
 def remove_feat(name: str) -> str:
-    return sub(r" \(*feat\. .+", "", name)
+    return sub(r" \(*f(?:ea)?t\. .+", "", name)
 
 
 def levenshtein_distance_sum(
