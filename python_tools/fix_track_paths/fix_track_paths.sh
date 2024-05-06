@@ -1,20 +1,49 @@
 #!/bin/bash
+# shellcheck source=config.sh
+
+source config.sh
 
 # generating the custom database
 python3 clementine_custom_music_db.py
 test $? -ne 0 && exit
 
+if test -f "$custom_db"; then
 
-
-if test -f custom_music_db.sqlite; then
-
-    # creating a backup
-    cp ${HOME}/.mixxx/mixxxdb.sqlite ${HOME}/.mixxx/mixxxdb.sqlite.bak.$(date +%y%m%d%H%M)
+    # creating a tmp file
+    temp=$(mktemp)
+    cp -f "$mixxx_db" "$temp"
     
-    # using the information of the custom database to modify Mixxx's database
-    sqlite3  ${HOME}/.mixxx/mixxxdb.sqlite < mixxxdb_fix_tracks_locations.sql
+    echo "Fixing the tracks locations"
+    sqlite3  "$temp" < "$fix_track_locations_sql"
     test $? -ne 0 && exit
 
-    # deleting the custom database
-    rm -f custom_music_db.sqlite
+    if $delete_keys; then
+        echo "Deleting the keys of the modified tracks"
+        sqlite3  "$temp" < "$delete_keys_sql"
+        test $? -ne 0 && exit
+    fi
+
+    if "$delete_gains"; then
+        echo "Deleting the gains of the modified tracks"
+        sqlite3  "$temp" < "$delete_gains_sql"
+        test $? -ne 0 && exit
+    fi
+
+    if "$delete_waveforms"; then
+        echo "Deleting the waveforms of the modified tracks"
+        for wave_id in $(sqlite3  "$temp" < "$get_waveforms_ids_sql"); do
+            rm "$mixxx_waveforms_folder/$wave_id"
+        done
+        sqlite3  "$temp" < "$delete_waveforms_sql"
+        test $? -ne 0 && exit
+    fi
+
+
+    # create a backup
+    cp "$mixxx_db" "$backup"
+    # (over)write Mixxx DB
+    mv -f "$temp" "$mixxx_db"
+    # delete the custom database
+    rm -f "$custom_db"
+
 fi
