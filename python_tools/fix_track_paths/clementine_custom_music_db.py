@@ -19,7 +19,8 @@ from config import (
     CLEM_DB,
     CUSTOM_DB,
     CUSTOM_DB_TABLE_NAME,
-    CUSTOM_DB_MIXXX_IDX_COLUMN,
+    CUSTOM_DB_LIBRARY_IDX_COLUMN,
+    CUSTOM_DB_LOCATION_IDX_COLUMN,
     CUSTOM_DB_PATH_COLUMN,
     CUSTOM_DB_FILENAME_COLUMN,
     CUSTOM_DB_DIRECTORY_COLUMN,
@@ -60,10 +61,12 @@ if __name__ == "__main__":
         df_mixxx[col] = df_mixxx[col].apply(remove_feat)
         df_custom[col] = df_custom[col].apply(remove_feat)
 
-    # saving the original indices
+    # TODO: rename instead of copy ?
+    # saving the internal track and location ids to fit the final (exported) dataset
+    df_mixxx[CUSTOM_DB_LIBRARY_IDX_COLUMN] = df_mixxx["id"]
+    df_mixxx[CUSTOM_DB_LOCATION_IDX_COLUMN] = df_mixxx["location"]
 
-    df_mixxx[CUSTOM_DB_MIXXX_IDX_COLUMN] = df_mixxx["location"]
-
+    # saving the table indices for post-merge operations
     IDX_MIXXX = "saved_index_mixxx"
     df_mixxx[IDX_MIXXX] = df_mixxx.index
     IDX_CUSTOM = "saved_index_custom"
@@ -83,7 +86,7 @@ if __name__ == "__main__":
 
     # %%% Close match (cm)
 
-    # first the tracks with no match (nm)
+    # we work on the tracks with no match (nm)
     df_mixxx_nm = df_mixxx.drop(df_custom_pm[IDX_MIXXX])
     df_custom_nm = df_custom.drop(df_custom_pm[IDX_CUSTOM])
 
@@ -94,11 +97,11 @@ if __name__ == "__main__":
             "we find the closest match for each one…"
         )
 
+        # removing the NA values in the columns we are going to use
         df_mixxx_nm[MERGE_COLS] = df_mixxx_nm[MERGE_COLS].fillna("")
         df_custom_nm[MERGE_COLS] = df_custom_nm[MERGE_COLS].fillna("")
 
-        list_for_df = []
-
+        list_idx_cm = []
         for idx_mixxx, row in df_mixxx_nm.iterrows():
             close_indices = get_closest_matches_indices(row, df_custom_nm, MERGE_COLS)
 
@@ -118,21 +121,31 @@ if __name__ == "__main__":
                 print("Please fix it manually <3")
             else:
                 idx_custom = close_indices[int(ans)]
-                list_for_df.append(
+                list_idx_cm.append(
                     [
-                        df_mixxx_nm.loc[idx_mixxx, CUSTOM_DB_MIXXX_IDX_COLUMN],
+                        df_mixxx_nm.loc[idx_mixxx, CUSTOM_DB_LIBRARY_IDX_COLUMN],
+                        df_mixxx_nm.loc[idx_mixxx, CUSTOM_DB_LOCATION_IDX_COLUMN],
                         df_custom_nm.loc[idx_custom, CUSTOM_DB_PATH_COLUMN],
                     ]
                 )
 
         df_custom_cm = pd.DataFrame(
-            list_for_df, columns=[CUSTOM_DB_MIXXX_IDX_COLUMN, CUSTOM_DB_PATH_COLUMN]
+            list_idx_cm,
+            columns=[
+                CUSTOM_DB_LIBRARY_IDX_COLUMN,
+                CUSTOM_DB_LOCATION_IDX_COLUMN,
+                CUSTOM_DB_PATH_COLUMN,
+            ],
         )
         df_custom_final = pd.concat([df_custom_pm, df_custom_cm])
 
     # %% Final filtering/output
     df_custom_final = df_custom_final[
-        [CUSTOM_DB_MIXXX_IDX_COLUMN, CUSTOM_DB_PATH_COLUMN]
+        [
+            CUSTOM_DB_LIBRARY_IDX_COLUMN,
+            CUSTOM_DB_LOCATION_IDX_COLUMN,
+            CUSTOM_DB_PATH_COLUMN,
+        ]
     ].reset_index(drop=True)
     df_custom_final.loc[:, CUSTOM_DB_FILENAME_COLUMN] = df_custom_final[
         CUSTOM_DB_PATH_COLUMN
