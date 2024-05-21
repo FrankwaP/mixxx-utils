@@ -7,6 +7,8 @@ from xml.etree import ElementTree as ET
 
 import pandas as pd
 
+from encoder_tools import get_offset_ms
+
 
 path.append(Path(__file__).parent.parent.as_posix())  # ugly tricks but works fine :-p
 
@@ -94,7 +96,7 @@ def mixxx_cue_to_rekordbox_cue(mixxx_position: float, samplerate: float) -> floa
 
 
 def mixxx_cue_row_to_rekbox_xml(
-    row: pd.Series, samplerate: float
+    row: pd.Series, samplerate: float, offset_ms: float
 ) -> Generator[ET.Element, None, None]:
     cue_nums = [-1]
     if params["keep_hot_cues"]:
@@ -103,7 +105,8 @@ def mixxx_cue_row_to_rekbox_xml(
         attrib: AttribDict = {
             "Type": "0",
             "Num": cnum,
-            "Start": mixxx_cue_to_rekordbox_cue(row["position"], samplerate),
+            "Start": mixxx_cue_to_rekordbox_cue(row["position"], samplerate)
+            + offset_ms / 1000,
         }
         yield get_elem("POSITION_MARK", attrib)
 
@@ -154,10 +157,13 @@ if __name__ == "__main__":
         track_xml = mixxx_track_row_to_rekbox_xml(track_row)
         track_cues = mixxx_cues[mixxx_cues["track_id"] == track_row["id_x"]]
         rate = track_xml.get("SampleRate")
+        export_offset_ms = get_offset_ms(track_row["location_y"], params["mp3_decoder"])
         for _, cue_row in track_cues.iterrows():
             assert rate
             frate = float(rate)
-            for cue_xml in mixxx_cue_row_to_rekbox_xml(cue_row, frate):
+            for cue_xml in mixxx_cue_row_to_rekbox_xml(
+                cue_row, frate, export_offset_ms
+            ):
                 track_xml.append(cue_xml)
         # this is a trick to calculate the "inizio" using the BPM and one of hot cues (assuming it is on a beat)
         if params["guess_inizio"] and len(track_cues) > 0:  # we need a hot cue...

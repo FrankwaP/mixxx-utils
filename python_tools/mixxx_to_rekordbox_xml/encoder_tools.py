@@ -67,7 +67,7 @@ def check_mp3_decoder_value(mp3_decoder: str) -> None:
         )
 
 
-def get_offset(track_path: str | Path, mp3_decoder: accepted_mp3_decoders) -> float:
+def get_offset_ms(track_path: str | Path, mp3_decoder: accepted_mp3_decoders) -> float:
     path = Path(track_path)
     if path.suffix == ".m4a":
         return 48
@@ -89,4 +89,4 @@ if __name__ == "__main__":
 
     for file in new_mp3_files:
         audiofile = eyed3.load(file)
-        print(file.stem, ":", get_offset(file, mp3_decoder="MAD"))
+        print(file.stem, ":", get_offset_ms(file, mp3_decoder="MAD"))
