@@ -1,0 +1,6 @@
+python>=3.10
+eyed3>=0.9
+pandas
+pandas-stubs
+jellyfish
+tqdm
