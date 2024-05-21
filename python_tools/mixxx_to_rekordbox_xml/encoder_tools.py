@@ -1,5 +1,6 @@
 from typing import Literal
 from pathlib import Path
+from logging import ERROR
 
 import eyed3
 import eyed3.mp3  # helps with the type hinting
@@ -8,6 +9,7 @@ import eyed3.mp3  # helps with the type hinting
 accepted_mp3_decoders = Literal["MAD", "CoreAudio", "FFmpeg"]
 ACCEPTED_MP3_DECODERS: list[accepted_mp3_decoders] = ["MAD", "CoreAudio", "FFmpeg"]
 
+eyed3.core.log.setLevel(ERROR)
 
 def has_xing_info(audiofile: eyed3.mp3.Mp3AudioFile) -> bool:
     return audiofile.info.xing_header is not None
