@@ -6,6 +6,7 @@ from urllib.parse import quote
 from xml.etree import ElementTree as ET
 
 import pandas as pd
+from tqdm import tqdm
 
 from encoder_tools import get_offset_ms
 
@@ -153,7 +154,7 @@ if __name__ == "__main__":
     )
 
     collection_xml = get_collection_xml(len(df_merge))
-    for _, track_row in df_merge.iterrows():
+    for _, track_row in tqdm(df_merge.iterrows(), total=len(df_merge)):
         track_xml = mixxx_track_row_to_rekbox_xml(track_row)
         track_cues = mixxx_cues[mixxx_cues["track_id"] == track_row["id_x"]]
         rate = track_xml.get("SampleRate")
