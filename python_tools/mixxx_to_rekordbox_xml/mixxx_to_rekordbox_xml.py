@@ -7,6 +7,8 @@ from xml.etree import ElementTree as ET
 
 import pandas as pd
 
+from proto import beats_pb2
+
 
 path.append(Path(__file__).parent.parent.as_posix())  # ugly tricks but works fine :-p
 
@@ -52,23 +54,21 @@ def get_node_xml(nb_playlists) -> ET.Element:
     return get_elem("NODE", attrib)
 
 
-def guess_inizio(bpm: float, some_hot_cue: float, beats_per_bar: int) -> float:
-    beat_length = 60.0 / bpm
-    inizio = some_hot_cue % (beat_length * beats_per_bar)
-    return inizio
-
-
-def get_tempo_xml(bpm: float, some_hot_cue: float, beats_per_bar: int) -> ET.Element:
+def mixxx_track_row_to_rekbox_tempo_xml(
+    row: pd.Series, beats_per_bar: int
+) -> ET.Element:
+    beatgrid = beats_pb2.BeatGrid()
+    beatgrid.ParseFromString(row["beats"])
     attrib: AttribDict = {
-        "Inizio": guess_inizio(bpm, some_hot_cue, beats_per_bar),
-        "Bpm": bpm,
+        "Inizio": beatgrid.first_beat.frame_position / row["samplerate"],
+        "Bpm": beatgrid.bpm.bpm,
         "Metro": f"{beats_per_bar}/{beats_per_bar}",
         "Battito": "1",
     }
     return get_elem("TEMPO", attrib)
 
 
-def mixxx_track_row_to_rekbox_xml(row: pd.Series) -> ET.Element:
+def mixxx_track_row_to_rekbox_track_xml(row: pd.Series) -> ET.Element:
     location = row["location_y"]
     final_location = location.replace(
         params["original_mount_point"], params["final_mount_point"]
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     collection_xml = get_collection_xml(len(df_merge))
     for _, track_row in df_merge.iterrows():
-        track_xml = mixxx_track_row_to_rekbox_xml(track_row)
+        track_xml = mixxx_track_row_to_rekbox_track_xml(track_row)
         track_cues = mixxx_cues[mixxx_cues["track_id"] == track_row["id_x"]]
         rate = track_xml.get("SampleRate")
         for _, cue_row in track_cues.iterrows():
@@ -159,17 +159,13 @@ if __name__ == "__main__":
             frate = float(rate)
             for cue_xml in mixxx_cue_row_to_rekbox_xml(cue_row, frate):
                 track_xml.append(cue_xml)
-        # this is a trick to calculate the "inizio" using the BPM and one of hot cues (assuming it is on a beat)
-        if params["guess_inizio"] and len(track_cues) > 0:  # we need a hot cue...
-            bpm, some_hot_cue = track_xml.get("AverageBpm"), cue_xml.get("Start")
-            if bpm and some_hot_cue:
-                fbpm = float(bpm)
-                if fbpm > 0.0:  # ... and a bpm
-                    fsome_hot_cue = float(some_hot_cue)
-                    tempo_xml = get_tempo_xml(
-                        fbpm, fsome_hot_cue, int(params["beats_per_bar"])
-                    )
-                    track_xml.append(tempo_xml)
+        if (
+            track_row["beats_version"] == "BeatGrid-2.0"
+        ):  # do we allow other versions of BeatGrid ?
+            tempo_xml = mixxx_track_row_to_rekbox_tempo_xml(
+                track_row, int(params["beats_per_bar"])
+            )
+            track_xml.append(tempo_xml)
         collection_xml.append(track_xml)
 
     # playlists
