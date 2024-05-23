@@ -15,6 +15,8 @@ Basicall you'll go from one of the worst to one of the best…
 > if you give the same song to 2 human musicians, they will agree with each other 75% of the time. If you give the same song to Mixed In Key and a musician, they will agree with each other 75% of the time too.
 > Mixed In Key & Human = 75% agreement, Human & Human = 75% agreement. They are the same. There is no such thing as 100% agreement because humans can't even agree with each other.
 
+If needed, you can delete the older keys using the [sql_tools/delete_old_keys.sql](sql_tools/delete_old_keys.sql) script (please read it first!).
+
 ## Install Mixxx from sources
 
 All these operations can be put in a script to ease the update process (as `apt update` will have no effect).  
@@ -24,11 +26,20 @@ All these operations can be put in a script to ease the update process (as `apt 
 Let's download [the sources from github](https://github.com/mixxxdj/mixxx):
 
 ```bash
-github_mixxx=https://github.com/mixxxdj/mixxx/archive/refs/heads/main.zip
-zip_mixxx=mixxx.zip
-dir_mixxx=mixxx-main
-wget --output-document=${zip_mixxx} ${github_mixxx}
-unzip ${zip_mixxx} && rm -f ${zip_mixxx} 
+git clone git@github.com:mixxxdj/mixxx.git
+cd mixxx
+```
+
+### Optionnal: Use modifications that have not been implemented yet in Mixxx's official deposit
+
+```bash
+# Set this variables
+other_repo=git@github.com:mxmilkiib/mixxx.git
+other_repo_branch=Add-bpm-scaling-controls
+#
+git fetch $other_repo $other_repo_branch:TO_BE_MERGED
+git merge TO_BE_MERGED
+git branch -d TO_BE_MERGED
 ```
 
 ### Prepare the installation
@@ -36,24 +47,31 @@ unzip ${zip_mixxx} && rm -f ${zip_mixxx}
 Then we use the [recommended commands](https://github.com/mixxxdj/mixxx/wiki/Compiling-On-Linux).
 
 ```bash
-cd ${dir_mixxx} || exit
 source tools/debian_buildenv.sh setup
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -S . -B build
 cmake --build build --parallel $(nproc)
 ```
 
-We skip the final `make install` step and instead…
+On Debian/Ubuntu, we can skip the final `make install` step and instead…
 
 ### Generate a package to install it
 
 ```bash
-cd build
+cd build || exit
 cpack -G DEB
 sudo dpkg -i *.deb
+cd ..
 ```
 
-We can then remove the sources folder:
+We can then remove the build folder:
 
 ```bash
-rm -rf ${dir_mixxx}
+rm -rf build
+```
+
+Or even the sources folder:
+
+```bash
+cd ..
+rm -rf mixxx
 ```
