@@ -4,3 +4,5 @@ pandas
 pandas-stubs
 jellyfish
 tqdm
+sqlalchemy
+protobuf
