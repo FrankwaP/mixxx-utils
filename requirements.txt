@@ -1,4 +1,0 @@
-pandas
-sqlalchemy
-jellyfish
-protobuf

@@ -1,0 +1,3 @@
+eyed3>=0.9
+protobuf
+types-protobuf

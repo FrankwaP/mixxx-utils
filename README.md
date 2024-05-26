@@ -1,14 +1,12 @@
 # mixxx-utils
 
-This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx) and its database.  
+This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx) and its database. They are stored in language specific "*language*-tools" folders, along with specific README.md files.
 
 They work on Linux. For Windows there might be a few adaptations needed to make it work… I can totally do it, but unless someone shows an interest, I'm going to play the [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it) card :-)
 
 IMPORTANT: As of May 4th 2024, Mixxx's database needs to be fixed so the Python tools work. Please see the[fix_mixxx_db.md](fix_mixxx_db.md) file.
 
 ## Python tools
-
-They are stored in the `python_tools` folder.  
 
 `cue_to_tracklist.py` is a Python tool to generate the tracklist corresponding to the cue file automatically generated when recording a mix on Mixxx, so you can add it in the description of the Soundcloud/Youtube/… page.
 
@@ -18,36 +16,15 @@ It works with Clementine's database so far, but it won't be hard to add other pl
 `mixxx_to_rekordbox_xml` export your Mixxx library into the [Rekorbox XML format](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf) and **YES IT EXPORTS THE PLAYLISTS, HOT CUES AND BEATGRIDS** :-)  
 Then you can import the XML file in Rekordbox to prepare a USB key. Rekorbox is free for this use, and can run on Wine [with a few tricks](https://erhan.es/blog/running-pioneer-rekordbox-on-linux/).
 
-**If you are a Git/Python noob**, here's what I suggest:
+## SQL tools  
 
-- [Download this repo](https://github.com/FrankwaP/mixxx-utils/archive/refs/heads/main.zip), unzip it, and open the "python_tools" folder (leave this window opened).
-- [Install Mambaforge](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) with the default settings.
+`delete_old_keys.sql` is used when you got want to delete keys that are calculated with a specific detector. I used it because I had a mix of keys calculated with "Queen Mary (qm-keydetector)" and "KeyFinder", and I selectively deleted the QM keys so the could be recalculated with KF.  
 
-Now open a terminal (omg so scary :-p ) and:
+`fix_false_missing_tracks.sql` is useful when Mixxx incorrectly detect tracks as missing (you can still use them with a drag-and-drop from the library). It simply resets all the "missing" field.  
 
-1. Create an Mamba environment:`mamba create --name mixxx-utils --yes pandas sqlalchemy jellyfish sqlite`. (An "environment" is simply a folder with compatible executables and libraries.)
-2. Activate this new environment: `mamba activate mixxx-utils`. ("Activating" means that the executables and libraries in the environement folder will be used when you execute code.)
-3. Change the path:  
-   1. On Windows type `chdir̀ /D` and on Linux type `cd`
-   2. Then go back to the windows you've opened, and drag&drop the folder you want to use in the terminal, which will write the path to the folder. So you end up with something like `chdir /D D:\...\mixxx_to_rekordbox_xml` or `cd /home/.../mixxx_to_rekordbox_xml`.
-   3. Execute the command (press "Enter")
-4. Execute the python tool  like explained in the README.md file.
+`mixxxdb_cleanup.sql` is a copy of a script found in the [offical repo](https://github.com/mixxxdj/mixxx/tree/main/tools) with extra commands (noted with "EXTRA" in the comment).  
 
-## Other small scripts  
+## Bash tools
 
 `mixxx_prepare.sh` uses the commands recommended in the [wiki](https://github.com/mixxxdj/mixxx/wiki/Adjusting%20Audio%20Latency)
-in order to minimize the latency problems in Linux.  
-It must be executed before launching Mixxx as follow:  
-
-```bash
-sudo ./mixxx_prepare.sh
-```
-
-`mixxxdb_cleanup.sql` is a copy of a script found in the [offical repo](https://github.com/mixxxdj/mixxx/tree/main/tools):  
-So far I've only added a single command (noted with "EXTRA" in the comment).  
-To use it on Linux:  
-
-```bash
-cp ${HOME}/.mixxx/mixxxdb.sqlite ${HOME}/.mixxx/mixxxdb.sqlite.bak.$(date +%y%m%d%H%M)
-sqlite3  ${HOME}/.mixxx/mixxxdb.sqlite  < mixxxdb_cleanup.sql
-```
+in order to minimize the latency problems in Linux. I call it before launching Mixxx (at least for live mixing).

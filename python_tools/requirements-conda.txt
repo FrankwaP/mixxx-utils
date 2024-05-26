@@ -1,8 +1,7 @@
 python>=3.10
-eyed3>=0.9
+pip
 pandas
 pandas-stubs
 jellyfish
 tqdm
 sqlalchemy
-protobuf
