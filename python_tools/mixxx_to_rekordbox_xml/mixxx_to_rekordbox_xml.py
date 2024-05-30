@@ -26,6 +26,10 @@ from utils.music_db_utils import (
 AttribDict = Mapping[str, int | float | str]
 
 
+# 0 star = "0", 1 star = "51", 2 stars = "102", 3 stars = "153", 4 stars = "204", 5 stars = "255"
+RATING_MAPING = {0: 0, 1: 51, 2: 102, 3: 153, 4: 204, 5: 255}
+
+
 def stringify_dict(d: AttribDict) -> dict[str, str]:
     return {k: str(v) for k, v in d.items()}
 
@@ -88,6 +92,7 @@ def mixxx_track_row_to_rekbox_track_xml(row: pd.Series) -> ET.Element:
         "AverageBpm": row["bpm"],
         "Location": quote("file://localhost/" + final_location),
         "SampleRate": row["samplerate"],
+        "Rating": RATING_MAPING[row["rating"]],
     }
     return get_elem("TRACK", attrib)
 
