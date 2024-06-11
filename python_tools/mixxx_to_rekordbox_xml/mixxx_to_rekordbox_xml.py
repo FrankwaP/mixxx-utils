@@ -10,9 +10,6 @@ from tqdm import tqdm
 
 from encoder_tools import get_offset_ms
 
-from proto import beats_pb2
-
-
 path.append(Path(__file__).parent.parent.as_posix())  # ugly tricks but works fine :-p
 
 from utils.music_db_utils import (
@@ -22,6 +19,11 @@ from utils.music_db_utils import (
     open_mixxx_playlists,
     open_mixxx_playlist_tracks,
 )
+
+from utils.track_utils import (
+    BeatGridInfo,
+)
+
 
 AttribDict = Mapping[str, int | float | str]
 
@@ -64,11 +66,10 @@ def get_node_xml(nb_playlists) -> ET.Element:
 def mixxx_track_row_to_rekbox_tempo_xml(
     row: pd.Series, beats_per_bar: int
 ) -> ET.Element:
-    beatgrid = beats_pb2.BeatGrid()
-    beatgrid.ParseFromString(row["beats"])
+    beatgrid_info = BeatGridInfo(row)
     attrib: AttribDict = {
-        "Inizio": beatgrid.first_beat.frame_position / row["samplerate"],
-        "Bpm": beatgrid.bpm.bpm,
+        "Inizio": beatgrid_info.start_sec,
+        "Bpm": beatgrid_info.bpm,
         "Metro": f"{beats_per_bar}/{beats_per_bar}",
         "Battito": "1",
     }
