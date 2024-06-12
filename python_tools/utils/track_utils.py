@@ -8,9 +8,17 @@ from jellyfish import levenshtein_distance
 from .proto import beats_pb2
 
 
-def mixxx_frame_to_sec(frame: int, samplerate: float) -> float:
-    return frame / (0.5 * samplerate)
+def position_frame_to_sec(frame: int, samplerate: float) -> float:
+    return frame / (2 * samplerate)
 
+def position_sec_to_frame(time_sec: float, samplerate: float) -> int:
+    return round(time_sec * (2 * samplerate))
+
+def beatgrid_frame_to_sec(frame: int, samplerate: float) -> float:
+    return frame / samplerate
+
+def beatgrid_sec_to_frame(time_sec: float, samplerate: float) -> int:
+    return round(time_sec *  samplerate)
 
 @dataclass
 class BeatGridInfo:
@@ -22,9 +30,8 @@ class BeatGridInfo:
         beatgrid = beats_pb2.BeatGrid()
         beatgrid.ParseFromString(library_row["beats"])
         self.start = beatgrid.first_beat.frame_position
-        self.start_sec = mixxx_frame_to_sec(self.start, library_row["samplerate"])
+        self.start_sec = beatgrid_frame_to_sec(self.start, library_row["samplerate"])
         self.bpm = beatgrid.bpm.bpm
-
 
 def remove_feat(name: str) -> str:
     return sub(r" \(*f(?:ea)?t\. .+", "", name)

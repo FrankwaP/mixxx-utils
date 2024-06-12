@@ -20,7 +20,7 @@ from utils.music_db_utils import (
     open_mixxx_playlist_tracks,
 )
 
-from utils.track_utils import BeatGridInfo, mixxx_frame_to_sec
+from utils.track_utils import BeatGridInfo, position_frame_to_sec
 
 
 AttribDict = Mapping[str, int | float | str]
@@ -106,7 +106,7 @@ def mixxx_cue_row_to_rekbox_xml(
         attrib: AttribDict = {
             "Type": "0",
             "Num": cnum,
-            "Start": mixxx_frame_to_sec(row["position"], samplerate) + offset_ms / 1000,
+            "Start": position_frame_to_sec(row["position"], samplerate) + offset_ms / 1000,
         }
         yield get_elem("POSITION_MARK", attrib)
 
