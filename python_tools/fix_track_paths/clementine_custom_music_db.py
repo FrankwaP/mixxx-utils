@@ -11,10 +11,14 @@ from utils.music_db_utils import (
     open_table_as_df,
     write_df_to_table,
     file_url_to_path,
-    get_closest_matches_indices,
     open_mixxx_library,
+)
+from utils.track_utils import (
+    MERGE_COLS,
+    get_closest_matches_indices,
     remove_feat,
 )
+
 from config import (
     CLEM_DB,
     CUSTOM_DB,
