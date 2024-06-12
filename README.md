@@ -16,6 +16,8 @@ It works with Clementine's database so far, but it won't be hard to add other pl
 `mixxx_to_rekordbox_xml` export your Mixxx library into the [Rekorbox XML format](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf) and **YES IT EXPORTS THE PLAYLISTS, HOT CUES AND BEATGRIDS** :-)  
 Then you can import the XML file in Rekordbox to prepare a USB key. Rekorbox is free for this use, and can run on Wine [with a few tricks](https://erhan.es/blog/running-pioneer-rekordbox-on-linux/).
 
+`snap_cues` snaps all the cue points to the closest beat.
+
 ## SQL tools  
 
 `delete_old_keys.sql` is used when you got want to delete keys that are calculated with a specific detector. I used it because I had a mix of keys calculated with "Queen Mary (qm-keydetector)" and "KeyFinder", and I selectively deleted the QM keys so the could be recalculated with KF.  
