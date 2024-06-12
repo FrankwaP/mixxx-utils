@@ -81,18 +81,3 @@ def get_offset_ms(track_path: str | Path, mp3_decoder: accepted_mp3_decoders) ->
         audiofile = eyed3.load(track_path)
         return get_offset_mp3(audiofile, mp3_decoder)
     return 0
-
-
-if __name__ == "__main__":
-    new_mp3_files = [
-        Path("/media/francois/MEGAMIX/DNB/Sleepnet - Lapse/01 - Lapse.mp3"),
-        Path("/media/francois/MEGAMIX/DNB/Buunshin - All About This/01 - Acolyte.mp3"),
-        Path(
-            "/media/francois/MEGAMIX/DNB/VRAC/DJ Rush - Motherfucking Bass (Phace Bootleg).mp3"
-        ),
-        Path("/media/francois/MEGAMIX/DNB/Noisia - Purpose EP/05 - Asteroids.mp3"),
-    ]
-
-    for file in new_mp3_files:
-        audiofile = eyed3.load(file)
-        print(file.stem, ":", get_offset_ms(file, mp3_decoder="MAD"))
