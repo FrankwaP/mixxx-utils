@@ -14,6 +14,7 @@ eyed3.core.log.setLevel(ERROR)
 eyed3.id3.frames.log.setLevel(ERROR)
 eyed3.mp3.headers.log.setLevel(ERROR)
 
+
 def has_xing_info(audiofile: eyed3.mp3.Mp3AudioFile) -> bool:
     return audiofile.info.xing_header is not None
 
