@@ -8,6 +8,10 @@ from jellyfish import levenshtein_distance
 from .proto import beats_pb2
 
 
+def mixxx_frame_to_sec(frame: int, samplerate: float) -> float:
+    return frame / (0.5 * samplerate)
+
+
 @dataclass
 class BeatGridInfo:
     start: int
@@ -18,7 +22,7 @@ class BeatGridInfo:
         beatgrid = beats_pb2.BeatGrid()
         beatgrid.ParseFromString(library_row["beats"])
         self.start = beatgrid.first_beat.frame_position
-        self.start_sec = self.start / library_row["samplerate"]
+        self.start_sec = mixxx_frame_to_sec(self.start, library_row["samplerate"])
         self.bpm = beatgrid.bpm.bpm
 
 

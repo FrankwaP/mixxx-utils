@@ -20,9 +20,7 @@ from utils.music_db_utils import (
     open_mixxx_playlist_tracks,
 )
 
-from utils.track_utils import (
-    BeatGridInfo,
-)
+from utils.track_utils import BeatGridInfo, mixxx_frame_to_sec
 
 
 AttribDict = Mapping[str, int | float | str]
@@ -98,10 +96,6 @@ def mixxx_track_row_to_rekbox_track_xml(row: pd.Series) -> ET.Element:
     return get_elem("TRACK", attrib)
 
 
-def mixxx_cue_to_rekordbox_cue(mixxx_position: float, samplerate: float) -> float:
-    return mixxx_position / samplerate / 2
-
-
 def mixxx_cue_row_to_rekbox_xml(
     row: pd.Series, samplerate: float, offset_ms: float
 ) -> Generator[ET.Element, None, None]:
@@ -112,8 +106,7 @@ def mixxx_cue_row_to_rekbox_xml(
         attrib: AttribDict = {
             "Type": "0",
             "Num": cnum,
-            "Start": mixxx_cue_to_rekordbox_cue(row["position"], samplerate)
-            + offset_ms / 1000,
+            "Start": mixxx_frame_to_sec(row["position"], samplerate) + offset_ms / 1000,
         }
         yield get_elem("POSITION_MARK", attrib)
 
