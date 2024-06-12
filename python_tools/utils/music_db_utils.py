@@ -144,4 +144,5 @@ def write_df_to_table(
         if_exists=if_exists,
         index=False,
         method="multi",
+        chunksize=999,
     )
