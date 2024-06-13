@@ -14,7 +14,6 @@ from utils.music_db_utils import (
     open_mixxx_library,
 )
 from utils.track_utils import (
-    MERGE_COLS,
     get_closest_matches_indices,
     remove_feat,
 )
