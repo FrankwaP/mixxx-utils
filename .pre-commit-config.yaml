@@ -9,8 +9,18 @@ repos:
     rev: 24.4.0
     hooks:
     -   id: black
+        files: '.*\.py'
+        exclude: '.*/beats_pb2\.py'
     -   id: black-jupyter
+        files: '.*\.ipynb'
+
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.10.0
     hooks:
     -   id: mypy
+-   repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.0.7
+    hooks:
+    -   id: sqlfluff-fix
+        files: '.*\.sql'
+        args: [--dialect, sqlite]
