@@ -62,11 +62,11 @@ def get_node_xml(nb_playlists) -> ET.Element:
 
 
 def mixxx_track_row_to_rekbox_tempo_xml(
-    row: pd.Series, beats_per_bar: int
+    row: pd.Series, beats_per_bar: int, offset_ms: float
 ) -> ET.Element:
     beatgrid_info = BeatGridInfo(row)
     attrib: AttribDict = {
-        "Inizio": beatgrid_info.start_sec,
+        "Inizio": beatgrid_info.start_sec + offset_ms / 1000,
         "Bpm": beatgrid_info.bpm,
         "Metro": f"{beats_per_bar}/{beats_per_bar}",
         "Battito": "1",
@@ -171,7 +171,7 @@ if __name__ == "__main__":
             track_row["beats_version"] == "BeatGrid-2.0"
         ):  # do we allow other versions of BeatGrid ?
             tempo_xml = mixxx_track_row_to_rekbox_tempo_xml(
-                track_row, int(params["beats_per_bar"])
+                track_row, int(params["beats_per_bar"]), export_offset_ms
             )
             track_xml.append(tempo_xml)
         collection_xml.append(track_xml)
