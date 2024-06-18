@@ -8,11 +8,11 @@ delete_keys=true
 delete_gains=true
 delete_waveforms=true
 # SQL files for each operations
-fix_track_locations_sql=mixxxdb_fix_tracks_locations.sql
-delete_keys_sql=mixxxdb_delete_keys.sql
-delete_gains_sql=mixxxdb_delete_gains.sql
-get_waveforms_ids_sql=mixxxdb_get_waveforms_ids.sql
-delete_waveforms_sql=mixxxdb_delete_waveforms.sql
+fix_track_locations_sql=sql/mixxxdb_fix_tracks_locations.sql
+delete_keys_sql=sql/mixxxdb_delete_keys.sql
+delete_gains_sql=sql/mixxxdb_delete_gains.sql
+get_waveforms_ids_sql=sql/mixxxdb_get_waveforms_ids.sql
+delete_waveforms_sql=sql/mixxxdb_delete_waveforms.sql
 #
 mixxx_db=${HOME}/.mixxx/mixxxdb.sqlite
 backup=${HOME}/.mixxx/mixxxdb.sqlite.bak.$(date +%y%m%d%H%M)
