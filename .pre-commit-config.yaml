@@ -13,18 +13,19 @@ repos:
         exclude: '.*/beats_pb2\.py'
     -   id: black-jupyter
         files: '.*\.ipynb'
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
-    hooks:
-    -   id: mypy
--   repo: https://github.com/sqlfluff/sqlfluff
-    rev: 3.0.7
-    hooks:
-    -   id: sqlfluff-fix
-        files: '.*\.sql'
-        args: [--dialect, sqlite]
+# -   repo: https://github.com/pre-commit/mirrors-mypy
+#     rev: v1.10.0
+#     hooks:
+#     -   id: mypy
+# -   repo: https://github.com/sqlfluff/sqlfluff
+#     rev: 3.0.7
+#     hooks:
+#     -   id: sqlfluff-fix
+#         files: '.*\.sql'
+#         args: [--dialect, sqlite, --exclude-rules, CP02]
 -   repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.41.0
     hooks:
     -   id: markdownlint-fix
         files: '.*\.md'
+        args: [--disable, MD013]

@@ -21,7 +21,7 @@ function scaling {
 function hyperthreading {
 	# parameter 1: on/off
 	ctl=/sys/devices/system/cpu/smt/control
-	msg="Hyperthreading is $1" 
+	msg="Hyperthreading is $1"
 	grep -wq "$1" $ctl || { echo "$1" > "$ctl" && echo "$msg"; }
 }
 

@@ -105,7 +105,9 @@ if __name__ == "__main__":
         df_custom_nm[MERGE_COLS] = df_custom_nm[MERGE_COLS].fillna("")
 
         list_idx_cm = []
-        for idx_mixxx, row in df_mixxx_nm.iterrows():
+        for idx_mixxx, row in df_mixxx_nm.sort_values(
+            by=["artist", "title"]
+        ).iterrows():
             close_indices = get_closest_matches_indices(row, df_custom_nm, MERGE_COLS)
 
             print(f"\nClosest match for Mixxx entry {row[MERGE_COLS].tolist()}:")

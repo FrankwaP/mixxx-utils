@@ -1,4 +1,4 @@
--- This script uses the information from a music player in order to fix 
+-- This script uses the information from a music player in order to fix
 -- the tracks locations in the Mixxx database.
 -- All the files/tables/colums names are defined in config.py
 

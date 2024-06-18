@@ -14,7 +14,7 @@ First [install Mambaforge](https://mamba.readthedocs.io/en/latest/installation/m
 
 Now open a terminal (omg so scary :-p ) and:
 
-1. Change the path:  
+1. Change the path:
    1. On Windows type `chdir̀ /D` and on Linux type `cd`
    2. Then go back to the windows you've opened, and drag&drop the `python_tools` folder, which will write the path to the folder. So you end up with something like `chdir /D D:\...\python_tools` or `cd /home/.../python_tools`.
    3. Execute the command (press "Enter")

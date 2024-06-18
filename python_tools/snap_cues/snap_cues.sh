@@ -11,7 +11,7 @@ if test -f "$custom_db"; then
     # creating a tmp file
     temp=$(mktemp)
     cp -f "$mixxx_db" "$temp"
-    
+
     echo "Snapping the cues locations to the beatgrid"
     sqlite3  "$temp" < "$fix_cues_sql"
     test $? -ne 0 && exit

@@ -1,4 +1,5 @@
--- This script will delete the waveforms of the tracks whose path have been modified
+-- This script gets the track_analysis ids
+--   of the tracks whose lcoations have been modified
 -- All the files/tables/colums names are defined in config.py
 
 ATTACH DATABASE "custom_music_db.sqlite" AS CustomMusicDb;

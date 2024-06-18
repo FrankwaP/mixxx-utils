@@ -21,7 +21,7 @@ python mixxx_to_rekordbox_xml.py
 
 ## Import in Rekordbox
 
-To import the XML file in Rekorbox:  
+To import the XML file in Rekorbox:
 
 1. Get into "export" mode. Side note: the settings panels differ from the "performance" mode's ones, so if you want some info/help you need to make it clear that it is for the "export" mode.
 2. Set up the correct xml import path in "settings > database".

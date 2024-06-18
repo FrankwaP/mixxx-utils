@@ -1,6 +1,5 @@
 """ A tool to generate a tracklist for Soundcloud/Youtube/… from a Mixxx's cue file"""
 
-
 from pathlib import Path
 
 

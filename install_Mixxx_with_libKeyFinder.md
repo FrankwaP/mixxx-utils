@@ -1,11 +1,11 @@
 # Install Mixxx with libKeyFinder (Debian/Ubuntu)
 
-Since there is no Debian/Ubuntu package with libKeyFinder, we must install it from sources.  
+Since there is no Debian/Ubuntu package with libKeyFinder, we must install it from sources.
 Here are instructions on how to do it.
 
 ## Why libKeyFinder?
 
-From [KEY DETECTION COMPARISON 2020](https://www.reddit.com/r/DJs/comments/hwlzyt/key_detection_comparison_2020/):  
+From [KEY DETECTION COMPARISON 2020](https://www.reddit.com/r/DJs/comments/hwlzyt/key_detection_comparison_2020/):
 
 ![What???](https://i.redd.it/zs186m2cpnc51.png "KEY DETECTION COMPARISON 2020")
 
@@ -19,7 +19,7 @@ If needed, you can delete the older keys using the [sql_tools/delete_old_keys.sq
 
 ## Install Mixxx from sources
 
-All these operations can be put in a script to ease the update process (as `apt update` will have no effect).  
+All these operations can be put in a script to ease the update process (as `apt update` will have no effect).
 
 ### Download the sources
 

@@ -12,7 +12,7 @@ if test -f "$custom_db"; then
     # creating a tmp file
     temp=$(mktemp)
     cp -f "$mixxx_db" "$temp"
-    
+
     echo "Fixing the tracks locations"
     sqlite3  "$temp" < "$fix_track_locations_sql"
     test $? -ne 0 && exit

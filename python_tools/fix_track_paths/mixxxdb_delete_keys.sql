@@ -5,7 +5,7 @@ ATTACH DATABASE "custom_music_db.sqlite" AS CustomMusicDb;
 
 UPDATE library
 SET key = "",
-    keys = "", 
+    keys = "",
     key_id = 0,
     keys_sub_version = NULL
     WHERE library.id IN (
