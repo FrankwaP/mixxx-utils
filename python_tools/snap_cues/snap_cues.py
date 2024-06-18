@@ -17,10 +17,7 @@ from utils.track_utils import (
     position_sec_to_frame,
 )
 
-from config import (
-    CUSTOM_DB,
-    CUSTOM_DB_TABLE_NAME,
-)
+from config import CUSTOM_DB, CUSTOM_DB_TABLE_NAME, CUES
 
 
 if __name__ == "__main__":
@@ -36,19 +33,20 @@ if __name__ == "__main__":
                 samplerate = lib_row["samplerate"]
                 cues_idx = df_cues[df_cues["track_id"] == lib_row["id"]]
                 for idx in cues_idx.index:
-                    position_sec = position_frame_to_sec(
-                        df_cues.loc[idx, "position"], samplerate
-                    )
-                    scaled_position = (
-                        position_sec - beatgrid_info.start_sec
-                    ) / interval_sec
-                    snaped_position = round(scaled_position)
-                    unscaled_position = (
-                        snaped_position * interval_sec + beatgrid_info.start_sec
-                    )
-                    df_cues.loc[idx, "position"] = position_sec_to_frame(
-                        unscaled_position, samplerate
-                    )
+                    if df_cues.loc[idx, "hotcue"] + 1 in CUES:
+                        position_sec = position_frame_to_sec(
+                            df_cues.loc[idx, "position"], samplerate
+                        )
+                        scaled_position = (
+                            position_sec - beatgrid_info.start_sec
+                        ) / interval_sec
+                        snaped_position = round(scaled_position)
+                        unscaled_position = (
+                            snaped_position * interval_sec + beatgrid_info.start_sec
+                        )
+                        df_cues.loc[idx, "position"] = position_sec_to_frame(
+                            unscaled_position, samplerate
+                        )
 
             except TypeError:
                 error_log += (
