@@ -15,6 +15,7 @@ from utils.track_utils import (
     BeatGridInfo,
     position_frame_to_sec,
     position_sec_to_frame,
+    snap_cue_frame,
 )
 
 from config import CUSTOM_DB, CUSTOM_DB_TABLE_NAME, IDX_SNAPED_CUES
@@ -28,25 +29,19 @@ if __name__ == "__main__":
         cues_idx = df_cues[df_cues["track_id"] == lib_row["id"]]
         if len(cues_idx) > 0:
             try:
-                beatgrid_info = BeatGridInfo(lib_row)
-                interval_sec = 1 / (beatgrid_info.bpm / 60)
-                samplerate = lib_row["samplerate"]
                 cues_idx = df_cues[df_cues["track_id"] == lib_row["id"]]
-                for idx in cues_idx.index:
-                    if df_cues.loc[idx, "hotcue"] + 1 in IDX_SNAPED_CUES:
-                        position_sec = position_frame_to_sec(
-                            df_cues.loc[idx, "position"], samplerate
-                        )
-                        scaled_position = (
-                            position_sec - beatgrid_info.start_sec
-                        ) / interval_sec
-                        snaped_position = round(scaled_position)
-                        unscaled_position = (
-                            snaped_position * interval_sec + beatgrid_info.start_sec
-                        )
-                        df_cues.loc[idx, "position"] = position_sec_to_frame(
-                            unscaled_position, samplerate
-                        )
+                if len(cues_idx) > 0:
+                    beatgrid_info = BeatGridInfo(lib_row)
+                    beat_interval_sec = 1 / (beatgrid_info.bpm / 60)
+                    samplerate = lib_row["samplerate"]
+                    for idx in cues_idx.index:
+                        if df_cues.loc[idx, "hotcue"] + 1 in IDX_SNAPED_CUES:
+                            df_cues.loc[idx, "position"] = snap_cue_frame(
+                                df_cues.loc[idx, "position"],
+                                samplerate,
+                                beatgrid_info.start_sec,
+                                beat_interval_sec,
+                            )
 
             except TypeError:
                 error_log += (

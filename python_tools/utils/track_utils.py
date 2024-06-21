@@ -59,3 +59,16 @@ def get_closest_matches_indices(
     )
     distance_serie = distance_serie.sort_values()
     return distance_serie[:n_results].index
+
+
+def snap_cue_frame(
+    cue_position_frame: int,
+    samplerate: float,
+    beatgrid_start_sec: float,
+    beat_interval_sec: float,
+) -> int:
+    position_sec = position_frame_to_sec(cue_position_frame, samplerate)
+    scaled_position = (position_sec - beatgrid_start_sec) / beat_interval_sec
+    snaped_position = round(scaled_position)
+    unscaled_position = snaped_position * beat_interval_sec + beatgrid_start_sec
+    return position_sec_to_frame(unscaled_position, samplerate)
