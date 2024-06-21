@@ -4,5 +4,5 @@
 # You normally do not need to change them
 CUSTOM_DB = "custom_music_db.sqlite"
 CUSTOM_DB_TABLE_NAME = "custom_table"
-# (String of) cues index to modify
-IDX_SNAPED_CUES = 1, 2, 3, 4, 5, 6, 7, 8
+# Cues index to modify
+IDX_SNAPPED_CUES = 1, 2, 3, 4, 5, 6, 7, 8

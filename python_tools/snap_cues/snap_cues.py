@@ -18,10 +18,13 @@ from utils.track_utils import (
     snap_cue_frame,
 )
 
-from config import CUSTOM_DB, CUSTOM_DB_TABLE_NAME, IDX_SNAPED_CUES
+from utils.misc import confirm_config
+
+import config as cfg
 
 
 if __name__ == "__main__":
+    confirm_config(cfg)
     df_lib = open_mixxx_library()
     df_cues = open_mixxx_cues(only_hot_cues=False)
     error_log = ""
@@ -35,7 +38,7 @@ if __name__ == "__main__":
                     beat_interval_sec = 1 / (beatgrid_info.bpm / 60)
                     samplerate = lib_row["samplerate"]
                     for idx in cues_idx.index:
-                        if df_cues.loc[idx, "hotcue"] + 1 in IDX_SNAPED_CUES:
+                        if df_cues.loc[idx, "hotcue"] + 1 in cfg.IDX_SNAPPED_CUES:
                             df_cues.loc[idx, "position"] = snap_cue_frame(
                                 df_cues.loc[idx, "position"],
                                 samplerate,
@@ -54,7 +57,7 @@ if __name__ == "__main__":
 
     write_df_to_table(
         df_cues,
-        db_path=CUSTOM_DB,
-        table_name=CUSTOM_DB_TABLE_NAME,
+        db_path=cfg.CUSTOM_DB,
+        table_name=cfg.CUSTOM_DB_TABLE_NAME,
         overwrite=True,
     )
