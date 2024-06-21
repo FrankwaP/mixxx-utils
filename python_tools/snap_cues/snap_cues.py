@@ -17,7 +17,7 @@ from utils.track_utils import (
     position_sec_to_frame,
 )
 
-from config import CUSTOM_DB, CUSTOM_DB_TABLE_NAME, CUES
+from config import CUSTOM_DB, CUSTOM_DB_TABLE_NAME, IDX_SNAPED_CUES
 
 
 if __name__ == "__main__":
@@ -33,7 +33,7 @@ if __name__ == "__main__":
                 samplerate = lib_row["samplerate"]
                 cues_idx = df_cues[df_cues["track_id"] == lib_row["id"]]
                 for idx in cues_idx.index:
-                    if df_cues.loc[idx, "hotcue"] + 1 in CUES:
+                    if df_cues.loc[idx, "hotcue"] + 1 in IDX_SNAPED_CUES:
                         position_sec = position_frame_to_sec(
                             df_cues.loc[idx, "position"], samplerate
                         )
