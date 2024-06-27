@@ -1,5 +1,4 @@
 from sys import path, exit
-import configparser
 from typing import Optional, Generator, Mapping
 from pathlib import Path
 from urllib.parse import quote
@@ -9,6 +8,8 @@ import pandas as pd
 from tqdm import tqdm
 
 from encoder_tools import get_offset_ms
+
+import config as cfg
 
 path.append(Path(__file__).parent.parent.as_posix())  # ugly tricks but works fine :-p
 
@@ -22,6 +23,7 @@ from utils.music_db_utils import (
 
 from utils.track_utils import BeatGridInfo, position_frame_to_sec
 
+from utils.misc import confirm_config
 
 AttribDict = Mapping[str, int | float | str]
 
@@ -76,9 +78,7 @@ def mixxx_track_row_to_rekbox_tempo_xml(
 
 def mixxx_track_row_to_rekbox_track_xml(row: pd.Series) -> ET.Element:
     location = row["location_y"]
-    final_location = location.replace(
-        params["original_mount_point"], params["final_mount_point"]
-    )
+    final_location = location.replace(cfg.original_mount_point, cfg.final_mount_point)
     attrib: AttribDict = {
         "TrackID": row["id_x"],
         "Name": row["title"],
@@ -100,7 +100,7 @@ def mixxx_cue_row_to_rekbox_xml(
     row: pd.Series, samplerate: float, offset_ms: float
 ) -> Generator[ET.Element, None, None]:
     cue_nums = [-1]
-    if params["keep_hot_cues"]:
+    if cfg.keep_hot_cues:
         cue_nums.append(row["hotcue"])
     for cnum in cue_nums:
         attrib: AttribDict = {
@@ -128,19 +128,17 @@ def mixxx_playlist_track_to_rekordbox_xml(row: pd.Series) -> ET.Element:
 
 
 if __name__ == "__main__":
-    # reading the config file
-    config_file = Path(__file__).parent / Path("config.ini")
-    config = configparser.ConfigParser()
-    config.read(config_file)
-    params = config["Default"]
+    confirm_config(cfg)
 
-    ans = print(f"The following parameters are defined in {config_file}")
-    for k, v in params.items():
-        print(f"  {k}: {v}")
-    ans = input("Are you OK with that (y/*)? ")
-    if ans != "y":
-        exit()
-
+    if cfg.index_cue_bar_start != 0:
+        print(
+            f"The hot cue #{cfg.index_cue_bar_start} will be used to detect the start of the bars."
+        )
+        answer = input(
+            "Are you sure all these hot cues are snapped to the beatgrid (y/*)? : "
+        )
+        if answer != "y":
+            exit(2)
     # collection
     mixxx_lib = open_mixxx_library(missing_tracks=False)
     mixxx_tl = open_mixxx_track_locations()
@@ -159,7 +157,7 @@ if __name__ == "__main__":
         track_xml = mixxx_track_row_to_rekbox_track_xml(track_row)
         track_cues = mixxx_cues[mixxx_cues["track_id"] == track_row["id_x"]]
         rate = track_xml.get("SampleRate")
-        export_offset_ms = get_offset_ms(track_row["location_y"], params["mp3_decoder"])
+        export_offset_ms = get_offset_ms(track_row["location_y"], cfg.mp3_decoder)
         for _, cue_row in track_cues.iterrows():
             assert rate
             frate = float(rate)
@@ -171,7 +169,7 @@ if __name__ == "__main__":
             track_row["beats_version"] == "BeatGrid-2.0"
         ):  # do we allow other versions of BeatGrid ?
             tempo_xml = mixxx_track_row_to_rekbox_tempo_xml(
-                track_row, int(params["beats_per_bar"]), export_offset_ms
+                track_row, int(cfg.beats_per_bar), export_offset_ms
             )
             track_xml.append(tempo_xml)
         collection_xml.append(track_xml)
@@ -201,7 +199,7 @@ if __name__ == "__main__":
     tree = ET.ElementTree(element=root_xml)
     ET.indent(tree, space="  ", level=0)
 
-    rek_fil = params["rekordbox_xml_file"]
+    rek_fil = cfg.rekordbox_xml_file
     with open(rek_fil, "w") as fxml:
         fxml.write('<?xml version="1.0" encoding="UTF-8"?>')
     tree.write(rek_fil, encoding="unicode")
