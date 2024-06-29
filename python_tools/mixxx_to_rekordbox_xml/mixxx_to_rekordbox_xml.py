@@ -21,7 +21,7 @@ from utils.music_db_utils import (
     open_mixxx_playlist_tracks,
 )
 
-from utils.track_utils import BeatGridInfo, position_frame_to_sec
+from utils.track_utils import BeatGridInfo, position_frame_to_sec, guess_inizio_sec
 
 from utils.misc import confirm_config
 
@@ -63,58 +63,73 @@ def get_node_xml(nb_playlists) -> ET.Element:
     return get_elem("NODE", attrib)
 
 
-def mixxx_track_row_to_rekbox_tempo_xml(
-    row: pd.Series, beats_per_bar: int, offset_ms: float
+def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
+    track_row: pd.Series, cue_rows: pd.DataFrame, offset_ms: float
 ) -> ET.Element:
-    beatgrid_info = BeatGridInfo(row)
+    bpm = track_row["bpm"]
+    if (
+        cfg.index_cue_bar_start <= 0
+        or cfg.index_cue_bar_start - 1 not in cue_rows["hotcue"]
+    ):
+        beatgrid_info = BeatGridInfo(track_row)
+        inizio = beatgrid_info.start_sec
+    else:
+        cue_point = cue_rows[cfg.index_cue_bar_start - 1 == cue_rows["hotcue"]]
+        assert len(cue_point) == 1
+        inizio = guess_inizio_sec(
+            cue_point["postion"], track_row["samplerate"], bpm, cfg.beats_per_bar
+        )
+
     attrib: AttribDict = {
-        "Inizio": beatgrid_info.start_sec + offset_ms / 1000,
-        "Bpm": beatgrid_info.bpm,
-        "Metro": f"{beats_per_bar}/{beats_per_bar}",
+        "Inizio": inizio + offset_ms / 1000,
+        "Bpm": bpm,
+        "Metro": f"{cfg.beats_per_bar}/{cfg.beats_per_bar}",
         "Battito": "1",
     }
     return get_elem("TEMPO", attrib)
 
 
-def mixxx_track_row_to_rekbox_track_xml(row: pd.Series) -> ET.Element:
-    location = row["location_y"]
+def mixxx_track_row_to_rekbox_track_xml(track_row: pd.Series) -> ET.Element:
+    location = track_row["location_y"]
     final_location = location.replace(cfg.original_mount_point, cfg.final_mount_point)
     attrib: AttribDict = {
-        "TrackID": row["id_x"],
-        "Name": row["title"],
-        "Artist": row["artist"],
-        "Album": row["album"],
-        "TrackNumber": row["tracknumber"],
-        "Genre": row["genre"],
-        "TotalTime": round(row["duration"]),
-        "Tonality": row["key"],
-        "AverageBpm": row["bpm"],
+        "TrackID": track_row["id_x"],
+        "Name": track_row["title"],
+        "Artist": track_row["artist"],
+        "Album": track_row["album"],
+        "TrackNumber": track_row["tracknumber"],
+        "Genre": track_row["genre"],
+        "TotalTime": round(track_row["duration"]),
+        "Tonality": track_row["key"],
+        "AverageBpm": track_row["bpm"],
         "Location": quote("file://localhost/" + final_location),
-        "SampleRate": row["samplerate"],
-        "Rating": RATING_MAPING[row["rating"]],
+        "SampleRate": track_row["samplerate"],
+        "Rating": RATING_MAPING[track_row["rating"]],
     }
     return get_elem("TRACK", attrib)
 
 
 def mixxx_cue_row_to_rekbox_xml(
-    row: pd.Series, samplerate: float, offset_ms: float
+    cue_row: pd.Series, samplerate: float, offset_ms: float
 ) -> Generator[ET.Element, None, None]:
     cue_nums = [-1]
     if cfg.keep_hot_cues:
-        cue_nums.append(row["hotcue"])
+        cue_nums.append(cue_row["hotcue"])
     for cnum in cue_nums:
         attrib: AttribDict = {
             "Type": "0",
             "Num": cnum,
-            "Start": position_frame_to_sec(row["position"], samplerate)
+            "Start": position_frame_to_sec(cue_row["position"], samplerate)
             + offset_ms / 1000,
         }
         yield get_elem("POSITION_MARK", attrib)
 
 
-def mixxx_playlist_to_rekordbox_xml(row: pd.Series, track_numbers: int) -> ET.Element:
+def mixxx_playlist_to_rekordbox_xml(
+    pls_row: pd.Series, track_numbers: int
+) -> ET.Element:
     attrib: AttribDict = {
-        "Name": row["name"],
+        "Name": pls_row["name"],
         "Type": "1",
         "KeyType": "0",
         " Entries": track_numbers,
@@ -122,8 +137,8 @@ def mixxx_playlist_to_rekordbox_xml(row: pd.Series, track_numbers: int) -> ET.El
     return get_elem("NODE", attrib)
 
 
-def mixxx_playlist_track_to_rekordbox_xml(row: pd.Series) -> ET.Element:
-    attrib = {"Key": row["track_id"]}
+def mixxx_playlist_track_to_rekordbox_xml(pls_trk_row: pd.Series) -> ET.Element:
+    attrib = {"Key": pls_trk_row["track_id"]}
     return get_elem("TRACK", attrib)
 
 
@@ -165,11 +180,10 @@ if __name__ == "__main__":
                 cue_row, frate, export_offset_ms
             ):
                 track_xml.append(cue_xml)
-        if (
-            track_row["beats_version"] == "BeatGrid-2.0"
-        ):  # do we allow other versions of BeatGrid ?
-            tempo_xml = mixxx_track_row_to_rekbox_tempo_xml(
-                track_row, int(cfg.beats_per_bar), export_offset_ms
+        if track_row["beats_version"] == "BeatGrid-2.0":
+            # do we allow other versions of BeatGrid ?
+            tempo_xml = mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
+                track_row, track_cues, export_offset_ms
             )
             track_xml.append(tempo_xml)
         collection_xml.append(track_xml)
