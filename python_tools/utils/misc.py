@@ -5,7 +5,7 @@ from types import ModuleType
 
 def confirm_config(config_module: ModuleType):
     members = getmembers(config_module)
-    params = [i for i in members if not i[0].startswith("__")]
+    params = sorted(i for i in members if not i[0].startswith("__"))
     print(
         "The following parameters have been defined in the "
         f"{config_module.__name__}.py file:"
