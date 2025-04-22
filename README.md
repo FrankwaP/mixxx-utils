@@ -20,9 +20,11 @@ It is usefull when the file has been renamed or if the track is now in another f
 It works with Clementine's database so far, but it won't be hard to add other players' databases.
 
 `mixxx_to_rekordbox_xml` export your Mixxx library into the [Rekorbox XML format](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf) and
-**YES IT EXPORTS THE PLAYLISTS, HOT CUES AND BEATGRIDS** :-)
-Then you can import the XML file in Rekordbox to prepare a USB key.
-Rekorbox is free for this use, and can run on Wine [with a few tricks](https://erhan.es/blog/running-pioneer-rekordbox-on-linux/).
+**YES IT EXPORTS THE PLAYLISTS, HOT CUES, BEATGRIDS, COLORS, RATING/ENERGY** :-)
+Then you can import the XML file in Rekordbox to prepare a USB key. Rekordbox is free for this use.
+So far one still needs to **use Rekordbox on Windows**.
+While Rekordbox can run on Wine [with a few tricks](https://erhan.es/blog/running-pioneer-rekordbox-on-linux/),
+I have not find how to make it recognize a USB key as an export device.
 
 `snap_cues` snaps all the cue points to the closest beat.
 
@@ -32,7 +34,7 @@ Rekorbox is free for this use, and can run on Wine [with a few tricks](https://e
 I used it because I had a mix of keys calculated with "Queen Mary (qm-keydetector)" and "KeyFinder",
 and I selectively deleted the QM keys so the could be recalculated with KF.
 
-`fix_false_missing_tracks.sql` is useful when Mixxx incorrectly detect tracks as missing
+`fix_false_missing_tracks.sql` is useful when Mixxx incorrectly detects tracks as missing
 (you can still use them with a drag-and-drop from the library). It simply resets all the "missing" field.
 
 `mixxxdb_cleanup.sql` is a copy of a script found in the [offical repo](https://github.com/mixxxdj/mixxx/tree/main/tools)
