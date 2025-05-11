@@ -1,22 +1,27 @@
 repos:
+-   repo: meta
+    hooks:
+    -   id: check-hooks-apply
+    -   id: check-useless-excludes
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0  # this is optional, use `pre-commit autoupdate` to get the latest rev!
+    rev: v5.0.0
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
+    -   id: check-added-large-files
     -   id: trailing-whitespace
+      #-   repo: https://github.com/asottile/reorder-python-imports
+  #    rev: v3.14.0
+      #    hooks:
+#    -   id: reorder-python-imports
 -   repo: https://github.com/psf/black
-    rev: 24.4.0
+    rev: 25.1.0
     hooks:
-    -   id: black
-        files: '.*\.py'
-        exclude: '.*/beats_pb2\.py'
     -   id: black-jupyter
-        files: '.*\.ipynb'
-# -   repo: https://github.com/pre-commit/mirrors-mypy
-#     rev: v1.10.0
-#     hooks:
-#     -   id: mypy
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+    -   id: mypy
 # -   repo: https://github.com/sqlfluff/sqlfluff
 #     rev: 3.0.7
 #     hooks:
@@ -24,7 +29,7 @@ repos:
 #         files: '.*\.sql'
 #         args: [--dialect, sqlite, --exclude-rules, CP02]
 -   repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.41.0
+    rev: v0.44.0
     hooks:
     -   id: markdownlint-fix
         files: '.*\.md'

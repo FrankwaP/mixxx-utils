@@ -1,10 +1,8 @@
-from typing import Literal
-from pathlib import Path
 from logging import ERROR
+from pathlib import Path
+from typing import Literal
 
-import eyed3
-import eyed3.mp3
-import eyed3.mp3.headers  # helps with the type hinting
+import eyed3.mp3.headers  # type: ignore
 
 
 accepted_mp3_decoders = Literal["MAD", "CoreAudio", "FFmpeg"]
@@ -43,7 +41,7 @@ def get_case_mp3(audiofile: eyed3.mp3.Mp3AudioFile) -> Literal["A", "B", "C", "D
 
 def get_offset_mp3(
     audiofile: eyed3.mp3.Mp3AudioFile, mp3_decoder: accepted_mp3_decoders
-) -> float:
+) -> int:
     check_mp3_decoder_value(mp3_decoder)
     #
     case = get_case_mp3(audiofile)
@@ -73,7 +71,7 @@ def check_mp3_decoder_value(mp3_decoder: str) -> None:
         )
 
 
-def get_offset_ms(track_path: str | Path, mp3_decoder: accepted_mp3_decoders) -> float:
+def get_offset_ms(track_path: str | Path, mp3_decoder: accepted_mp3_decoders) -> int:
     path = Path(track_path)
     if path.suffix == ".m4a":
         return 48

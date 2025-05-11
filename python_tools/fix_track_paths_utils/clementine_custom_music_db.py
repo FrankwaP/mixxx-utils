@@ -1,36 +1,28 @@
-from sys import exit, path
 from pathlib import Path
+from sys import exit
 
 import pandas as pd
+from utils.music_db_utils import file_url_to_path
+from utils.music_db_utils import MERGE_COLS
+from utils.music_db_utils import open_mixxx_library
+from utils.music_db_utils import open_table_as_df
+from utils.music_db_utils import write_df_to_table
+from utils.track_utils import get_closest_matches_indices
+from utils.track_utils import remove_feat
+
+from .config import CLEM_DB
+from .config import CUSTOM_DB
+from .config import CUSTOM_DB_DIRECTORY_COLUMN
+from .config import CUSTOM_DB_FILENAME_COLUMN
+from .config import CUSTOM_DB_LIBRARY_IDX_COLUMN
+from .config import CUSTOM_DB_LOCATION_IDX_COLUMN
+from .config import CUSTOM_DB_PATH_COLUMN
+from .config import CUSTOM_DB_TABLE_NAME
+from .config import N_SIMILAR_TRACK_PROPOSAL
+from .config import THRESHOLD_NAME_SIMILARITY
 
 
-path.append(Path(__file__).parent.parent.as_posix())  # ugly tricks but works fine :-p
-
-from utils.music_db_utils import (
-    MERGE_COLS,
-    open_table_as_df,
-    write_df_to_table,
-    file_url_to_path,
-    open_mixxx_library,
-)
-from utils.track_utils import (
-    get_closest_matches_indices,
-    remove_feat,
-)
-
-from config import (
-    CLEM_DB,
-    CUSTOM_DB,
-    CUSTOM_DB_TABLE_NAME,
-    CUSTOM_DB_LIBRARY_IDX_COLUMN,
-    CUSTOM_DB_LOCATION_IDX_COLUMN,
-    CUSTOM_DB_PATH_COLUMN,
-    CUSTOM_DB_FILENAME_COLUMN,
-    CUSTOM_DB_DIRECTORY_COLUMN,
-)
-
-
-if __name__ == "__main__":
+def fix_with_clementine_db():
     df_mixxx = open_mixxx_library(existing_tracks=False)
     if len(df_mixxx) == 0:
         print("No missing tracks, congratulation!")
@@ -90,8 +82,8 @@ if __name__ == "__main__":
     # %%% Close match (cm)
 
     # we work on the tracks with no match (nm)
-    df_mixxx_nm = df_mixxx.drop(df_custom_pm[IDX_MIXXX])
-    df_custom_nm = df_custom.drop(df_custom_pm[IDX_CUSTOM])
+    df_mixxx_nm = df_mixxx.drop(index=pd.Index(df_custom_pm[IDX_MIXXX]))
+    df_custom_nm = df_custom.drop(index=pd.Index(df_custom_pm[IDX_CUSTOM]))
 
     # finding the closest match (cm) for each Mixxx track
     if len(df_mixxx_nm):
@@ -108,31 +100,45 @@ if __name__ == "__main__":
         for idx_mixxx, row in df_mixxx_nm.sort_values(
             by=["artist", "title"]
         ).iterrows():
-            close_indices = get_closest_matches_indices(row, df_custom_nm, MERGE_COLS)
+            print(
+                f"\nFinding the closest match for Mixxx entry {row[MERGE_COLS].to_list()}"
+            )
+            close_indices = get_closest_matches_indices(
+                row,
+                df_custom_nm,
+                MERGE_COLS,
+                THRESHOLD_NAME_SIMILARITY,
+                N_SIMILAR_TRACK_PROPOSAL,
+            )
 
-            print(f"\nClosest match for Mixxx entry {row[MERGE_COLS].tolist()}:")
-            for i, idx in enumerate(close_indices):
-                print(f"\t{i}:\t{df_custom.loc[idx, MERGE_COLS].tolist()}")
-
-            ans_check = [""] + [str(i) for i, _ in enumerate(close_indices)]
-            while True:
-                ans = input(
-                    "Please choose an index or leave empty to skip the operation: "
+            if len(close_indices) == 0:
+                print(
+                    f"\tCould not find a track with similar name with actual setting "
+                    f"of max similarity distance ({THRESHOLD_NAME_SIMILARITY})."
                 )
-                if ans in ans_check:
-                    break
-
-            if not ans:
-                print("Please fix it manually <3")
             else:
-                idx_custom = close_indices[int(ans)]
-                list_idx_cm.append(
-                    [
-                        df_mixxx_nm.loc[idx_mixxx, CUSTOM_DB_LIBRARY_IDX_COLUMN],
-                        df_mixxx_nm.loc[idx_mixxx, CUSTOM_DB_LOCATION_IDX_COLUMN],
-                        df_custom_nm.loc[idx_custom, CUSTOM_DB_PATH_COLUMN],
-                    ]
-                )
+                ans_check = [""]
+                for i, idx in enumerate(close_indices):
+                    # test = df_custom.loc[idx, MERGE_COLS].to_list()
+                    print(f"\t{i}:\t{df_custom.loc[idx, MERGE_COLS].to_list()}")
+                    ans_check.append(str(i))
+
+                while True:
+                    ans = input(
+                        "Please choose an index or leave empty to skip the operation: "
+                    )
+                    if ans in ans_check:
+                        break
+
+                if ans:
+                    idx_custom = close_indices[int(ans)]
+                    list_idx_cm.append(
+                        [
+                            df_mixxx_nm.loc[idx_mixxx, CUSTOM_DB_LIBRARY_IDX_COLUMN],
+                            df_mixxx_nm.loc[idx_mixxx, CUSTOM_DB_LOCATION_IDX_COLUMN],
+                            df_custom_nm.loc[idx_custom, CUSTOM_DB_PATH_COLUMN],
+                        ]
+                    )
 
         df_custom_cm = pd.DataFrame(
             list_idx_cm,

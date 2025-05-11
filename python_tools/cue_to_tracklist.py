@@ -1,19 +1,19 @@
-""" A tool to generate a tracklist for Soundcloud/Youtube/… from a Mixxx's cue file"""
+"""A tool to generate a tracklist for Soundcloud/Youtube/… from a Mixxx's cue file"""
 
 from pathlib import Path
 
 
 class TrackObj:
     def __init__(self):
-        self.performer = "ID"
+        self.artist = "ID"
         self.title = "ID"
-        self.index = "XX:XX"
+        self.time = "XX:XX"
 
     def __str__(self):
         return f"{self.time}\t{self.artist} - {self.title}"
 
 
-def get_tracks_dict_list(cue_file: str) -> list[TrackObj]:
+def get_tracks_dict_list(cue_file: Path) -> list[TrackObj]:
     track_obj_list = []
     with open(cue_file, "r") as fcue:
         for line in fcue:

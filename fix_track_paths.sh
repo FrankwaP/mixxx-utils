@@ -1,10 +1,10 @@
 #!/bin/bash
 # shellcheck source=config.sh
 
-source config.sh
+source $(dirname $0)/python_tools/fix_track_paths_utils/config.sh
 
 # generating the custom database
-python3 clementine_custom_music_db.py
+python3 $(dirname $0)/python_tools/fix_track_paths.py
 test $? -ne 0 && exit
 
 if test -f "$custom_db"; then
@@ -32,7 +32,7 @@ if test -f "$custom_db"; then
     if "$delete_waveforms"; then
         echo "Deleting the waveforms of the modified tracks"
         for wave_id in $(sqlite3  "$temp" < "$get_waveforms_ids_sql"); do
-            rm "$mixxx_waveforms_folder/$wave_id"
+            rm "$mixxx_waveforms_folder/$wave_id" 2> /dev/null
         done
         sqlite3  "$temp" < "$delete_waveforms_sql"
         test $? -ne 0 && exit

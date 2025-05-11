@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from re import sub
 from math import prod
+from re import sub
 
 import pandas as pd
 from jellyfish import levenshtein_distance
 
-from .proto import beats_pb2
+from .proto import beats_pb2  # type:ignore
 
 
 def position_frame_to_sec(frame: int, samplerate: float) -> float:
@@ -31,7 +31,7 @@ class BeatGridInfo:
     bpm: float
 
     def __init__(self, library_row: pd.Series):
-        beatgrid = beats_pb2.BeatGrid()
+        beatgrid = beats_pb2.BeatGrid()  # type: ignore
         beatgrid.ParseFromString(library_row["beats"])
         self.start = beatgrid.first_beat.frame_position
         self.start_sec = beatgrid_frame_to_sec(self.start, library_row["samplerate"])
@@ -52,11 +52,13 @@ def get_closest_matches_indices(
     row: pd.Series,
     search_df: pd.DataFrame,
     col_names: list[str],
-    n_results: int = 3,
+    max_distance: int,
+    n_results: int,
 ) -> pd.Index:
     distance_serie = search_df.apply(
         lambda t: levenshtein_distance_sum(t, row, col_names), axis=1
     )
+    distance_serie = distance_serie[distance_serie <= max_distance]
     distance_serie = distance_serie.sort_values()
     return distance_serie[:n_results].index
 
@@ -74,11 +76,9 @@ def snap_cue_frame(
     return position_sec_to_frame(unscaled_position, samplerate)
 
 
-def bpm_to_beat_interval_sec(bpm: float) -> float:
-    return 1 / (bpm / 60)
-
-
 def guess_inizio_sec(
-    hot_cue_frame_pos: int, framerate: float, bpm: float, beats_per_bar: 4
+    hot_cue_frame_pos: int, samplerate: float, bpm: float, beats_per_bar: int
 ) -> float:
-    interval_sec = bpm_to_beat_interval_sec(bpm)
+    hot_cue_sec = position_frame_to_sec(hot_cue_frame_pos, samplerate)
+    interval_sec = 60 / bpm
+    return hot_cue_sec % (beats_per_bar * interval_sec)

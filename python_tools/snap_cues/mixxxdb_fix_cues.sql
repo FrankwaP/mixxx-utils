@@ -2,7 +2,7 @@
 -- the tracks locations in the Mixxx database.
 -- All the files/tables/colums names are defined in config.py
 
-ATTACH DATABASE "custom_music_db.sqlite" AS CustomMusicDb;
+ATTACH DATABASE "/tmp/custom_music_db.sqlite" AS CustomMusicDb;
 
 UPDATE cues
 SET position = custom_table.position

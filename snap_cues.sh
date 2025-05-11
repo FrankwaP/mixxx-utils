@@ -1,10 +1,10 @@
 #!/bin/bash
 # shellcheck source=config.sh
 
-source config.sh
+source python_tools/snap_cues/config.sh
 
 # generating the custom database
-python3 snap_cues.py || exit
+python3 python_tools/snap_cues/snap_cues.py || exit
 
 if test -f "$custom_db"; then
 

@@ -1,5 +1,5 @@
-from sys import path
 from pathlib import Path
+from sys import path
 
 from tqdm import tqdm
 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
                 cues_idx = df_cues[df_cues["track_id"] == lib_row["id"]]
                 if len(cues_idx) > 0:
                     beatgrid_info = BeatGridInfo(lib_row)
-                    beat_interval_sec = 1 / (beatgrid_info.bpm / 60)
+                    beat_interval_sec = 60 / beatgrid_info.bpm
                     samplerate = lib_row["samplerate"]
                     for idx in cues_idx.index:
                         if df_cues.loc[idx, "hotcue"] + 1 in cfg.IDX_SNAPPED_CUES:
