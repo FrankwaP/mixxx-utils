@@ -69,9 +69,9 @@ We can then remove the build folder:
 rm -rf build
 ```
 
-Or even the sources folder:
+And even the cache folder:
 
 ```bash
 cd ..
-rm -rf mixxx
+rm -rf "${HOME}/.cache/ccache"
 ```
