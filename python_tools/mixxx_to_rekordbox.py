@@ -22,6 +22,7 @@ from utils.music_db_utils import open_mixxx_track_locations
 from utils.track_utils import BeatGridInfo
 from utils.track_utils import guess_inizio_sec
 from utils.track_utils import position_frame_to_sec
+import sqlalchemy.exc
 
 
 # 0 star = "0", 1 star = "51", 2 stars = "102", 3 stars = "153", 4 stars = "204", 5 stars = "255"
@@ -174,8 +175,14 @@ if __name__ == "__main__":
             sys.exit(2)
 
     # %% opening/filtering
+    try:
+        df_lib = open_mixxx_library(missing_tracks=False)
+    except sqlalchemy.exc.NoSuchTableError:
+        print("Fixing foreign key constraint in cues table...")
+        from utils.music_db_utils import fix_cues_foreign_key
+        fix_cues_foreign_key(cfg.mixxx_db)
+        df_lib = open_mixxx_library(missing_tracks=False)
 
-    df_lib = open_mixxx_library(missing_tracks=False)
     df_trk_loc = open_mixxx_track_locations()
     df_cues = open_mixxx_cues(only_hot_cues=True)
 
