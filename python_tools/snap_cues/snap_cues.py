@@ -32,19 +32,24 @@ if __name__ == "__main__":
         cues_idx = df_cues[df_cues["track_id"] == lib_row["id"]]
         if len(cues_idx) > 0:
             try:
-                cues_idx = df_cues[df_cues["track_id"] == lib_row["id"]]
-                if len(cues_idx) > 0:
-                    beatgrid_info = BeatGridInfo(lib_row)
-                    beat_interval_sec = 60 / beatgrid_info.bpm
-                    samplerate = lib_row["samplerate"]
-                    for idx in cues_idx.index:
-                        if df_cues.loc[idx, "hotcue"] + 1 in cfg.IDX_SNAPPED_CUES:
-                            df_cues.loc[idx, "position"] = snap_cue_frame(
-                                df_cues.loc[idx, "position"],
-                                samplerate,
-                                beatgrid_info.start_sec,
-                                beat_interval_sec,
-                            )
+                beatgrid_info = BeatGridInfo(lib_row)
+                if beatgrid_info.bpm <= 0:
+                    error_log += (
+                        f"\n Skipping track with invalid BPM ({beatgrid_info.bpm}): "
+                        f"{lib_row['artist']} - {lib_row['title']}"
+                    )
+                    continue
+                    
+                beat_interval_sec = 60 / beatgrid_info.bpm
+                samplerate = lib_row["samplerate"]
+                for idx in cues_idx.index:
+                    if df_cues.loc[idx, "hotcue"] + 1 in cfg.IDX_SNAPPED_CUES:
+                        df_cues.loc[idx, "position"] = snap_cue_frame(
+                            df_cues.loc[idx, "position"],
+                            samplerate,
+                            beatgrid_info.start_sec,
+                            beat_interval_sec,
+                        )
 
             except TypeError:
                 error_log += (

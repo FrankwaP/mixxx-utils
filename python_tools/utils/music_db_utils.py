@@ -9,6 +9,7 @@ from typing import Tuple
 from urllib.parse import unquote
 
 import pandas as pd
+import sqlalchemy
 
 from .config import MIXXX_DB
 
@@ -29,7 +30,9 @@ def open_table_as_df(db_path: str, table_name: str) -> pd.DataFrame:
 
 
 def quit_if_duplicates(df: pd.DataFrame) -> None:
-    df_dup = df[df.duplicated(MERGE_COLS)]
+    # Filter out STEM tracks before checking for duplicates
+    df_no_stem = df[~df["comment"].str.contains("STEM", case=False, na=False)]
+    df_dup = df_no_stem[df_no_stem.duplicated(MERGE_COLS)]
     if len(df_dup):
         print(
             f"""Duplicated {MERGE_COLS} found!
@@ -41,8 +44,10 @@ def quit_if_duplicates(df: pd.DataFrame) -> None:
 
 
 def hint_duplicates(df: pd.DataFrame) -> None:
+    # Filter out STEM tracks before checking for duplicates
     df = df[df["mixxx_deleted"] == 0]  # not actually "deleted" but hidden
-    df_dup = df[df.duplicated(NOT_CRITICAL_DUP_COLS)]
+    df_no_stem = df[~df["comment"].str.contains("STEM", case=False, na=False)]
+    df_dup = df_no_stem[df_no_stem.duplicated(NOT_CRITICAL_DUP_COLS)]
     if len(df_dup):
         print(
             """Duplicated artist/title found that are not hidden!
@@ -77,9 +82,63 @@ def open_mixxx_library(
     return df_lib[df_lib["location"].isin(id_loc)]
 
 
+def fix_foreign_key_constraints(db_path: str) -> None:
+    """Fix incorrect foreign key constraints in the database."""
+    # Expand environment variables in the path
+    db_path = expandvars(db_path)
+    print(f"Fixing foreign key constraints in database: {db_path}")
+    
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+    
+    # First disable foreign key checks
+    cursor.execute("PRAGMA foreign_keys = OFF;")
+    
+    # Get all tables that might have foreign keys to library_old
+    cursor.execute("""
+        SELECT name FROM sqlite_master 
+        WHERE type='table' 
+        AND sql LIKE '%REFERENCES%library_old%';
+    """)
+    tables_to_fix = [row[0] for row in cursor.fetchall()]
+    
+    for table in tables_to_fix:
+        print(f"Fixing foreign key constraints in table: {table}")
+        # Get the table schema
+        cursor.execute(f"SELECT sql FROM sqlite_master WHERE type='table' AND name='{table}';")
+        schema = cursor.fetchone()[0]
+        
+        # Create new table with corrected references
+        new_schema = schema.replace('REFERENCES "library_old"', 'REFERENCES "library"')
+        new_table = f"{table}_new"
+        
+        # Create new table
+        cursor.execute(new_schema.replace(table, new_table))
+        
+        # Copy data
+        cursor.execute(f"INSERT INTO {new_table} SELECT * FROM {table};")
+        
+        # Drop old table and rename new one
+        cursor.execute(f"DROP TABLE {table};")
+        cursor.execute(f"ALTER TABLE {new_table} RENAME TO {table};")
+    
+    # Re-enable foreign key checks
+    cursor.execute("PRAGMA foreign_keys = ON;")
+    
+    # Commit changes and close connection
+    connection.commit()
+    connection.close()
+
+
 def open_mixxx_cues(only_hot_cues) -> pd.DataFrame:
     print(f"Openning the Mixxx cues from {MIXXX_DB}.")
-    df = open_table_as_df(MIXXX_DB, "cues")
+    try:
+        df = open_table_as_df(MIXXX_DB, "cues")
+    except sqlalchemy.exc.NoSuchTableError:
+        print("Fixing foreign key constraints...")
+        fix_foreign_key_constraints(MIXXX_DB)
+        df = open_table_as_df(MIXXX_DB, "cues")
+    
     if only_hot_cues:
         df = df[df["hotcue"] >= 0]
     return df
@@ -130,7 +189,12 @@ def _open_mixxx_playlists(filter_hidden: bool) -> pd.DataFrame:
 
 def _open_mixxx_playlist_tracks() -> pd.DataFrame:
     print(f"Openning the Mixxx playlist tracks from {MIXXX_DB}.")
-    df = open_table_as_df(MIXXX_DB, "PlaylistTracks")
+    try:
+        df = open_table_as_df(MIXXX_DB, "PlaylistTracks")
+    except sqlalchemy.exc.NoSuchTableError:
+        print("Fixing foreign key constraints...")
+        fix_foreign_key_constraints(MIXXX_DB)
+        df = open_table_as_df(MIXXX_DB, "PlaylistTracks")
     return df
 
 
