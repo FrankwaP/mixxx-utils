@@ -27,6 +27,46 @@ import sqlalchemy.exc
 
 # 0 star = "0", 1 star = "51", 2 stars = "102", 3 stars = "153", 4 stars = "204", 5 stars = "255"
 RATING_MAPING = {0: 0, 1: 51, 2: 102, 3: 153, 4: 204, 5: 255}
+
+# Rekordbox color palette (hex values)
+REKORDBOX_COLORS = {
+    (255, 0, 0): "0xFF0000",     # Red
+    (255, 165, 0): "0xFFA500",   # Orange
+    (255, 255, 0): "0xFFFF00",   # Yellow
+    (0, 255, 0): "0x00FF00",     # Green
+    (37, 253, 233): "0x25FDE9",  # Aqua
+    (0, 0, 255): "0x0000FF",     # Blue
+    (102, 0, 153): "0x660099",   # Purple
+    (255, 0, 127): "0xFF007F",   # Pink
+}
+
+def rgb_to_rekordbox_color(rgb_value: int | float) -> str:
+    """Convert Mixxx RGB color to Rekordbox hex color code."""
+    if rgb_value is None or pd.isna(rgb_value):
+        return None
+    
+    # Convert to integer if it's a float
+    rgb_value = int(rgb_value)
+    
+    # Extract RGB components
+    r = (rgb_value >> 16) & 0xFF
+    g = (rgb_value >> 8) & 0xFF
+    b = rgb_value & 0xFF
+    
+    # Find closest Rekordbox color
+    min_distance = float('inf')
+    closest_color = None
+    
+    for rb_rgb, rb_hex in REKORDBOX_COLORS.items():
+        distance = ((r - rb_rgb[0]) ** 2 + 
+                   (g - rb_rgb[1]) ** 2 + 
+                   (b - rb_rgb[2]) ** 2)
+        if distance < min_distance:
+            min_distance = distance
+            closest_color = rb_hex
+    
+    return closest_color
+
 SUFFIX_LIB = "_lib"
 SUFFIX_LOC = "_loc"
 
@@ -122,6 +162,17 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
         "SampleRate": trk_row["samplerate"],
         "Rating": RATING_MAPING[trk_row["rating"]],
     }
+    
+    # Add comment if present
+    if "comment" in trk_row and is_non_empty_string(trk_row["comment"]):
+        attrib["Comments"] = trk_row["comment"]
+    
+    # Add color if present
+    if "color" in trk_row and trk_row["color"] is not None:
+        rekordbox_color = rgb_to_rekordbox_color(trk_row["color"])
+        if rekordbox_color is not None:
+            attrib["Colour"] = rekordbox_color
+    
     return get_elem("TRACK", attrib)
 
 
@@ -182,6 +233,10 @@ if __name__ == "__main__":
         from utils.music_db_utils import fix_cues_foreign_key
         fix_cues_foreign_key(cfg.mixxx_db)
         df_lib = open_mixxx_library(missing_tracks=False)
+
+    # Filter out tracks with "STEM" in comments
+    df_lib = df_lib[~df_lib["comment"].str.contains("STEM", case=False, na=False)]
+    print(f"Filtered out {len(df_lib)} tracks with STEM in comments")
 
     df_trk_loc = open_mixxx_track_locations()
     df_cues = open_mixxx_cues(only_hot_cues=True)
