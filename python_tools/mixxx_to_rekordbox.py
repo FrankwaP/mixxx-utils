@@ -1,27 +1,26 @@
 import logging
 import sys
 from pathlib import Path
-from shutil import copyfile
 from typing import Generator
 from urllib.parse import quote
 from xml.etree import ElementTree as ET
 
-import mixxx_to_rekordbox_utils.config as cfg
+import python_tools.mixxx_to_rekordbox_utils.config as cfg
 import pandas as pd
-from mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
-from mixxx_to_rekordbox_utils.xml_utils import AttribDict
-from mixxx_to_rekordbox_utils.xml_utils import get_elem
+from python_tools.mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
+from python_tools.mixxx_to_rekordbox_utils.xml_utils import AttribDict
+from python_tools.mixxx_to_rekordbox_utils.xml_utils import get_elem
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
-from utils.key_utils import key_id_to_lancelot
-from utils.misc import confirm_config
-from utils.music_db_utils import open_mixxx_cues
-from utils.music_db_utils import open_mixxx_library
-from utils.music_db_utils import open_mixxx_playlists_with_tracks
-from utils.music_db_utils import open_mixxx_track_locations
-from utils.track_utils import BeatGridInfo
-from utils.track_utils import guess_inizio_sec
-from utils.track_utils import position_frame_to_sec
+from python_tools.utils.key_utils import key_id_to_lancelot
+from python_tools.utils.misc import confirm_config
+from python_tools.utils.music_db_utils import open_mixxx_cues
+from python_tools.utils.music_db_utils import open_mixxx_library
+from python_tools.utils.music_db_utils import open_mixxx_playlists_with_tracks
+from python_tools.utils.music_db_utils import open_mixxx_track_locations
+from python_tools.utils.track_utils import BeatGridInfo
+from python_tools.utils.track_utils import guess_inizio_sec
+from python_tools.utils.track_utils import position_frame_to_sec
 
 
 # 0 star = "0", 1 star = "51", 2 stars = "102", 3 stars = "153", 4 stars = "204", 5 stars = "255"
