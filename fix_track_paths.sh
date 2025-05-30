@@ -4,7 +4,7 @@
 source $(dirname $0)/python_tools/fix_track_paths_utils/config.sh
 
 # generating the custom database
-python3 $(dirname $0)/python_tools/fix_track_paths.py
+python -m python_tools.fix_track_paths
 test $? -ne 0 && exit
 
 if test -f "$custom_db"; then

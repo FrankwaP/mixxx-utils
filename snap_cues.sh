@@ -4,7 +4,7 @@
 source python_tools/snap_cues/config.sh
 
 # generating the custom database
-python3 python_tools/snap_cues/snap_cues.py || exit
+python3 -m python_tools.snap_cues.snap_cues || exit
 
 if test -f "$custom_db"; then
 

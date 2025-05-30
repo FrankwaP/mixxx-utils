@@ -1,0 +1,6 @@
+-r requirements-pip.txt
+
+types-protobuf
+pandas-stubs
+types-tqdm
+pre-commit

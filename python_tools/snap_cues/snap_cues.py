@@ -1,26 +1,19 @@
-from pathlib import Path
-from sys import path
-
 from tqdm import tqdm
 
-path.append(Path(__file__).parent.parent.as_posix())  # ugly tricks but works fine :-p
-
-from utils.music_db_utils import (
+from python_tools.utils.music_db_utils import (
     open_mixxx_library,
     open_mixxx_cues,
     write_df_to_table,
 )
 
-from utils.track_utils import (
+from python_tools.utils.track_utils import (
     BeatGridInfo,
-    position_frame_to_sec,
-    position_sec_to_frame,
     snap_cue_frame,
 )
 
-from utils.misc import confirm_config
+from python_tools.utils.misc import confirm_config
 
-import config as cfg
+import python_tools.snap_cues.config as cfg
 
 
 if __name__ == "__main__":

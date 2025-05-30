@@ -2,13 +2,13 @@ from pathlib import Path
 from sys import exit
 
 import pandas as pd
-from utils.music_db_utils import file_url_to_path
-from utils.music_db_utils import MERGE_COLS
-from utils.music_db_utils import open_mixxx_library
-from utils.music_db_utils import open_table_as_df
-from utils.music_db_utils import write_df_to_table
-from utils.track_utils import get_closest_matches_indices
-from utils.track_utils import remove_feat
+from python_tools.utils.music_db_utils import file_url_to_path
+from python_tools.utils.music_db_utils import MERGE_COLS
+from python_tools.utils.music_db_utils import open_mixxx_library
+from python_tools.utils.music_db_utils import open_table_as_df
+from python_tools.utils.music_db_utils import write_df_to_table
+from python_tools.utils.track_utils import get_closest_matches_indices
+from python_tools.utils.track_utils import remove_feat
 
 from .config import CLEM_DB
 from .config import CUSTOM_DB
