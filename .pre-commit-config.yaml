@@ -13,6 +13,7 @@ repos:
     -   id: mixed-line-ending
         args: [--fix=lf]
     -   id: check-merge-conflict
+    -   id: no-commit-to-branch
 -   repo: https://github.com/psf/black-pre-commit-mirror
     rev: 25.1.0
     hooks:
@@ -21,6 +22,10 @@ repos:
     rev: v1.15.0
     hooks:
     -   id: mypy
+-   repo: https://github.com/pycqa/flake8
+    rev: 3.8.3
+    hooks:
+    -   id: flake8
 # -   repo: https://github.com/sqlfluff/sqlfluff
 #     rev: 3.0.7
 #     hooks:
