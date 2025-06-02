@@ -10,14 +10,13 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-added-large-files
     -   id: trailing-whitespace
-      #-   repo: https://github.com/asottile/reorder-python-imports
-  #    rev: v3.14.0
-      #    hooks:
-#    -   id: reorder-python-imports
--   repo: https://github.com/psf/black
+    -   id: mixed-line-ending
+        args: [--fix=lf]
+    -   id: check-merge-conflict
+-   repo: https://github.com/psf/black-pre-commit-mirror
     rev: 25.1.0
     hooks:
-    -   id: black-jupyter
+      - id: black
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.15.0
     hooks:
