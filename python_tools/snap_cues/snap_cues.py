@@ -32,7 +32,7 @@ if __name__ == "__main__":
                         f"{lib_row['artist']} - {lib_row['title']}"
                     )
                     continue
-                    
+
                 beat_interval_sec = 60 / beatgrid_info.bpm
                 samplerate = lib_row["samplerate"]
                 for idx in cues_idx.index:

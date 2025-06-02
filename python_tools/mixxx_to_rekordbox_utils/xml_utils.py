@@ -1,9 +1,8 @@
-from typing import Mapping
-from typing import Optional
+from typing import Optional, MutableMapping, Any
 from xml.etree import ElementTree as ET
 
 
-AttribDict = Mapping[str, object]
+AttribDict = MutableMapping[str, Any]
 
 
 def stringify_dict(d: AttribDict) -> dict[str, str]:

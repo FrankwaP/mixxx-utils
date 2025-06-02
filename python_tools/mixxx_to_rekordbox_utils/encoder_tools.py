@@ -45,7 +45,6 @@ def get_offset_mp3(
     check_mp3_decoder_value(mp3_decoder)
     #
     case = get_case_mp3(audiofile)
-    offset = 0
     if mp3_decoder == "MAD":
         if case == "A" or case == "D":
             return 26
