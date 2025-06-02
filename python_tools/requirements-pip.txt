@@ -1,3 +1,6 @@
 eyed3>=0.9
 protobuf
-types-protobuf
+pandas
+jellyfish
+tqdm
+sqlalchemy
