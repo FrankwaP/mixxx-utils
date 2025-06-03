@@ -1,15 +1,14 @@
-import sqlite3
 import sys
-from os.path import exists
-from os.path import expandvars
+from shutil import copy
+from os.path import exists, expandvars
 from pathlib import Path
-from typing import Final
-from typing import Literal
-from typing import Tuple
-from urllib.parse import unquote
+from typing import Final, Literal, Tuple
+from time import strftime
 
+from urllib.parse import unquote
+import sqlite3
 import pandas as pd
-import sqlalchemy
+from sqlalchemy.exc import NoSuchTableError
 
 from .config import MIXXX_DB
 
@@ -27,10 +26,20 @@ NOT_CRITICAL_DUP_COLS: Final[list[str]] = ["artist", "title"]
 
 def open_table_as_df(db_path: str, table_name: str) -> pd.DataFrame:
     try:
-        # TODO: move the try/except straight into open_mixxx_library
         return pd.read_sql_table(table_name, db_path_to_url(db_path))
-    except sqlalchemy.exc.NoSuchTableError:
-        print("Fixing foreign key constraint in cues table...")
+    except NoSuchTableError:
+        answer = input(
+            "The Mixxx database cannot be opened and we must fix the foreign key constraints...\n"
+            "A backup file will be created.\n\n"
+            "Are you OK with that? (y/*)"
+        )
+        if answer != "y":
+            print("There's a SQL file to help you do it manually, if you want...")
+            sys.exit()
+        now = strftime("%y%m%d.%H%M%S")
+        backup = Path(db_path + ".bak." + now).resolve()
+        copy(db_path, backup)
+        print(f"The backup is: {backup}")
         fix_foreign_key_constraints(db_path)
         return pd.read_sql_table(table_name, db_path_to_url(db_path))
 
@@ -142,13 +151,7 @@ def fix_foreign_key_constraints(db_path: str) -> None:
 
 def open_mixxx_cues(only_hot_cues) -> pd.DataFrame:
     print(f"Openning the Mixxx cues from {MIXXX_DB}.")
-    try:
-        df = open_table_as_df(MIXXX_DB, "cues")
-    except sqlalchemy.exc.NoSuchTableError:
-        print("Fixing foreign key constraints...")
-        fix_foreign_key_constraints(MIXXX_DB)
-        df = open_table_as_df(MIXXX_DB, "cues")
-
+    df = open_table_as_df(MIXXX_DB, "cues")
     if only_hot_cues:
         df = df[df["hotcue"] >= 0]
     return df
@@ -199,13 +202,7 @@ def _open_mixxx_playlists(filter_hidden: bool) -> pd.DataFrame:
 
 def _open_mixxx_playlist_tracks() -> pd.DataFrame:
     print(f"Openning the Mixxx playlist tracks from {MIXXX_DB}.")
-    try:
-        df = open_table_as_df(MIXXX_DB, "PlaylistTracks")
-    except sqlalchemy.exc.NoSuchTableError:
-        print("Fixing foreign key constraints...")
-        fix_foreign_key_constraints(MIXXX_DB)
-        df = open_table_as_df(MIXXX_DB, "PlaylistTracks")
-    return df
+    return open_table_as_df(MIXXX_DB, "PlaylistTracks")
 
 
 def _open_mixxx_crates(filter_hidden: bool) -> pd.DataFrame:
