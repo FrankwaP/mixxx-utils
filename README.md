@@ -9,7 +9,7 @@ I can totally do it, but unless someone shows an interest, I'm going to play the
 **IMPORTANT**: As of May 4th 2024, Mixxx's database needs to be fixed so the Python tools work.
 Please see the[fix_mixxx_db.md](fix_mixxx_db.md) file.
 
-**NOTE TO DEVELOPPERS**: There is an additionnal requirements file (`python_tools/requirements-pip-dev.txt`).  
+**NOTE TO DEVELOPERS**: There is an additionnal requirements file (`python_tools/requirements-pip-dev.txt`).  
 After installing the requirements, please run `pre-commit install` to prepare the differents "hooks" that will be executed when you commit stuff.
 **Watch out** as one hooks enforces to not commit on the `main` branch so start by create a branch to work in it!  
 
