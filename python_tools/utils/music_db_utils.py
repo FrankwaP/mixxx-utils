@@ -58,20 +58,6 @@ def quit_if_duplicates(df: pd.DataFrame) -> None:
         sys.exit(1138)
 
 
-def hint_duplicates(df: pd.DataFrame) -> None:
-    # Filter out STEM tracks before checking for duplicates
-    df = df[df["mixxx_deleted"] == 0]  # not actually "deleted" but hidden
-    df_no_stem = df[~df["comment"].str.contains("STEM", case=False, na=False)]
-    df_dup = df_no_stem[df_no_stem.duplicated(NOT_CRITICAL_DUP_COLS)]
-    if len(df_dup):
-        print(
-            """Duplicated artist/title found that are not hidden!
-            Not critical, just suboptimal...
-            """
-        )
-        print(df_dup[NOT_CRITICAL_DUP_COLS])
-
-
 def open_mixxx_library(
     existing_tracks: bool = True, missing_tracks: bool = True
 ) -> pd.DataFrame:
@@ -83,7 +69,6 @@ def open_mixxx_library(
     df_lib = open_table_as_df(MIXXX_DB, "library")
     df_lib[MERGE_COLS] = df_lib[MERGE_COLS].fillna("")
     quit_if_duplicates(df_lib)
-    # hint_duplicates(df_lib)
     if existing_tracks and missing_tracks:
         return df_lib
     # else we need to know which tracks exist/miss
