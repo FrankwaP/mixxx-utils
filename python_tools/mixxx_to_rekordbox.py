@@ -76,7 +76,15 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
         inizio = beatgrid_info.start_sec
     else:
         cue_point = cue_rows[cfg.index_cue_bar_start - 1 == cue_rows["hotcue"]]
-        assert len(cue_point) == 1
+        if len(cue_point) != 1:
+            logging.warning(
+                "More than one hotcue #%d has been found for file %s\n.",
+                "The first one has been kept to decide the start of the bars"
+                "… but you might want to re-create it!",
+                cfg.index_cue_bar_start,
+                trk_row["location"],
+            )
+            cue_point = cue_point[0]
         inizio = guess_inizio_sec(
             cue_point.iloc[0]["position"],
             trk_row["samplerate"],
@@ -99,7 +107,7 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
         cfg.mixxx_library_folder, cfg.rekordbox_library_folder
     )
     if cfg.rekordbox_library_folder not in final_location:
-        logging.warning("This track is not in the Mixxx library folder:", location)
+        logging.warning("This track is not in the Mixxx library folder: %s", location)
 
     if not is_non_empty_string(trk_row["artist"]):
         logging.warning("Artist name is empty for file: %s", location)
