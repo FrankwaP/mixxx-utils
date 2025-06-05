@@ -4,3 +4,4 @@ types-protobuf
 pandas-stubs
 types-tqdm
 pre-commit
+flake8-bugbear
