@@ -20,8 +20,9 @@ def beatgrid_frame_to_sec(frame: int, samplerate: float) -> float:
     return frame / samplerate
 
 
-def beatgrid_sec_to_frame(time_sec: float, samplerate: float) -> int:
-    return round(time_sec * samplerate)
+# YAGNI
+# def beatgrid_sec_to_frame(time_sec: float, samplerate: float) -> int:
+#     return round(time_sec * samplerate)
 
 
 @dataclass

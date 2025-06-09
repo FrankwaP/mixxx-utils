@@ -17,12 +17,6 @@ from .config import MIXXX_DB
 # due to a faile UNIQUE constraint
 MERGE_COLS: Final[list[str]] = ["artist", "album", "title"]
 
-# columns used to tell the user when there is a duplicate track
-# from two different albums
-# this is not critical (won't crash the database)
-# it's just suboptimal and I hate that
-NOT_CRITICAL_DUP_COLS: Final[list[str]] = ["artist", "title"]
-
 
 def open_table_as_df(db_path: str, table_name: str) -> pd.DataFrame:
     try:
@@ -238,17 +232,18 @@ def db_path_to_url(db_path: str) -> str:
     raise NotImplementedError
 
 
-def list_table_names(db_path: str) -> list[str]:
-    connection = sqlite3.connect(db_path)
-    cursor = connection.cursor()
-    command = """
-    SELECT name FROM sqlite_master
-      WHERE type='table';
-    """
-    cursor.execute(command)
-    tables_names = cursor.fetchall()
-    tables_names = [i[0] for i in tables_names]
-    return tables_names
+# YAGNI
+# def list_table_names(db_path: str) -> list[str]:
+#     connection = sqlite3.connect(db_path)
+#     cursor = connection.cursor()
+#     command = """
+#     SELECT name FROM sqlite_master
+#       WHERE type='table';
+#     """
+#     cursor.execute(command)
+#     tables_names = cursor.fetchall()
+#     tables_names = [i[0] for i in tables_names]
+#     return tables_names
 
 
 def write_df_to_table(

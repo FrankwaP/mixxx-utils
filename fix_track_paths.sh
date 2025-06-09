@@ -1,7 +1,8 @@
 #!/bin/bash
 # shellcheck source=config.sh
 
-source $(dirname $0)/python_tools/fix_track_paths_utils/config.sh
+cd $(dirname $0)
+source python_tools/fix_track_paths_utils/config.sh
 
 # generating the custom database
 python -m python_tools.fix_track_paths
