@@ -1,3 +1,4 @@
+exclude: python_tools/utils/proto/.*
 repos:
 -   repo: meta
     hooks:
@@ -29,9 +30,8 @@ repos:
 # -   repo: https://github.com/sqlfluff/sqlfluff
 #     rev: 3.0.7
 #     hooks:
-#     -   id: sqlfluff-fix
-#         files: '.*\.sql'
-#         args: [--dialect, sqlite, --exclude-rules, CP02]
+#     -   id: sqlfluff-lint
+#         args: [--dialect, sqlite] # , --exclude-rules, CP02]
 -   repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.44.0
     hooks:
