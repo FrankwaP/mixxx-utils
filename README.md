@@ -3,15 +3,15 @@
 This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx) and its database.
 They are stored in language specific "*language*-tools" folders, along with specific README.md files.
 
-They work on Linux. For Windows there might be a few adaptations needed to make it work…
-I can totally do it, but unless someone shows an interest, I'm going to play the [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it) card :-)
+They work on Linux. For Windows there might be a few adaptations needed to make it work...
+I can totally do it, but unless someone shows an interest, Im going to play the [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it) card :-)
 
 **IMPORTANT**: As of May 4th 2024, Mixxx's database needs to be fixed so the Python tools work.
 Please see the[fix_mixxx_db.md](fix_mixxx_db.md) file.
 
-**NOTE TO DEVELOPERS**: There is an additionnal requirements file (`python_tools/requirements-pip-dev.txt`).  
+**NOTE TO DEVELOPERS**: There is an additionnal requirements file (`python_tools/requirements-pip-dev.txt`).
 After installing the requirements, please run `pre-commit install` to prepare the differents "hooks" that will be executed when you commit stuff.
-**Watch out** as one hooks enforces to not commit on the `main` branch so start by create a branch to work in it!  
+**Watch out** as one hooks enforces to not commit on the `main` branch so start by create a branch to work in it!
 
 ## Python tools
 

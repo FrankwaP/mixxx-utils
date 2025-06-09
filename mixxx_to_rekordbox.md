@@ -18,11 +18,13 @@ While Rekordbox can run on Wine [with a few tricks](https://erhan.es/blog/runnin
 I have not find how to make it recognize a USB key as an export device.
 
 So that left you with two options:
+
 1. having your music on a shared FAT/NTFS partition
 2. having your music on an external drive
 
 In both cases, but especially with the 2nd option, **make sure that Windows will give the same letter to the drive each time!**
 Else all your songs will be considered as new ones, and Rekordbox will:
+
 - analyse them once again: you'll end up with one analysis for "D:\some_track" and one analysis for "E:\some_track".
 - export them to your USB key once again, copying all the files for "E:\some_track" and deleting all the files for "D:/some_track".
 
