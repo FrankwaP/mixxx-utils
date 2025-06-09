@@ -1,6 +1,7 @@
 #!/bin/bash
 # shellcheck source=config.sh
 
+cd $(dirname $0)
 source python_tools/snap_cues/config.sh
 
 # generating the custom database
