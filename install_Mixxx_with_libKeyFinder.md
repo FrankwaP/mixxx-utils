@@ -42,17 +42,22 @@ git merge TO_BE_MERGED
 git branch -d TO_BE_MERGED
 ```
 
-### Prepare the installation
+### Prepare the installation (on Debian/Ubuntu)
 
 Then we use the [recommended commands](https://github.com/mixxxdj/mixxx/wiki/Compiling-On-Linux).
 
 ```bash
 source tools/debian_buildenv.sh setup
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -S . -B build
-cmake --build build --parallel $(nproc)
+
+# chose if you want all the processors to be used or to leave one
+# this will not only affect the build, but the track analysis in Mixxx
+# NPROC=$(nproc) # all the processor
+NPROC=$(( $(nproc) - ($(nproc)!=1) )) # all but one processor (except if you have only one processor)
+cmake --build build --parallel $NPROC
 ```
 
-On Debian/Ubuntu, we can skip the final `make install` step and instead…
+Then we can skip the final `make install` step and instead…
 
 ### Generate a package to install it
 
