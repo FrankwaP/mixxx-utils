@@ -69,19 +69,19 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
     bpm = trk_row["bpm"]
     assert isinstance(bpm, float)
     if (
-        cfg.index_cue_bar_start <= 0
-        or cfg.index_cue_bar_start - 1 not in cue_rows["hotcue"].values
+        cfg.INDEX_CUE_BAR_START <= 0
+        or cfg.INDEX_CUE_BAR_START - 1 not in cue_rows["hotcue"].values
     ):
         beatgrid_info = BeatGridInfo(trk_row)
         inizio = beatgrid_info.start_sec
     else:
-        cue_point = cue_rows[cfg.index_cue_bar_start - 1 == cue_rows["hotcue"]]
+        cue_point = cue_rows[cfg.INDEX_CUE_BAR_START - 1 == cue_rows["hotcue"]]
         if len(cue_point) != 1:
             logging.warning(
                 "More than one hotcue #%d has been found for file %s\n.",
                 "The first one has been kept to decide the start of the bars"
                 "… but you might want to re-create it!",
-                cfg.index_cue_bar_start,
+                cfg.INDEX_CUE_BAR_START,
                 trk_row["location"],
             )
             cue_point = cue_point[0]
@@ -89,13 +89,13 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
             cue_point.iloc[0]["position"],
             trk_row["samplerate"],
             bpm,
-            cfg.beats_per_bar,
+            cfg.BEATS_PER_BAR,
         )
 
     attrib: AttribDict = {
         "Inizio": inizio + offset_start_beatgrid_ms / 1000,
         "Bpm": bpm,
-        "Metro": f"{cfg.beats_per_bar}/{cfg.beats_per_bar}",
+        "Metro": f"{cfg.BEATS_PER_BAR}/{cfg.BEATS_PER_BAR}",
         "Battito": "1",
     }
     return get_elem("TEMPO", attrib)
@@ -104,9 +104,9 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
 def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
     location = trk_row["location" + SUFFIX_LOC]
     final_location = location.replace(
-        cfg.mixxx_library_folder, cfg.rekordbox_library_folder
+        cfg.MIXXX_LIBRARY_FOLDER, cfg.REKORDBOX_LIBRARY_FOLDER
     )
-    if cfg.rekordbox_library_folder not in final_location:
+    if cfg.REKORDBOX_LIBRARY_FOLDER not in final_location:
         logging.warning("This track is not in the Mixxx library folder: %s", location)
 
     if not is_non_empty_string(trk_row["artist"]):
@@ -187,9 +187,9 @@ if __name__ == "__main__":
     # %% checking the config
     confirm_config(cfg)
 
-    if cfg.index_cue_bar_start != 0:
+    if cfg.INDEX_CUE_BAR_START != 0:
         print(
-            f"The hot cue #{cfg.index_cue_bar_start} will be used to detect the start of the bars."
+            f"The hot cue #{cfg.INDEX_CUE_BAR_START} will be used to detect the start of the bars."
         )
         answer = input(
             "Are you sure all these hot cues are snapped to the beatgrid (y/*)? : "
@@ -203,10 +203,10 @@ if __name__ == "__main__":
     df_cues = open_mixxx_cues(only_hot_cues=True)
     df_pls, df_pls_trk = open_mixxx_playlists_with_tracks(
         filter_hidden=True,
-        add_crates_as_playlist=cfg.add_crates_as_playlist,
-        crate_suffix=cfg.crates_suffix,
+        add_crates_as_playlist=cfg.ADD_CRATES_AS_PLAYLIST,
+        crate_suffix=cfg.CRATES_SUFFIX,
     )
-    if cfg.export_only_tracks_in_playlists:
+    if cfg.EXPORT_ONLY_TRACKS_IN_PLAYLISTS:
         df_lib = df_lib[df_lib["id"].isin(df_pls_trk["track_id"])]
 
     # Filter out tracks with "STEM" in comments
@@ -239,7 +239,7 @@ if __name__ == "__main__":
             track_cues = df_cues[df_cues["track_id"] == track_row["id" + SUFFIX_LIB]]
             rate = track_row["samplerate"]
             export_offset_ms = get_offset_ms(
-                track_row["location" + SUFFIX_LOC], cfg.mp3_decoder
+                track_row["location" + SUFFIX_LOC], cfg.MP3_DECODER
             )
             for _, cue_row in track_cues.iterrows():
                 assert rate
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     tree = ET.ElementTree(element=root_xml)
     ET.indent(tree, space="  ", level=0)
 
-    rek_fil = Path(cfg.mixxx_library_folder, cfg.rekordbox_xml_file)
+    rek_fil = Path(cfg.MIXXX_LIBRARY_FOLDER, cfg.REKORDBOX_XML_FILE)
     with open(rek_fil, "w", encoding="utf-8") as fxml:
         fxml.write('<?xml version="1.0" encoding="UTF-8"?>')
     tree.write(rek_fil, encoding="unicode")

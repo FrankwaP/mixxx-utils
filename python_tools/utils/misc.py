@@ -1,7 +1,7 @@
+import re
 from inspect import getmembers
 from sys import exit
 from types import ModuleType
-
 
 # 0 star = "0", 1 star = "51", 2 stars = "102", 3 stars = "153", 4 stars = "204", 5 stars = "255"
 RATING_MAPING = {0: 0, 1: 51, 2: 102, 3: 153, 4: 204, 5: 255}
@@ -38,9 +38,7 @@ KEY_ID_LANCELOT = {
 
 def confirm_config(config_module: ModuleType):
     members = getmembers(config_module)
-    params = sorted(
-        i for i in members if not i[0].startswith("__") and "." not in str(i[1])
-    )
+    params = sorted(i for i in members if re.match("^[A-Z][A-Z0-9_]+$", i[0]))
     if params:
         print(
             "The following parameters have been defined in the "

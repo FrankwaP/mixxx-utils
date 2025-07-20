@@ -1,0 +1,36 @@
+[mixxx]
+
+mixxx_db = "/home/benselme/.mixxx/mixxxdb.sqlite"
+mixxx_folder = "/home/benselme/.mixxx/"
+
+[mixxx_to_rekordbox]
+rekordbox_xml_file = "rekordbox_output.xml"
+mixxx_library_folder = "/mnt/data/mixxx_test"
+rekordbox_library_folder = "E:/DNB"
+export_only_tracks_in_playlists = true
+
+crates_suffix = "_crates"
+add_crates_as_playlist = true
+beats_per_bar = 4
+index_cue_bar_start = 3
+mp3_decoder = "MAD"
+
+[snap_cues]
+
+custom_db = "/tmp/custom_music_db.sqlite"
+custom_db_table_name = "custom_table"
+idx_snapped_cues = [1, 2, 3, 4, 5, 6, 7, 8]
+
+
+[fix_track_paths_utils]
+
+clem_db = "${HOME}/.config/Clementine/clementine.db"
+custom_db = "/tmp/custom_music_db.sqlite"
+custom_db_table_name = "custom_table"
+custom_db_library_idx_column = "MIXXX_LIBRARY_IDX"
+custom_db_location_idx_column = "MIXXX_LOCATION_IDX"
+custom_db_path_column = "MUSIC_PLAYER_PATH"
+custom_db_filename_column = "MUSIC_PLAYER_FILENAME"
+custom_db_directory_column = "MUSIC_PLAYER_DIRECTORY"
+threshold_name_similarity = 50
+n_similar_track_proposal = 3
