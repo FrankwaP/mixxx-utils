@@ -68,13 +68,14 @@ sudo dpkg -i *.deb
 cd ..
 ```
 
-We can then remove the build folder:
+We can then delete the build folder:
 
 ```bash
 rm -rf build
 ```
 
-And even the cache folder:
+And if your computer is short on memory, you can even delete the cache folder;
+else it is recommended to keep it as this will make the following upgrades faster:
 
 ```bash
 cd ..
