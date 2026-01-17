@@ -64,18 +64,26 @@ Then we can skip the final `make install` step and instead…
 ```bash
 cd build || exit
 cpack -G DEB
-sudo dpkg -i *.deb
+sudo dpkg -i mixxx*.deb
 cd ..
 ```
 
-We can then delete the build folder:
+In case you want to share the installer:
+```bash
+INSTALLER_FOLDER=".."  # pick the one you want
+mv build/mixxx*.deb $INSTALLER_FOLDER 
+```
 
+### (Optionnal) Cleaning
+
+
+If your computer is short on memory, you can delete the build folder:
 ```bash
 rm -rf build
 ```
 
-And if your computer is short on memory, you can even delete the compilation cache folder;
-else it is recommended to keep it as this will make the following upgrades faster:
+You can even delete the compilation cache folder
+(it is recommended to keep it as this will make the following upgrades faster):
 
 ```bash
 cd ..
