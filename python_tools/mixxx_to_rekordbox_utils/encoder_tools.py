@@ -6,7 +6,11 @@ import eyed3.mp3.headers  # type: ignore
 
 
 accepted_mp3_decoders = Literal["MAD", "CoreAudio", "FFmpeg"]
-ACCEPTED_MP3_DECODERS: list[accepted_mp3_decoders] = ["MAD", "CoreAudio", "FFmpeg"]
+ACCEPTED_MP3_DECODERS: list[accepted_mp3_decoders] = [
+    "MAD",
+    "CoreAudio",
+    "FFmpeg",
+]
 
 eyed3.core.log.setLevel(ERROR)
 eyed3.id3.frames.log.setLevel(ERROR)
@@ -28,7 +32,9 @@ def has_valid_CRC_tag(audiofile: eyed3.mp3.Mp3AudioFile) -> bool:
         return False
 
 
-def get_case_mp3(audiofile: eyed3.mp3.Mp3AudioFile) -> Literal["A", "B", "C", "D"]:
+def get_case_mp3(
+    audiofile: eyed3.mp3.Mp3AudioFile,
+) -> Literal["A", "B", "C", "D"]:
     if not has_xing_info(audiofile):
         return "A"
     elif not has_lame_tag(audiofile):
@@ -66,7 +72,7 @@ def get_offset_mp3(
 def check_mp3_decoder_value(mp3_decoder: str) -> None:
     if mp3_decoder not in ACCEPTED_MP3_DECODERS:
         raise ValueError(
-            "Incorrect value for Mixxx encoder: expecting {ACCEPTED_MP3_DECODERS}"
+            f"Incorrect value for Mixxx encoder: expecting {ACCEPTED_MP3_DECODERS}"
         )
 
 
@@ -76,5 +82,11 @@ def get_offset_ms(track_path: str | Path, mp3_decoder: accepted_mp3_decoders) ->
         return 48
     if path.suffix == ".mp3":
         audiofile = eyed3.load(track_path)
+        if audiofile is None:
+            print(
+                "Could not open the mp3 file to compute the grid offset:",
+                f" {track_path}",
+            )
+            return 0
         return get_offset_mp3(audiofile, mp3_decoder)
     return 0
