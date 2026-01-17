@@ -48,10 +48,12 @@ Then we use the [recommended commands](https://github.com/mixxxdj/mixxx/wiki/Com
 
 ```bash
 source tools/debian_buildenv.sh setup
+# rm -rf build  # this might help if you've had issues with libraries 
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -S . -B build
 
-# chose if you want all the processors to be used or to leave one
-# this will not only affect the build, but the track analysis in Mixxx
+# choose how many processors to use
+# it seems this will not only affect the build, but the track analysis in Mixxx later on
+# NPROC=1
 # NPROC=$(nproc) # all the processor
 NPROC=$(( $(nproc) - ($(nproc)!=1) )) # all but one processor (except if you have only one processor)
 cmake --build build --parallel $NPROC
@@ -59,7 +61,7 @@ cmake --build build --parallel $NPROC
 
 Then we can skip the final `make install` step and instead…
 
-### Generate a package to install it
+### Generate a (Debian/Ubuntu) package to install it
 
 ```bash
 cd build || exit
@@ -71,6 +73,7 @@ cd ..
 We can then remove the build folder:
 
 ```bash
+mv build/*deb ..
 rm -rf build
 ```
 
