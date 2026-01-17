@@ -3,7 +3,6 @@ from sys import exit
 
 import pandas as pd
 from python_tools.utils.music_db_utils import file_url_to_path
-from python_tools.utils.music_db_utils import MERGE_COLS
 from python_tools.utils.music_db_utils import open_mixxx_library
 from python_tools.utils.music_db_utils import open_table_as_df
 from python_tools.utils.music_db_utils import write_df_to_table
@@ -20,6 +19,7 @@ from .config import CUSTOM_DB_PATH_COLUMN
 from .config import CUSTOM_DB_TABLE_NAME
 from .config import N_SIMILAR_TRACK_PROPOSAL
 from .config import THRESHOLD_NAME_SIMILARITY
+from .config import COLS_PERFECT_MATCH, COLS_CLOSE_MATCH
 
 
 def fix_with_clementine_db():
@@ -73,8 +73,8 @@ def fix_with_clementine_db():
         right=df_mixxx,
         how="inner",
         on=None,
-        left_on=MERGE_COLS,
-        right_on=MERGE_COLS,
+        left_on=COLS_PERFECT_MATCH,
+        right_on=COLS_PERFECT_MATCH,
     )
 
     df_custom_final = df_custom_pm
@@ -93,20 +93,20 @@ def fix_with_clementine_db():
         )
 
         # removing the NA values in the columns we are going to use
-        df_mixxx_nm[MERGE_COLS] = df_mixxx_nm[MERGE_COLS].fillna("")
-        df_custom_nm[MERGE_COLS] = df_custom_nm[MERGE_COLS].fillna("")
+        df_mixxx_nm[COLS_CLOSE_MATCH] = df_mixxx_nm[COLS_CLOSE_MATCH].fillna("")
+        df_custom_nm[COLS_CLOSE_MATCH] = df_custom_nm[COLS_CLOSE_MATCH].fillna("")
 
         list_idx_cm = []
         for idx_mixxx, row in df_mixxx_nm.sort_values(
             by=["artist", "title"]
         ).iterrows():
             print(
-                f"\nFinding the closest match for Mixxx entry {row[MERGE_COLS].to_list()}"
+                f"\nFinding the closest match for Mixxx entry {row[COLS_PERFECT_MATCH].to_list()}"
             )
             close_indices = get_closest_matches_indices(
                 row,
                 df_custom_nm,
-                MERGE_COLS,
+                COLS_CLOSE_MATCH,
                 THRESHOLD_NAME_SIMILARITY,
                 N_SIMILAR_TRACK_PROPOSAL,
             )
@@ -120,7 +120,7 @@ def fix_with_clementine_db():
                 ans_check = [""]
                 for i, idx in enumerate(close_indices):
                     # test = df_custom.loc[idx, MERGE_COLS].to_list()
-                    print(f"\t{i}:\t{df_custom.loc[idx, MERGE_COLS].to_list()}")
+                    print(f"\t{i}:\t{df_custom.loc[idx, COLS_PERFECT_MATCH].to_list()}")
                     ans_check.append(str(i))
 
                 while True:
