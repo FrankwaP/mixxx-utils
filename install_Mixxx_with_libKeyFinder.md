@@ -74,7 +74,7 @@ We can then delete the build folder:
 rm -rf build
 ```
 
-And if your computer is short on memory, you can even delete the cache folder;
+And if your computer is short on memory, you can even delete the compilation cache folder;
 else it is recommended to keep it as this will make the following upgrades faster:
 
 ```bash
