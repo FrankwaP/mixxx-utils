@@ -15,7 +15,7 @@ from .config import MIXXX_DB
 # columns used to relate the Mixxx and music player databases
 # also used to detect duplicate entries which would crash the database
 # due to a faile UNIQUE constraint
-MERGE_COLS: Final[list[str]] = ["artist", "album", "title"]
+COLS_FOR_DUP: Final[list[str]] = ["artist", "album", "title"]
 
 
 def open_table_as_df(db_path: str, table_name: str) -> pd.DataFrame:
@@ -41,14 +41,14 @@ def open_table_as_df(db_path: str, table_name: str) -> pd.DataFrame:
 def quit_if_duplicates(df: pd.DataFrame) -> None:
     # Filter out STEM tracks before checking for duplicates
     df_no_stem = df[~df["comment"].str.contains("STEM", case=False, na=False)]
-    df_dup = df_no_stem[df_no_stem.duplicated(MERGE_COLS)]
+    df_dup = df_no_stem[df_no_stem.duplicated(COLS_FOR_DUP)]
     if len(df_dup):
         print(
-            f"""Duplicated {MERGE_COLS} found!
+            f"""Duplicated {COLS_FOR_DUP} found!
             Please open Mixxx and clean them manually <3
             """
         )
-        print(df_dup[MERGE_COLS])
+        print(df_dup[COLS_FOR_DUP])
         sys.exit(1138)
 
 
@@ -61,7 +61,7 @@ def open_mixxx_library(
     # and after the correction we end up with twice the correct path (so... duplicate)
     print(f"Openning the Mixxx library {MIXXX_DB}.")
     df_lib = open_table_as_df(MIXXX_DB, "library")
-    df_lib[MERGE_COLS] = df_lib[MERGE_COLS].fillna("")
+    df_lib[COLS_FOR_DUP] = df_lib[COLS_FOR_DUP].fillna("")
     quit_if_duplicates(df_lib)
     if existing_tracks and missing_tracks:
         return df_lib
