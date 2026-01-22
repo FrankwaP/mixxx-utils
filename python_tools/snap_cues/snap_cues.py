@@ -1,23 +1,24 @@
+from typing import Final
 from tqdm import tqdm
 
+from python_tools import CONFIG
 from python_tools.utils.music_db_utils import (
     open_mixxx_library,
     open_mixxx_cues,
     write_df_to_table,
 )
+from python_tools.utils.track_utils import BeatGridInfo, snap_cue_frame
 
-from python_tools.utils.track_utils import (
-    BeatGridInfo,
-    snap_cue_frame,
-)
-
-from python_tools.utils.misc import confirm_config
-
-import python_tools.snap_cues.config as cfg
+# The names <<MUST>> correspond to the ones defined in
+# python_tools/snap_cues/mixxxdb_fix_cues.sql
+# <<DO NOT>> change them.
+# A more robust solution will be used when Windows users are interested.
+CUSTOM_DB: Final[str] = "/tmp/custom_music_db.sqlite"
+CUSTOM_DB_TABLE_NAME: Final[str] = "custom_table"
 
 
 if __name__ == "__main__":
-    confirm_config(cfg)
+    cfg = CONFIG.snap_cues
     df_lib = open_mixxx_library()
     df_cues = open_mixxx_cues(only_hot_cues=False)
     error_log = ""
@@ -36,7 +37,7 @@ if __name__ == "__main__":
                 beat_interval_sec = 60 / beatgrid_info.bpm
                 samplerate = lib_row["samplerate"]
                 for idx in cues_idx.index:
-                    if df_cues.loc[idx, "hotcue"] + 1 in cfg.IDX_SNAPPED_CUES:
+                    if df_cues.loc[idx, "hotcue"] + 1 in cfg.idx_snapped_cues:
                         df_cues.loc[idx, "position"] = snap_cue_frame(
                             df_cues.loc[idx, "position"],
                             samplerate,
@@ -55,7 +56,7 @@ if __name__ == "__main__":
 
     write_df_to_table(
         df_cues,
-        db_path=cfg.CUSTOM_DB,
-        table_name=cfg.CUSTOM_DB_TABLE_NAME,
+        db_path=CUSTOM_DB,
+        table_name=CUSTOM_DB_TABLE_NAME,
         overwrite=True,
     )

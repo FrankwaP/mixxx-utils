@@ -1,8 +1,30 @@
 #!/bin/bash
 # shellcheck source=config.sh
 
-cd $(dirname $0)
-source python_tools/fix_track_paths_utils/config.sh
+cd "$(dirname "$0")" || exit
+
+sql_folder=python_tools/fix_track_paths_utils/sql
+fix_track_locations_sql=$sql_folder/mixxxdb_fix_tracks_locations.sql
+delete_keys_sql=$sql_folder/mixxxdb_delete_keys.sql
+delete_gains_sql=$sql_folder/mixxxdb_delete_gains.sql
+get_waveforms_ids_sql=$sql_folder/mixxxdb_get_waveforms_ids.sql
+delete_waveforms_sql=$sql_folder/mixxxdb_delete_waveforms.sql
+
+mixxx_db=$(toml get --toml-path python_tools/config.toml mixxx.mixxx_db)
+backup=${mixxx_db}.bak.$(date +%y%m%d%H%M)
+mixxx_waveforms_folder=$(dirname "$mixxx_db")/analysis/
+
+delete_keys=$(toml get --toml-path python_tools/config.toml fix_track_paths.delete_keys)
+delete_gains=$(toml get --toml-path python_tools/config.toml fix_track_paths.delete_gains)
+delete_waveforms=$(toml get --toml-path python_tools/config.toml fix_track_paths.delete_waveforms)
+
+
+# The names <<MUST>> correspond to the ones defined in
+# python_tools/fix_track_paths_utils/clementine_custom_music_db.py
+# <<DO NOT>> change them.
+# A more robust solution will be used when Windows users are interested.
+custom_db=/tmp/custom_music_db.sqlite
+
 
 # generating the custom database
 python -m python_tools.fix_track_paths

@@ -1,5 +1,6 @@
 from pathlib import Path
 from sys import exit
+from typing import Final
 
 import pandas as pd
 from python_tools.utils.music_db_utils import file_url_to_path
@@ -9,20 +10,27 @@ from python_tools.utils.music_db_utils import write_df_to_table
 from python_tools.utils.track_utils import get_closest_matches_indices
 from python_tools.utils.track_utils import remove_feat
 
-from .config import CLEM_DB
-from .config import CUSTOM_DB
-from .config import CUSTOM_DB_DIRECTORY_COLUMN
-from .config import CUSTOM_DB_FILENAME_COLUMN
-from .config import CUSTOM_DB_LIBRARY_IDX_COLUMN
-from .config import CUSTOM_DB_LOCATION_IDX_COLUMN
-from .config import CUSTOM_DB_PATH_COLUMN
-from .config import CUSTOM_DB_TABLE_NAME
-from .config import N_SIMILAR_TRACK_PROPOSAL
-from .config import THRESHOLD_NAME_SIMILARITY
-from .config import COLS_PERFECT_MATCH, COLS_CLOSE_MATCH
+from python_tools import CONFIG
+
+# The names <<MUST>> correspond to the ones defined in
+# python_tools/fix_track_paths_utils/sql/mixxxdb_fix_tracks_locations.sql
+# <<DO NOT>> change them.
+# A more robust solution will be used when Windows users are interested.
+CUSTOM_DB: Final[str] = "/tmp/custom_music_db.sqlite"
+CUSTOM_DB_TABLE_NAME: Final[str] = "custom_table"
+CUSTOM_DB_LIBRARY_IDX_COLUMN: Final[str] = "MIXXX_LIBRARY_IDX"
+CUSTOM_DB_LOCATION_IDX_COLUMN: Final[str] = "MIXXX_LOCATION_IDX"
+CUSTOM_DB_PATH_COLUMN: Final[str] = "MUSIC_PLAYER_PATH"
+CUSTOM_DB_FILENAME_COLUMN: Final[str] = "MUSIC_PLAYER_FILENAME"
+CUSTOM_DB_DIRECTORY_COLUMN: Final[str] = "MUSIC_PLAYER_DIRECTORY"
+COLS_PERFECT_MATCH: Final[list[str]] = ["artist", "album", "title"]
+COLS_CLOSE_MATCH: Final[list[str]] = ["artist", "title"]
 
 
 def fix_with_clementine_db():
+
+    cfg = CONFIG.fix_track_paths_utils
+
     df_mixxx = open_mixxx_library(existing_tracks=False)
     if len(df_mixxx) == 0:
         print("No missing tracks, congratulation!")
@@ -35,7 +43,7 @@ def fix_with_clementine_db():
         print("Well do it <3")
         exit()
 
-    df_custom = open_table_as_df(CLEM_DB, "songs")
+    df_custom = open_table_as_df(cfg.clem_db, "songs")
 
     # %% Changing/modifying the main columns so they fit CUSTOM_DB_COLUMNS
 
@@ -101,33 +109,33 @@ def fix_with_clementine_db():
             by=["artist", "title"]
         ).iterrows():
             print(
-                f"\nFinding the closest match for Mixxx entry {row[COLS_PERFECT_MATCH].to_list()}"
+                "\nFinding the closest match for Mixxx entry \n"
+                f"{row[COLS_PERFECT_MATCH].to_frame().T}"
             )
             close_indices = get_closest_matches_indices(
                 row,
                 df_custom_nm,
                 COLS_CLOSE_MATCH,
-                THRESHOLD_NAME_SIMILARITY,
-                N_SIMILAR_TRACK_PROPOSAL,
+                cfg.threshold_name_similarity,
+                cfg.n_similar_track_proposal,
             )
 
             if len(close_indices) == 0:
                 print(
                     f"\tCould not find a track with similar name with actual setting "
-                    f"of max similarity distance ({THRESHOLD_NAME_SIMILARITY})."
+                    f"of max similarity distance ({cfg.threshold_name_similarity})."
                 )
             else:
-                ans_check = [""]
-                for i, idx in enumerate(close_indices):
-                    # test = df_custom.loc[idx, MERGE_COLS].to_list()
-                    print(f"\t{i}:\t{df_custom.loc[idx, COLS_PERFECT_MATCH].to_list()}")
-                    ans_check.append(str(i))
+                df_close = df_custom.loc[close_indices, COLS_PERFECT_MATCH].reset_index(
+                    drop=True
+                )
+                print(df_close)
 
                 while True:
                     ans = input(
                         "Please choose an index or leave empty to skip the operation: "
                     )
-                    if ans in ans_check:
+                    if ans in [""] + list(df_close.index):
                         break
 
                 if ans:

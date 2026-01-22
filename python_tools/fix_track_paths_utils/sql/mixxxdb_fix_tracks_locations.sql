@@ -1,6 +1,11 @@
 -- This script uses the information from a music player in order to fix
 -- the tracks locations in the Mixxx database.
--- All the files/tables/colums names are defined in config.py
+--
+-- The names <<MUST>> correspond to the ones defined in
+-- python_tools/fix_track_paths_utils/clementine_custom_music_db.py
+-- <<DO NOT>> change them.
+-- A more robust solution will be used when Windows users are interested.
+
 
 ATTACH DATABASE "/tmp/custom_music_db.sqlite" AS CustomMusicDb;
 

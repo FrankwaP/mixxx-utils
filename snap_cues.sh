@@ -1,8 +1,19 @@
 #!/bin/bash
 # shellcheck source=config.sh
 
-cd $(dirname $0)
-source python_tools/snap_cues/config.sh
+cd "$(dirname "$0")" || exit
+
+# SQL files for each operations
+fix_cues_sql=python_tools/snap_cues/mixxxdb_fix_cues.sql
+#
+mixxx_db=$(toml get --toml-path python_tools/config.toml mixxx.mixxx_db)
+backup=${mixxx_db}.bak.$(date +%y%m%d%H%M)
+
+# The names <<MUST>> correspond to the ones defined in
+# python_tools/snap_cues/clementine_custom_music_db.py
+# <<DO NOT>> change them.
+# A more robust solution will be used when Windows users are interested.
+custom_db=/tmp/custom_music_db.sqlite
 
 # generating the custom database
 python3 -m python_tools.snap_cues.snap_cues || exit

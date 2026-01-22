@@ -5,7 +5,7 @@ repos:
     -   id: check-hooks-apply
     -   id: check-useless-excludes
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
@@ -16,15 +16,15 @@ repos:
     -   id: check-merge-conflict
     -   id: no-commit-to-branch
 -   repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.1.0
+    rev: 26.1.0
     hooks:
       - id: black
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
+    rev: v1.19.1
     hooks:
     -   id: mypy
 -   repo: https://github.com/pycqa/flake8
-    rev: 3.8.3
+    rev: 7.3.0
     hooks:
     -   id: flake8
 # -   repo: https://github.com/sqlfluff/sqlfluff
@@ -33,7 +33,7 @@ repos:
 #     -   id: sqlfluff-lint
 #         args: [--dialect, sqlite] # , --exclude-rules, CP02]
 -   repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.44.0
+    rev: v0.47.0
     hooks:
     -   id: markdownlint-fix
         files: '.*\.md'

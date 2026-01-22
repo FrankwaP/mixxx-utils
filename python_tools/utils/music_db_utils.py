@@ -2,7 +2,7 @@ import sys
 from shutil import copy
 from os.path import exists, expandvars
 from pathlib import Path
-from typing import Final, Literal, Tuple
+from typing import Final, Literal, Tuple, Union
 from time import strftime
 
 from urllib.parse import unquote
@@ -10,7 +10,7 @@ import sqlite3
 import pandas as pd
 from sqlalchemy.exc import NoSuchTableError
 
-from .config import MIXXX_DB
+from python_tools import CONFIG
 
 # columns used to relate the Mixxx and music player databases
 # also used to detect duplicate entries which would crash the database
@@ -18,7 +18,11 @@ from .config import MIXXX_DB
 COLS_FOR_DUP: Final[list[str]] = ["artist", "album", "title"]
 
 
-def open_table_as_df(db_path: str, table_name: str) -> pd.DataFrame:
+MIXXX_DB = CONFIG.mixxx.mixxx_db
+
+
+def open_table_as_df(db_path: Union[str, Path], table_name: str) -> pd.DataFrame:
+    db_path = Path(db_path)
     try:
         return pd.read_sql_table(table_name, db_path_to_url(db_path))
     except NoSuchTableError:
@@ -31,7 +35,7 @@ def open_table_as_df(db_path: str, table_name: str) -> pd.DataFrame:
             print("There's a SQL file to help you do it manually, if you want...")
             sys.exit()
         now = strftime("%y%m%d.%H%M%S")
-        backup = Path(db_path + ".bak." + now).resolve()
+        backup = db_path.with_suffix(db_path.suffix + ".bak." + now).resolve()
         copy(db_path, backup)
         print(f"The backup is: {backup}")
         fix_foreign_key_constraints(db_path)
@@ -43,11 +47,9 @@ def quit_if_duplicates(df: pd.DataFrame) -> None:
     df_no_stem = df[~df["comment"].str.contains("STEM", case=False, na=False)]
     df_dup = df_no_stem[df_no_stem.duplicated(COLS_FOR_DUP)]
     if len(df_dup):
-        print(
-            f"""Duplicated {COLS_FOR_DUP} found!
+        print(f"""Duplicated {COLS_FOR_DUP} found!
             Please open Mixxx and clean them manually <3
-            """
-        )
+            """)
         print(df_dup[COLS_FOR_DUP])
         sys.exit(1138)
 
@@ -55,6 +57,7 @@ def quit_if_duplicates(df: pd.DataFrame) -> None:
 def open_mixxx_library(
     existing_tracks: bool = True, missing_tracks: bool = True
 ) -> pd.DataFrame:
+
     # we add a check for duplicates because the will make
     # the final SQL fusion fail due to unique constraint
     # this can happen when there's both the correct and incorrect path for a track
@@ -76,7 +79,7 @@ def open_mixxx_library(
     return df_lib[df_lib["location"].isin(id_loc)]
 
 
-def fix_foreign_key_constraints(db_path: str) -> None:
+def fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
     """Fix incorrect foreign key constraints in the database."""
     # Expand environment variables in the path
     db_path = expandvars(db_path)
@@ -89,13 +92,11 @@ def fix_foreign_key_constraints(db_path: str) -> None:
     cursor.execute("PRAGMA foreign_keys = OFF;")
 
     # Get all tables that might have foreign keys to library_old
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT name FROM sqlite_master
         WHERE type='table'
         AND sql LIKE '%REFERENCES%library_old%';
-    """
-    )
+    """)
     tables_to_fix = [row[0] for row in cursor.fetchall()]
 
     for table in tables_to_fix:
@@ -220,7 +221,7 @@ def file_url_to_path(file_url: str) -> str:
     return unquote(file_url).replace("file://", "")
 
 
-def db_path_to_url(db_path: str) -> str:
+def db_path_to_url(db_path: Union[str, Path]) -> str:
     # sqlite:///relative/path/to/file.db
     # sqlite:////absolute/path/to/file.db
     db_path = expandvars(db_path)
@@ -230,20 +231,6 @@ def db_path_to_url(db_path: str) -> str:
     if path.is_relative_to(Path.cwd()):
         return "sqlite://" + path.as_posix()
     raise NotImplementedError
-
-
-# YAGNI
-# def list_table_names(db_path: str) -> list[str]:
-#     connection = sqlite3.connect(db_path)
-#     cursor = connection.cursor()
-#     command = """
-#     SELECT name FROM sqlite_master
-#       WHERE type='table';
-#     """
-#     cursor.execute(command)
-#     tables_names = cursor.fetchall()
-#     tables_names = [i[0] for i in tables_names]
-#     return tables_names
 
 
 def write_df_to_table(

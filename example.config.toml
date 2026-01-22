@@ -1,0 +1,57 @@
+# Note: do not use variables such as "~", "$HOME" or "%TMP" in the paths
+# ex: $HOME/Music => /home/francois/Music
+
+
+[mixxx]
+mixxx_db = "/home/francois/.mixxx/mixxxdb.sqlite"
+
+[mixxx_to_rekordbox]
+# folder/filename of the exported RB xml file
+rekordbox_xml_file = "/home/francois/Musique/rekordbox_output.xml"
+mixxx_library_folder = "/home/francois/Musique/"
+rekordbox_library_folder = "E:/Music"
+# Exports all the tracks of the library or only the ones in playlists
+export_only_tracks_in_playlists = true
+# Should crates calso be used to generate RB playlists ?
+add_crates_as_playlist = true
+# Which suffix to use to create the playlist name from the crate name
+crates_suffix = "_crates"
+# How many beats are used to define a bar in RB
+# (of course it will fail with weird time signature)
+beats_per_bar = 8
+# If one of your hot cue is always at the start of a bar (for example: a hot cue for the drop)
+# then we can use it to calculate the start of the bars
+# (some tracks do not start at the start of a bar so using the start of the beatgrid is incorrect)
+# NOTE:
+#  - set to 0 to only use the start of the BeatGrid
+#  - if the hot cue does not exist, the start of the BeatGrid will be used
+#  - the hot cue must be exactly on the BeatGrid: the snap_cues utility is here to help you with that!
+#
+index_cue_bar_start = 3
+# Mixxx mp3 decoder
+# this is used to calculate the tracks offsets to apply when exporting to Rekordbox
+# The value can be: MAD, CoreAudio, FFmpeg
+# You can find it launching Mixxx from the command line with the `--developer` parameter,
+# and search for the line with You then search for the line with: "SoundSource providers for file type "mp3""
+# In my case I get:
+#  info [Main] SoundSourceProxy - SoundSource providers for file type "mp3"
+#  info [Main] SoundSourceProxy - 3 (default) : "MAD: MPEG Audio Decoder 0.15.1 (beta) NDEBUG FPM_64BIT"
+#  info [Main] SoundSourceProxy - 1 (lowest) : "FFmpeg 4.4.2-0ubuntu0.22.04.1"
+# The one with the highest probability is MAD
+mp3_decoder = "MAD"
+
+[snap_cues]
+# which hot cues should be snapped
+idx_snapped_cues = [1, 2, 3, 4, 5, 6, 7, 8]
+
+
+[fix_track_paths]
+clem_db = "/home/francois/.config/Clementine/clementine.db"
+threshold_name_similarity = 50
+n_similar_track_proposal = 3
+# since changing the track file can impact the key, gain and waveform
+# we can decide to delete them so Mixxx recompute them
+# (for some reasons, the bitrate is updated)
+delete_keys = true
+delete_gains = true
+delete_waveforms = true

@@ -1,6 +1,9 @@
+python==3.11
 eyed3>=0.9
 protobuf
 pandas
 jellyfish
 tqdm
 sqlalchemy
+pydantic
+toml-cli

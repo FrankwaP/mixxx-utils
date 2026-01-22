@@ -9,13 +9,20 @@ import pandas as pd
 from urllib.parse import quote
 from xml.etree import ElementTree as ET
 
-import python_tools.mixxx_to_rekordbox_utils.config as cfg
+
+from python_tools import CONFIG
 from python_tools.mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
 from python_tools.mixxx_to_rekordbox_utils.color_tools import (
     convert_colors_for_rekordbox,
 )
-from python_tools.mixxx_to_rekordbox_utils.xml_utils import AttribDict, get_elem
-from python_tools.utils.misc import confirm_config, RATING_MAPING, KEY_ID_LANCELOT
+from python_tools.mixxx_to_rekordbox_utils.xml_utils import (
+    AttribDict,
+    get_elem,
+)
+from python_tools.utils.misc import (
+    RATING_MAPING,
+    KEY_ID_LANCELOT,
+)
 from python_tools.utils.music_db_utils import (
     open_mixxx_cues,
     open_mixxx_library,
@@ -27,7 +34,6 @@ from python_tools.utils.track_utils import (
     guess_inizio_sec,
     position_frame_to_sec,
 )
-
 
 SUFFIX_LIB = "_lib"
 SUFFIX_LOC = "_loc"
@@ -102,12 +108,12 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
 
 
 def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
-    location = trk_row["location" + SUFFIX_LOC]
-    final_location = location.replace(
-        cfg.mixxx_library_folder, cfg.rekordbox_library_folder
-    )
-    if cfg.rekordbox_library_folder not in final_location:
+    location = Path(trk_row["location" + SUFFIX_LOC])
+    if not location.is_relative_to(cfg.mixxx_library_folder):
         logging.warning("This track is not in the Mixxx library folder: %s", location)
+    final_location = cfg.rekordbox_library_folder / location.relative_to(
+        cfg.mixxx_library_folder
+    )
 
     if not is_non_empty_string(trk_row["artist"]):
         logging.warning("Artist name is empty for file: %s", location)
@@ -127,7 +133,7 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
         "Genre": trk_row["genre"],
         "TotalTime": round(trk_row["duration"]),
         "AverageBpm": trk_row["bpm"],
-        "Location": quote("file://localhost/" + final_location),
+        "Location": quote("file://localhost/" + str(final_location)),
         "SampleRate": trk_row["samplerate"],
         "Rating": RATING_MAPING[trk_row["rating"]],
     }
@@ -178,19 +184,18 @@ def mixxx_playlist_to_rekordbox_xml(
     return get_elem("NODE", attrib)
 
 
-def mixxx_playlist_track_to_rekordbox_xml(pls_trk_row: pd.Series) -> ET.Element:
+def mixxx_playlist_track_to_rekordbox_xml(
+    pls_trk_row: pd.Series,
+) -> ET.Element:
     attrib = {"Key": pls_trk_row["track_id"]}
     return get_elem("TRACK", attrib)
 
 
 if __name__ == "__main__":
-    # %% checking the config
-    confirm_config(cfg)
 
+    cfg = CONFIG.mixxx_to_rekordbox
+    # %% checking the config
     if cfg.index_cue_bar_start != 0:
-        print(
-            f"The hot cue #{cfg.index_cue_bar_start} will be used to detect the start of the bars."
-        )
         answer = input(
             "Are you sure all these hot cues are snapped to the beatgrid (y/*)? : "
         )
@@ -210,8 +215,9 @@ if __name__ == "__main__":
         df_lib = df_lib[df_lib["id"].isin(df_pls_trk["track_id"])]
 
     # Filter out tracks with "STEM" in comments
-    df_lib = df_lib[~df_lib["comment"].str.contains("STEM", case=False, na=False)]
-    print(f"Filtered out {len(df_lib)} tracks with STEM in comments")
+    df_nostem = df_lib[~df_lib["comment"].str.contains("STEM", case=False, na=False)]
+    print(f"Filtered out {len(df_lib)-len(df_nostem)} tracks with STEM in comments")
+    df_lib = df_nostem
 
     # Convert the colors
     convert_colors_for_rekordbox(df_lib["color"])
