@@ -29,7 +29,7 @@ COLS_CLOSE_MATCH: Final[list[str]] = ["artist", "title"]
 
 def fix_with_clementine_db():
 
-    cfg = CONFIG.fix_track_paths_utils
+    cfg = CONFIG.fix_track_paths
 
     df_mixxx = open_mixxx_library(existing_tracks=False)
     if len(df_mixxx) == 0:
