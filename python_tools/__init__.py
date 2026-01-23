@@ -9,6 +9,8 @@ from pydantic.fields import Field
 from pydantic.types import FilePath, DirectoryPath
 from pydantic_core import ErrorDetails
 
+CONFIG_ENV_VAR = "MIXXX_UTILS_CONFIG"
+
 
 class MyBaseModel(BaseModel):
     model_config = {"extra": "forbid"}
@@ -52,15 +54,15 @@ class Config(MyBaseModel):
 
 
 def get_config_path() -> Path:
-    if "MIXXX_UTILS_CONFIG" in os.environ:
-        config_path = Path(os.environ["MIXXX_UTILS_CONFIG"])
+    if CONFIG_ENV_VAR in os.environ:
+        config_path = Path(os.environ[CONFIG_ENV_VAR])
         if not config_path.exists():
             raise FileNotFoundError(
-                "The file defined in MIXXX_UTILS_CONFIG environment variable "
+                f"The file defined in {CONFIG_ENV_VAR} environment variable "
                 " does not exists."
             )
         print(
-            "Reading the config file defined in MIXXX_UTILS_CONFIG environment variable"
+            f"Reading the config file defined in {CONFIG_ENV_VAR} environment variable"
         )
     else:
         pytool_dir = Path(__file__).parent
@@ -68,7 +70,7 @@ def get_config_path() -> Path:
         if not config_path.exists():
             raise FileNotFoundError(
                 "No config file detected either using:\n",
-                " - a path specified in the MIXXX_UTILS_CONFIG environment variable\n",
+                f" - a path specified in the {CONFIG_ENV_VAR} environment variable\n",
                 f" - or the path {config_path}",
             )
         print(f"Reading the config file {config_path}")
