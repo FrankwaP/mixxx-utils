@@ -131,14 +131,16 @@ def fix_with_clementine_db():
                 )
                 print(df_close)
 
+                choices = [""] + [str(i) for i in df_close.index]
                 while True:
                     ans = input(
-                        "Please choose an index or leave empty to skip the operation: "
+                        "Please choose an index or leave empty to skip the operation "
+                        f"({choices}) : "
                     )
-                    if ans in [""] + list(df_close.index):
+                    if ans in choices:
                         break
 
-                if ans:
+                if ans != "":
                     idx_custom = close_indices[int(ans)]
                     list_idx_cm.append(
                         [
