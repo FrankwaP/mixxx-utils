@@ -9,7 +9,7 @@ mixxx_db = "/home/francois/.mixxx/mixxxdb.sqlite"
 # folder/filename of the exported RB xml file
 rekordbox_xml_file = "/home/francois/Musique/rekordbox_output.xml"
 mixxx_library_folder = "/home/francois/Musique/"
-rekordbox_library_folder = "E:/Music"
+rekordbox_library_folder = "E:/"
 # Exports all the tracks of the library or only the ones in playlists
 export_only_tracks_in_playlists = true
 # Should crates calso be used to generate RB playlists ?
