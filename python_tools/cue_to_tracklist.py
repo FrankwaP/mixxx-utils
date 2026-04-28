@@ -1,5 +1,6 @@
 """A tool to generate a tracklist for Soundcloud/Youtube/… from a Mixxx's cue file"""
 
+from sys import argv
 from pathlib import Path
 
 
@@ -41,20 +42,28 @@ def genereate_tracklist_file(cue_file: Path) -> None:
     track_obj_list = get_tracks_dict_list(cue_file)
     txt_file = cue_file.with_suffix(".txt")
     write_track_obj_list(txt_file, track_obj_list)
+    print(f"==> {txt_file}")
 
 
-def clean_drag_an_drop(path: str) -> str:
-    if path[0] in ["'", '"']:
-        path = path[1:]
-    if path[-1] in ["'", '"']:
-        path = path[:-1]
+def remove_file_quotes(path: str) -> str:
+    """
+    Remove the quotes around the file name.
+
+    When using drag and drop to easily get a file name in a terminal, quotes can be added
+    to this file name.
+    """
+    if path[0] in ["'", '"'] and path[-1] in ["'", '"']:
+        path = path[1:-1]
     return path
 
 
 if __name__ == "__main__":
-    cue_file = input("Path to the cue file (drag-and-drop prob. works): ")
-    pcue = Path(clean_drag_an_drop(cue_file))
-    if pcue.exists() and pcue.suffix == ".cue":
-        genereate_tracklist_file(pcue)
+    if len(argv) == 1:
+        print("Please use files names as arguments")
     else:
-        print("File does not exist or is not a cue file.")
+        for cue_file in argv[1:]:
+            pcue = Path(remove_file_quotes(cue_file))
+            if pcue.exists() and pcue.suffix == ".cue":
+                genereate_tracklist_file(pcue)
+            else:
+                print("File does not exist or is not a cue file.")
