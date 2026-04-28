@@ -40,19 +40,19 @@ if test -f "$custom_db"; then
     sqlite3  "$temp" < "$fix_track_locations_sql"
     test $? -ne 0 && exit
 
-    if $delete_keys; then
+    if [ $delete_keys == "True" ]; then
         echo "Deleting the keys of the modified tracks"
         sqlite3  "$temp" < "$delete_keys_sql"
         test $? -ne 0 && exit
     fi
 
-    if "$delete_gains"; then
+    if [ "$delete_gains" == "True" ]; then
         echo "Deleting the gains of the modified tracks"
         sqlite3  "$temp" < "$delete_gains_sql"
         test $? -ne 0 && exit
     fi
 
-    if "$delete_waveforms"; then
+    if [ "$delete_waveforms" == "True" ]; then
         echo "Deleting the waveforms of the modified tracks"
         for wave_id in $(sqlite3  "$temp" < "$get_waveforms_ids_sql"); do
             rm "$mixxx_waveforms_folder/$wave_id" 2> /dev/null
