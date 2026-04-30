@@ -18,7 +18,6 @@ After installing the requirements, please run `pre-commit install` to prepare th
 The different tools get their configuration from a toml file that is specified through the
 MIXXX_UTILS_CONFIG environment variable or will default to a file named `config.toml` in the
 current directory. See the provided `example.config.toml` for details.
->>>>>>> 77a9421 (Make mixxx-utils configurable via a toml file)
 
 ## Python tools
 
