@@ -9,15 +9,6 @@ I can totally do it, but unless someone shows an interest, Im going to play the 
 **IMPORTANT**: As of May 4th 2024, Mixxx's database needs to be fixed so the Python tools work.
 Please see the[fix_mixxx_db.md](fix_mixxx_db.md) file.
 
-<<<<<<< HEAD
-**NOTE TO DEVELOPERS #1**: There is an additionnal requirements file (`python_tools/requirements-pip-dev.txt`).
-After installing the requirements, please run `pre-commit install` to prepare the differents "hooks" that will be executed when you commit stuff.
-**Watch out** as one hooks enforces to not commit on the `main` branch so start by create a branch to work in it!
-
-**NOTE TO DEVELOPERS #2**: Using [pyrekordbox](https://pyrekordbox.readthedocs.io) to write directly into Rekordbox pdb file instead of using 
-an intermediate step with an XML file would be neat for people without dual-boot. If you're interested in participating, please let me know, 
-as I don't have much incentive to do it for myself.
-=======
 **NOTE TO DEVELOPERS**: There is an additionnal requirements file (`python_tools/requirements-pip-dev.txt`).
 After installing the requirements, please run `pre-commit install` to prepare the differents "hooks" that will be executed when you commit stuff.
 **Watch out** as one hooks enforces to not commit on the `main` branch so start by create a branch to work in it!
@@ -27,7 +18,6 @@ After installing the requirements, please run `pre-commit install` to prepare th
 The different tools get their configuration from a toml file that is specified through the
 MIXXX_UTILS_CONFIG environment variable or will default to a file named `config.toml` in the
 current directory. See the provided `example.config.toml` for details.
->>>>>>> 77a9421 (Make mixxx-utils configurable via a toml file)
 
 ## Python tools
 
