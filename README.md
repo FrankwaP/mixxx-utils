@@ -31,8 +31,8 @@ It works with Clementine's database so far, but it won't be hard to add other pl
 
 `mixxx_to_rekordbox_xml` export your Mixxx library into the [Rekorbox XML format](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf) and
 **YES IT EXPORTS THE PLAYLISTS, HOT CUES, BEATGRIDS, COLORS, RATING/ENERGY** :-)
-Then you can import the XML file in Rekordbox to prepare a USB key. Rekordbox is free for this use.
-So far one still needs to **use Rekordbox on Windows**.
+Then you can import the XML file in Rekordbox to prepare a USB key. **Rekordbox do not need a license for this use**.
+If you are a Linux user, you will need to use a [Windows virtual machine](tips_for_windows_virtual_machine.md) or dual boot.
 While Rekordbox can run on Wine [with a few tricks](https://erhan.es/blog/running-pioneer-rekordbox-on-linux/),
 I have not find how to make it recognize a USB key as an export device.
 
