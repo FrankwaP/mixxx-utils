@@ -44,6 +44,10 @@ I have not find how to make it recognize a USB key as an export device.
 I used it because I had a mix of keys calculated with "Queen Mary (qm-keydetector)" and "KeyFinder",
 and I selectively deleted the QM keys so the could be recalculated with KF.
 
+`fix_convert_keys_to_lancelot.sql` is used to change the stored keys formats from standard ("BMaj") to Lancelot/Camelot ("1B").
+
+
+
 `fix_false_missing_tracks.sql` is useful when Mixxx incorrectly detects tracks as missing
 (you can still use them with a drag-and-drop from the library). It simply resets all the "missing" field.
 
