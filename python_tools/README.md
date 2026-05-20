@@ -1,12 +1,18 @@
-# Suggestions for Git/Python noob
+# Python tools
 
-## Dowloading this repo
+## Configuration
 
-You probably do not have Git installed and do not want to mess with it… so you can directly [download a zip of the reposit](https://github.com/FrankwaP/mixxx-utils/archive/refs/heads/main.zip) and unzip it where you want.
+The different tools get their configuration from a toml file that is specified through the
+`MIXXX_UTILS_CONFIG` environment variable or will default to a file named `config.toml` in the
+[python_tools](python_tools) directory.
+See the provided [example.config.toml](example.config.toml) file for details.
 
-Note that you'll have to do this each time a modification is made. That would be an advantage of installing (and using) Git: you'd first `git clone` then a siple `git pull` will automatically update the content of the reposit.
 
-## Installing Python and the required library
+## Installing Python and the required libraries
+
+**NOTE**: I know it's a bit of a chicken and egg problem, but since I do not think that this project will get big, I consider the majority of the users finding this work on github
+will be fine using a terminal… once again: [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it)…
+
 
 This is a method which does not need you to use administrator/sudo account.
 
@@ -22,6 +28,14 @@ Now open a terminal (omg so scary :-p ) and:
 3. Activate this new environment: `mamba activate mixxx-utils`. ("Activating" means that the executables and libraries in the environement folder will be used when you execute code.)
 4. Install the libraries that can only be installed with `pip` (package installer for Python): `pip install --requirement requirements-pip.txt`
 
+
 ## Running the scripts
 
-Please see the README.md files in each specific folder.
+**NOTE**: Remember to activate the Python environment if you are using one (pipenv/anaconda…) :-)
+
+BASH scripts are available to use the Python scripts in Lunx.
+
+Some of them are very simple, like [mixxx_to_rekordbox.sh](mixxx_to_rekordbox.sh), because they only read Mixxx library.
+In this case it is pretty straightforward to use the same command in Windows or Mac.
+
+However the ones modifying Mixxx library, such as [fix_track_paths.sh](fix_track_paths.sh) and [fix_track_paths.sh](fix_track_paths.sh), are more complex since they call `sqlite3` function to edit the database. This was the chosen solution at the beginning of this project since Mixxx could not open a database exported using `pandas`. But I rekon this has to be improved so we can do it all in Python.

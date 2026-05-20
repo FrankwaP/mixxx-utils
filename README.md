@@ -13,13 +13,17 @@ Please see the [fix_mixxx_db.md](fix_mixxx_db.md) file.
 After installing the requirements, please run `pre-commit install` to prepare the differents "hooks" that will be executed when you commit stuff.
 **Watch out** as one hooks enforces to not commit on the `main` branch so start by create a branch to work in it!
 
-## Configuration
 
-The different tools get their configuration from a toml file that is specified through the
-MIXXX_UTILS_CONFIG environment variable or will default to a file named `config.toml` in the
-current directory. See the provided `example.config.toml` for details.
+## Downloading the tools for the average user
+
+Since you probably do not have Git installed and do not want to mess with it… you can directly [download a zip of the repository](https://github.com/FrankwaP/mixxx-utils/archive/refs/heads/main.zip) and unzip it where you want.
+
+Note that you'll have to do this each time a modification is made. That would be an advantage of using Git: you'd first `git clone` then a simple `git pull` will automatically update the content of the repository.
+
 
 ## Python tools
+
+Please read the [README](python_tools/README.md) for more details.
 
 `cue_to_tracklist.py` is a Python tool to generate the tracklist corresponding to the cue file
 automatically generated when recording a mix on Mixxx, so you can add it in the description of the Soundcloud/Youtube/… page.
@@ -28,15 +32,18 @@ automatically generated when recording a mix on Mixxx, so you can add it in the 
 It is usefull when the file has been renamed or if the track is now in another format
 (for example you wanted a better quality format and went from a mp3 to a flac file).
 It works with Clementine's database so far, but it won't be hard to add other players' databases.
+Please read the [README](python_tools/fix_track_paths_utils/README.md) for more details.
+
 
 `mixxx_to_rekordbox_xml` export your Mixxx library into the [Rekorbox XML format](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf) and
 **YES IT EXPORTS THE PLAYLISTS, HOT CUES, BEATGRIDS, COLORS, RATING/ENERGY** :-)
-Then you can import the XML file in Rekordbox to prepare a USB key. **Rekordbox do not need a license for this use**.
-If you are a Linux user, you will need to use a [Windows virtual machine](tips_for_windows_virtual_machine.md) or dual boot.
-While Rekordbox can run on Wine [with a few tricks](https://erhan.es/blog/running-pioneer-rekordbox-on-linux/),
-I have not find how to make it recognize a USB key as an export device.
+Then you can import the XML file in Rekordbox to prepare a USB key (no license needed).
+Please read the [README](python_tools/mixxx_to_rekordbox_utils/README.md) for more details.
 
 `snap_cues` snaps all the cue points to the closest beat.
+
+
+
 
 ## SQL tools
 
@@ -46,15 +53,18 @@ and I selectively deleted the QM keys so the could be recalculated with KF.
 
 `fix_convert_keys_to_lancelot.sql` is used to change the stored keys formats from standard ("BMaj") to Lancelot/Camelot ("1B").
 
-
-
 `fix_false_missing_tracks.sql` is useful when Mixxx incorrectly detects tracks as missing
 (you can still use them with a drag-and-drop from the library). It simply resets all the "missing" field.
 
 `mixxxdb_cleanup.sql` is a copy of a script found in the [offical repo](https://github.com/mixxxdj/mixxx/tree/main/tools)
 with extra commands (noted with "EXTRA" in the comment).
 
+
+Please read the [README](sql_tools/README.md) for more details.
+
 ## Bash tools
 
 `mixxx_prepare.sh` uses the commands recommended in the [wiki](https://github.com/mixxxdj/mixxx/wiki/Adjusting%20Audio%20Latency)
 in order to minimize the latency problems in Linux. I call it before launching Mixxx (at least for live mixing).
+
+`mixxx_compile.sh` uses the commands I use to compile my git forks on my Ubuntu (shold work on Debian too).

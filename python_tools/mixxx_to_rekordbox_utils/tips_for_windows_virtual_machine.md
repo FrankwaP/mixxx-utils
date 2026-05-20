@@ -57,14 +57,12 @@ If you want to use an existing Rekordbox library, this is the time to paste the 
 
 ### Music folder
 
-
-
 If you statr with a blank Rekordbox library, you can create:
 
 1. A Virtual Box link between "rekordbox_preferences" and "E:"
 
 
-If you want to use an existing Rekordbox library, and your music was stored in `C:\Users\your_user_name\Music`, you can create:
+If you want to use an existing Rekordbox library, and your music was stored in `C:\Users\your_user_name\Music` for example, you can create:
 
 1. A Virtual Box link between "rekordbox_preferences" and "E:"
 2. A symbolic link between "E:" and `C:\Users\your_user_name\Music`: `mklink E: C:\Users\your_user_name\Music`
