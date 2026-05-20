@@ -27,7 +27,7 @@ Else each time the drive letter changes (let's say from `D:` to `E:`), your song
 
 If at some point you had such problem, clean the Rekordbox library by deleting all the tracks using the old drive letter. You might have warning about tracks belonging to a playlist: it's fine, the playlist was incorrect, just reimport it from the Mixxx's XML.
 
-My preference went for a Windows virtual machine with a shared folder. If you want to follow this path, please see [my recommendations](python_tools/mixxx_to_rekordbox_utils/tips_for_windows_virtual_machine.md).
+My preference went for a Windows virtual machine with a shared folder. If you want to follow this path, please see [my recommendations](tips_for_windows_virtual_machine.md).
 
 
 ## Import in Rekordbox
