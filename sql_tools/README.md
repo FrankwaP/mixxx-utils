@@ -1,4 +1,6 @@
-# Suggestions to use these script
+# SQL tools
+
+Here's how to run these scripts.
 
 ## Linux Terminal
 
@@ -13,4 +15,4 @@ sqlite3  "$database"  < "$script_name"
 
 ## GUI (Linux/Windows/macOS)
 
-I presonnaly use "[DB brower for SQLite](https://sqlitebrowser.org/)" aka `sqlitebrowser`. Open the database then go to "Execute SQL" and copy paste the commands of the script.
+I presonnaly use [DB brower for SQLite](https://sqlitebrowser.org/) aka `sqlitebrowser`. Open the database then go to "Execute SQL" and copy paste the commands of the script.
