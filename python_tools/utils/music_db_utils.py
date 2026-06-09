@@ -259,3 +259,11 @@ def write_df_to_table(
         method="multi",
         chunksize=999,
     )
+
+
+def update_mixxx_db_table(df: pd.DataFrame, table_name: str) -> None:
+    """Update the Mixxx database table using a pandas DataFrame."""
+    create_mixxx_db_backup(CONFIG.mixxx.mixxx_db)
+    with sqlite3.connect(CONFIG.mixxx.mixxx_db) as conn:
+        conn = sqlite3.connect(CONFIG.mixxx.mixxx_db)
+        df.to_sql(table_name, conn, if_exists="replace", index=False)
