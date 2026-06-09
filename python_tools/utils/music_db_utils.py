@@ -29,22 +29,27 @@ def create_mixxx_db_backup(db_path: Union[str, Path]) -> None:
     print(f"Backup created: {backup}")
 
 
+def propose_fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
+    db_path = Path(db_path)
+    answer = input(
+        "The Mixxx database cannot be opened and we must fix the foreign key constraints...\n"
+        "A backup file will be created.\n\n"
+        "Are you OK with that? (y/*)"
+    )
+    if answer != "y":
+        print("There's a SQL file to help you do it manually, if you want...")
+        sys.exit()
+    create_mixxx_db_backup(db_path)
+    fix_foreign_key_constraints(db_path)
+
+
 def open_table_as_df(db_path: Union[str, Path], table_name: str) -> pd.DataFrame:
     db_path = Path(db_path)
     try:
         return pd.read_sql_table(table_name, db_path_to_url(db_path))
     except NoSuchTableError:
-        answer = input(
-            "The Mixxx database cannot be opened and we must fix the foreign key constraints...\n"
-            "A backup file will be created.\n\n"
-            "Are you OK with that? (y/*)"
-        )
-        if answer != "y":
-            print("There's a SQL file to help you do it manually, if you want...")
-            sys.exit()
-        create_mixxx_db_backup(db_path)
-        fix_foreign_key_constraints(db_path)
-        return pd.read_sql_table(table_name, db_path_to_url(db_path))
+        propose_fix_foreign_key_constraints(db_path)
+        return open_table_as_df(db_path, table_name)
 
 
 def quit_if_duplicates(df: pd.DataFrame) -> None:
