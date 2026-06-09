@@ -21,6 +21,14 @@ COLS_FOR_DUP: Final[list[str]] = ["artist", "album", "title"]
 MIXXX_DB = CONFIG.mixxx.mixxx_db
 
 
+def create_mixxx_db_backup(db_path: Union[str, Path]) -> None:
+    db_path = Path(db_path)
+    now = strftime("%y%m%d.%H%M%S")
+    backup = db_path.with_suffix(db_path.suffix + ".bak." + now).resolve()
+    copy(db_path, backup)
+    print(f"Backup created: {backup}")
+
+
 def open_table_as_df(db_path: Union[str, Path], table_name: str) -> pd.DataFrame:
     db_path = Path(db_path)
     try:
@@ -34,10 +42,7 @@ def open_table_as_df(db_path: Union[str, Path], table_name: str) -> pd.DataFrame
         if answer != "y":
             print("There's a SQL file to help you do it manually, if you want...")
             sys.exit()
-        now = strftime("%y%m%d.%H%M%S")
-        backup = db_path.with_suffix(db_path.suffix + ".bak." + now).resolve()
-        copy(db_path, backup)
-        print(f"The backup is: {backup}")
+        create_mixxx_db_backup(db_path)
         fix_foreign_key_constraints(db_path)
         return pd.read_sql_table(table_name, db_path_to_url(db_path))
 
