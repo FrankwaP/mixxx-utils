@@ -39,7 +39,6 @@ def propose_fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
     if answer != "y":
         print("There's a SQL file to help you do it manually, if you want...")
         sys.exit()
-    create_mixxx_db_backup(db_path)
     fix_foreign_key_constraints(db_path)
 
 
@@ -91,6 +90,7 @@ def open_mixxx_library(
 
 def fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
     """Fix incorrect foreign key constraints in the database."""
+    create_mixxx_db_backup(db_path)
     # Expand environment variables in the path
     db_path = expandvars(db_path)
     print(f"Fixing foreign key constraints in database: {db_path}")
