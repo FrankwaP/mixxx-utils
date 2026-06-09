@@ -1,20 +1,22 @@
-from typing import Final
 from tqdm import tqdm
+import sqlite3
+import pandas as pd
 
 from python_tools import CONFIG
 from python_tools.utils.music_db_utils import (
     open_mixxx_library,
     open_mixxx_cues,
-    write_df_to_table,
+    create_mixxx_db_backup,
 )
 from python_tools.utils.track_utils import BeatGridInfo, snap_cue_frame
 
-# The names <<MUST>> correspond to the ones defined in
-# python_tools/snap_cues/mixxxdb_fix_cues.sql
-# <<DO NOT>> change them.
-# A more robust solution will be used when Windows users are interested.
-CUSTOM_DB: Final[str] = "/tmp/custom_music_db.sqlite"
-CUSTOM_DB_TABLE_NAME: Final[str] = "custom_table"
+
+def update_mixxx_db(df_cues: pd.DataFrame) -> None:
+    """Update the Mixxx database with the new cue positions."""
+    create_mixxx_db_backup(CONFIG.mixxx.mixxx_db)
+    conn = sqlite3.connect(CONFIG.mixxx.mixxx_db)
+    df_cues.to_sql("cues", conn, if_exists="replace", index=False)
+    conn.close()
 
 
 if __name__ == "__main__":
@@ -38,12 +40,20 @@ if __name__ == "__main__":
                 samplerate = lib_row["samplerate"]
                 for idx in cues_idx.index:
                     if df_cues.loc[idx, "hotcue"] + 1 in cfg.idx_snapped_cues:
-                        df_cues.loc[idx, "position"] = snap_cue_frame(
-                            df_cues.loc[idx, "position"],
+                        old_pos = df_cues.loc[idx, "position"]
+                        new_pos = snap_cue_frame(
+                            old_pos,
                             samplerate,
                             beatgrid_info.start_sec,
                             beat_interval_sec,
                         )
+                        if new_pos != old_pos:
+                            print(
+                                f"Snapping cue {df_cues.loc[idx, 'hotcue'] + 1} for "
+                                f"{lib_row['artist']} - {lib_row['title']} from "
+                                f"frame {old_pos:d} to frame{new_pos:d}"
+                            )
+                            df_cues.loc[idx, "position"] = new_pos
 
             except TypeError:
                 error_log += (
@@ -53,10 +63,4 @@ if __name__ == "__main__":
                 pass
 
     print(error_log)
-
-    write_df_to_table(
-        df_cues,
-        db_path=CUSTOM_DB,
-        table_name=CUSTOM_DB_TABLE_NAME,
-        overwrite=True,
-    )
+    update_mixxx_db(df_cues)
