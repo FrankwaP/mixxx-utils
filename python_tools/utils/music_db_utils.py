@@ -2,11 +2,12 @@ import sys
 from shutil import copy
 from os.path import exists, expandvars
 from pathlib import Path
-from typing import Final, Literal, Tuple, Union
+from typing import Final, Tuple, Union
 from time import strftime
 
 from urllib.parse import unquote
 import sqlite3
+import sqlalchemy
 import pandas as pd
 from sqlalchemy.exc import NoSuchTableError
 
@@ -19,14 +20,6 @@ COLS_FOR_DUP: Final[list[str]] = ["artist", "album", "title"]
 
 
 MIXXX_DB = CONFIG.mixxx.mixxx_db
-
-
-def create_mixxx_db_backup(db_path: Union[str, Path]) -> None:
-    db_path = Path(db_path)
-    now = strftime("%y%m%d.%H%M%S")
-    backup = db_path.with_suffix(db_path.suffix + ".bak." + now).resolve()
-    copy(db_path, backup)
-    print(f"Backup created: {backup}")
 
 
 def propose_fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
@@ -90,7 +83,7 @@ def open_mixxx_library(
 
 def fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
     """Fix incorrect foreign key constraints in the database."""
-    create_mixxx_db_backup(db_path)
+    create_mixxx_db_backup()
     # Expand environment variables in the path
     db_path = expandvars(db_path)
     print(f"Fixing foreign key constraints in database: {db_path}")
@@ -150,6 +143,12 @@ def open_mixxx_cues(only_hot_cues) -> pd.DataFrame:
 def open_mixxx_track_locations() -> pd.DataFrame:
     print(f"Openning the Mixxx track locations from {MIXXX_DB}.")
     df = open_table_as_df(MIXXX_DB, "track_locations")
+    return df
+
+
+def open_mixxx_track_analysis() -> pd.DataFrame:
+    print(f"Openning the Mixxx track analysis from {MIXXX_DB}.")
+    df = open_table_as_df(MIXXX_DB, "track_analysis")
     return df
 
 
@@ -228,6 +227,7 @@ def _crate_tracks_to_playlist_tracks(
 
 
 def file_url_to_path(file_url: str) -> str:
+    assert isinstance(file_url, str), f"Error: expected a string, got {type(file_url)}"
     return unquote(file_url).replace("file://", "")
 
 
@@ -243,27 +243,63 @@ def db_path_to_url(db_path: Union[str, Path]) -> str:
     raise NotImplementedError
 
 
-def write_df_to_table(
-    df: pd.DataFrame, db_path: str, table_name: str, overwrite: bool = False
-):
-    if overwrite is True:
-        if_exists: Literal["fail", "replace", "append"] = "replace"
-    else:
-        if_exists = "fail"
-    connection = sqlite3.connect(db_path)
-    df.to_sql(
-        table_name,
-        connection,
-        if_exists=if_exists,
-        index=False,
-        method="multi",
-        chunksize=999,
-    )
+def create_mixxx_db_backup() -> None:
+    db_path = Path(CONFIG.mixxx.mixxx_db)
+    now = strftime("%y%m%d.%H%M%S")
+    backup = db_path.with_suffix(db_path.suffix + ".bak." + now).resolve()
+    copy(db_path, backup)
+    print(f"Backup created: {backup}")
 
 
 def update_mixxx_db_table(df: pd.DataFrame, table_name: str) -> None:
     """Update the Mixxx database table using a pandas DataFrame."""
-    create_mixxx_db_backup(CONFIG.mixxx.mixxx_db)
+    # with sqlite3.connect(CONFIG.mixxx.mixxx_db) as conn:
+    # df.to_sql(table_name, conn, if_exists="replace", index=False)
+    engine = sqlalchemy.create_engine(f"sqlite:///{CONFIG.mixxx.mixxx_db}")
+    df.to_sql(table_name, engine, if_exists="replace", index=False)
+
+
+def update_mixxx_db_table___(
+    df: pd.DataFrame, table_name: str, set_cols: list[str], where_cols: list[str]
+) -> None:
+    """Update the Mixxx database table using a pandas DataFrame."""
+    assert isinstance(set_cols, list)
+    assert all(c in df.columns for c in set_cols)
+    assert isinstance(where_cols, list)
+    assert all(c in df.columns for c in where_cols)
+    if df.empty:
+        return
+    sql = (
+        f"UPDATE {table_name}"
+        + " SET "
+        + ", ".join(f"{col} = ?" for col in set_cols)
+        + " WHERE "
+        + " AND ".join(f"{col} = ?" for col in where_cols)
+    )
+
+    params = [
+        [row[col] for col in set_cols] + [row[col] for col in where_cols]
+        for _, row in df.iterrows()
+    ]
+
     with sqlite3.connect(CONFIG.mixxx.mixxx_db) as conn:
-        conn = sqlite3.connect(CONFIG.mixxx.mixxx_db)
-        df.to_sql(table_name, conn, if_exists="replace", index=False)
+        conn.executemany(sql, params)
+
+
+def delete_rows_mixxx_db_table(
+    df: pd.DataFrame, table_name: str, where_cols: list[str]
+) -> None:
+    assert isinstance(where_cols, list)
+    assert all(c in df.columns for c in where_cols)
+    if df.empty:
+        return
+    sql = (
+        f"DELETE FROM {table_name}"
+        + " WHERE "
+        + " AND ".join(f"{col} = ?" for col in where_cols)
+    )
+
+    params = [[row[col] for col in where_cols] for _, row in df.iterrows()]
+
+    with sqlite3.connect(CONFIG.mixxx.mixxx_db) as conn:
+        conn.executemany(sql, params)
