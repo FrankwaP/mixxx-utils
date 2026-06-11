@@ -6,7 +6,7 @@ from python_tools import CONFIG
 from python_tools.utils.music_db_utils import (
     open_mixxx_library,
     open_mixxx_cues,
-    update_mixxx_db_table___,
+    update_mixxx_db_table,
 )
 from python_tools.utils.track_utils import BeatGridInfo, snap_cue_frame
 
@@ -55,4 +55,4 @@ if __name__ == "__main__":
                         pd.concat([df_update, df_cues])
 
     print("\n".join(error_log))
-    update_mixxx_db_table___(df_cues, "cues", set_cols=["position"], where_cols=["id"])
+    update_mixxx_db_table(df_cues, "cues", set_cols=["position"], where_cols=["id"])

@@ -7,7 +7,6 @@ from time import strftime
 
 from urllib.parse import unquote
 import sqlite3
-import sqlalchemy
 import pandas as pd
 from sqlalchemy.exc import NoSuchTableError
 
@@ -251,15 +250,7 @@ def create_mixxx_db_backup() -> None:
     print(f"Backup created: {backup}")
 
 
-def update_mixxx_db_table(df: pd.DataFrame, table_name: str) -> None:
-    """Update the Mixxx database table using a pandas DataFrame."""
-    # with sqlite3.connect(CONFIG.mixxx.mixxx_db) as conn:
-    # df.to_sql(table_name, conn, if_exists="replace", index=False)
-    engine = sqlalchemy.create_engine(f"sqlite:///{CONFIG.mixxx.mixxx_db}")
-    df.to_sql(table_name, engine, if_exists="replace", index=False)
-
-
-def update_mixxx_db_table___(
+def update_mixxx_db_table(
     df: pd.DataFrame, table_name: str, set_cols: list[str], where_cols: list[str]
 ) -> None:
     """Update the Mixxx database table using a pandas DataFrame."""

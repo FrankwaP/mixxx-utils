@@ -9,7 +9,7 @@ from python_tools.utils.music_db_utils import (
     open_mixxx_track_locations,
     open_mixxx_track_analysis,
     create_mixxx_db_backup,
-    update_mixxx_db_table___,
+    update_mixxx_db_table,
     delete_rows_mixxx_db_table,
 )
 from python_tools.utils.track_utils import (
@@ -185,7 +185,7 @@ def _update_mixxx_track_location(df_match: pd.DataFrame) -> None:
         df_merge[PLAYER_PATH].apply(lambda x: Path(x).parent.as_posix()).values
     )
     df_merge.loc[:, "fs_deleted"] = 0
-    update_mixxx_db_table___(
+    update_mixxx_db_table(
         df_merge,
         "track_locations",
         set_cols=["location", "filename", "directory", "fs_deleted"],
@@ -206,7 +206,7 @@ def _update_mixxx_library(df_match: pd.DataFrame) -> None:
         df_match.loc[:, "key_id"] = 0
         df_match.loc[:, "keys_version"] = ""
         df_match.loc[:, "keys_sub_version"] = ""
-        update_mixxx_db_table___(
+        update_mixxx_db_table(
             df_match,
             "library",
             set_cols=["key", "keys", "key_id", "keys_version", "keys_sub_version"],
@@ -219,7 +219,7 @@ def _update_mixxx_library(df_match: pd.DataFrame) -> None:
         )
         df_match.loc[:, "replaygain"] = 0
         df_match.loc[:, "replaygain_peak"] = -1
-        update_mixxx_db_table___(
+        update_mixxx_db_table(
             df_match,
             "library",
             set_cols=["replaygain", "replaygain_peak"],
