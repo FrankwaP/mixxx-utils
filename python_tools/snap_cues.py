@@ -10,7 +10,8 @@ from python_tools.utils.music_db_utils import (
 )
 from python_tools.utils.track_utils import BeatGridInfo, snap_cue_frame
 
-if __name__ == "__main__":
+
+def main():
     cfg = CONFIG.snap_cues
     df_lib = open_mixxx_library()
     df_cues = open_mixxx_cues(only_hot_cues=False)
@@ -49,7 +50,7 @@ if __name__ == "__main__":
                         print(
                             f"Snapping cue {df_cues.loc[idx, 'hotcue'] + 1} for "
                             f"{lib_row['artist']} - {lib_row['title']} from "
-                            f"frame {old_pos:d} to frame{new_pos:d}"
+                            f"frame {old_pos:d} to frame {new_pos:d}"
                         )
                         df_cues.loc[idx, "position"] = new_pos
                         pd.concat([df_update, df_cues])
