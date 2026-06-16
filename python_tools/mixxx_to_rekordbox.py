@@ -41,6 +41,7 @@ cfg = CONFIG.mixxx_to_rekordbox
 SUFFIX_LIB = "_lib"
 SUFFIX_LOC = "_loc"
 RKBOX_COLOR = "rkbox_color"
+ALLOWED = "FLAC", "ALAC", "WAV", "AIFF", "MP3", "AAC"
 
 
 def is_non_empty_string(s: str) -> bool:
@@ -210,6 +211,13 @@ def main():
 
     # %% opening/filtering
     df_lib = open_mixxx_library(missing_tracks=False)
+    idx_allowed = df_lib["filetype"].isin(a.lower() for a in ALLOWED)
+    if not all(idx_allowed):
+        filestypes = df_lib[~idx_allowed]["filetype"].unique().tolist()
+        print(
+            f"Files with incorrect filetypes {filestypes} have been found and removed."
+        )
+    df_lib = df_lib[idx_allowed]
     df_trk_loc = open_mixxx_track_locations()
     df_cues = open_mixxx_cues(only_hot_cues=True)
     df_pls, df_pls_trk = open_mixxx_playlists_with_tracks(
