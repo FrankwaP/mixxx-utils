@@ -34,16 +34,16 @@ It is usefull when the file has been renamed or if the track is now in another f
 It works with Clementine's database so far, but it won't be hard to add other players' databases.
 Please read the [README](python_tools/fix_track_paths_utils/README.md) for more details.
 
-
 `mixxx_to_rekordbox_xml` export your Mixxx library into the [Rekorbox XML format](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf) and
 **YES IT EXPORTS THE PLAYLISTS, HOT CUES, BEATGRIDS, COLORS, RATING/ENERGY** :-)
 Then you can import the XML file in Rekordbox to prepare a USB key (no license needed).
 Please read the [README](python_tools/mixxx_to_rekordbox_utils/README.md) for more details.
 
+`mixxx_to_rekordbox_xml_compare` creates a Rekordbox playlist with the tracks updated in Mixxx
+since the last Mixxx to Rekordbox import. This makes updating tracks, tempo or cues information very simple and fast.
+Please read the [README](python_tools/mixxx_to_rekordbox_compare_utils/README.md) for more details.
+
 `snap_cues` snaps all the cue points to the closest beat.
-
-
-
 
 ## SQL tools
 
@@ -58,7 +58,6 @@ and I selectively deleted the QM keys so the could be recalculated with KF.
 
 `mixxxdb_cleanup.sql` is a copy of a script found in the [offical repo](https://github.com/mixxxdj/mixxx/tree/main/tools)
 with extra commands (noted with "EXTRA" in the comment).
-
 
 Please read the [README](sql_tools/README.md) for more details.
 
