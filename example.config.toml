@@ -7,7 +7,7 @@ mixxx_db = "/home/francois/.mixxx/mixxxdb.sqlite"
 
 [mixxx_to_rekordbox]
 # folder/filename of the exported RB xml file
-rekordbox_xml_file = "/home/francois/Musique/rekordbox_output.xml"
+mixxx_to_rekordbox_xml = "/home/francois/Musique/mixxx_to_rekordbox.xml"
 mixxx_library_folder = "/home/francois/Musique/"
 rekordbox_library_folder = "E:/"
 # Exports all the tracks of the library or only the ones in playlists
@@ -18,7 +18,9 @@ add_crates_as_playlist = true
 crates_suffix = "_crates"
 # How many beats are used to define a bar in RB
 # (of course it will fail with weird time signature)
-beats_per_bar = 8
+# ATTENTION: Wrong assumption (eg: 8 becomes 8/8 in the XML and becomes 4/4 once imported)
+#            Keep it to 4 so far.
+beats_per_bar = 4
 # If one of your hot cue is always at the start of a bar (for example: a hot cue for the drop)
 # then we can use it to calculate the start of the bars
 # (some tracks do not start at the start of a bar so using the start of the beatgrid is incorrect)
@@ -29,7 +31,7 @@ beats_per_bar = 8
 #
 index_cue_bar_start = 3
 # Mixxx mp3 decoder
-# this is used to calculate the tracks offsets to apply when exporting to Rekordbox
+# This is used to calculate the tracks offsets to apply when exporting to Rekordbox
 # The value can be: MAD, CoreAudio, FFmpeg
 # You can find it launching Mixxx from the command line with the `--developer` parameter,
 # and search for the line with You then search for the line with: "SoundSource providers for file type "mp3""
@@ -39,6 +41,10 @@ index_cue_bar_start = 3
 #  info [Main] SoundSourceProxy - 1 (lowest) : "FFmpeg 4.4.2-0ubuntu0.22.04.1"
 # The one with the highest probability is MAD
 mp3_decoder = "MAD"
+######
+# parameters for the "mixxx_to_rekordbox_compare" utility
+rekordbox_export_xml = "/home/francois/Documents/francois/Pioneer_virtualbox/rekordbox_compare.xml"
+playlist_updated_tracks = "TRACKS_TO_UPDATE"
 
 [snap_cues]
 # which hot cues should be snapped
