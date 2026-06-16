@@ -1,23 +1,24 @@
 # mixxx_to_rekordbox_xml
 
-`mixxx_to_rekordbox_xml` export the information of the Mixxx's library
+`mixxx_to_rekordbox_xml` exports the information of the Mixxx's library
 into the [xml format used by Rekordbox](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf).
 You can then use Rekordbox to prepare a USB key (no license needed).
 
-`mixxx_to_rekordbox_xml` exports the BPM, key, score/energy, color, beat grid, hot cues (as both memory and hot cues), the playlists, the crates (as playlists).
+It exports the BPM, key, score/energy, color, beat grid, hot cues (as both memory and hot cues), the playlists, the crates (as playlists).
 
 ## Suggestions for people using Mixxx on Linux
 
 So far one still needs to **use Rekordbox on Windows**.
 While Rekordbox can run on Wine [with a few tricks](https://erhan.es/blog/running-pioneer-rekordbox-on-linux/),
-I have not find how to make it recognize a USB key as an export device.
+I have not found how to make it recognize a USB key as an export device.
+Please share any tips you have regarding this <3
 
 So that left us with two options:
 
 1. Using a Linux/Windows dual boot.
 2. Using a Windows virtual machine on Linux.
 
-In both cases you have to options regarding how to make your music available on Windows:
+In both cases you have two options regarding how to make your music available on Windows:
 
 1. Having your music on a shared partition (dual-boot case) or folder (virtual machine case).
 2. Having your music on an external drive.
@@ -46,17 +47,13 @@ Since you already have the BPM, key, gain… from Mixxx, you can prevent Rekordb
 Now… let's avoid a nervous meltdown because of the implicit/blackbox behaviour of Rekordbox:
 
 1. For the *XML > Rekordbox* import, always import the tracks, not the playlists. Else RB will skip the tracks that are already present (the track location exists) in its collection, to save analysis time. So open each playlist of your choice, select the tracks, and *right click > import*.
-2. For the *Rekordbox > USB key* export, always use *Right Click > Export* not the *Sync Manager*. I don't remember 100% TBH, but I think it also has to do with updating or not tracks informations when they are already present in the key database.
+2. For the *Rekordbox > USB key* export, always use *Right Click > Export* not the *Sync Manager*. I don't remember 100% TBH, but I think it also has to do with updating or not tracks information when they are already present in the key database.
 
 Extreme case: it happened to me that some music files were damaged (they sounded like a scratched vinyle). In this case the only solution I've found was to… delete the content of the USB key, and export all my tracks once again :-(
 
-But to my surprise this actually does not take so long, here are my rough observations:
+But to my surprise this actually does not take so long: the worse is by far a track first import (with all the extra files generation, like the waveforms files…).
 
-1. Consider 30s for a *XML > Rekordbox* track first import (with all the extra files generation, like the waveforms files…)
-2. Consider 2s for a *XML > Rekordbox* track information update
-3. Consider 0.5s for a *Rekordbox > USB 3* track export
-
-## Extra Ressources
+## Extra Resources
 
 Here are great tips to prepare your first USB key using Rekordbox:
 
