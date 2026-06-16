@@ -21,7 +21,7 @@ class MixxxConfig(MyBaseModel):
 
 
 class MixxxToRekordboxConfig(MyBaseModel):
-    rekordbox_xml_file: Path
+    mixxx_to_rekordbox_xml: Path
     mixxx_library_folder: DirectoryPath
     rekordbox_library_folder: Path
     export_only_tracks_in_playlists: bool = True
@@ -30,6 +30,8 @@ class MixxxToRekordboxConfig(MyBaseModel):
     beats_per_bar: int = Field(default=8, gt=0)
     index_cue_bar_start: int = Field(ge=0)
     mp3_decoder: Literal["MAD", "CoreAudio", "FFmpeg"] = "MAD"
+    rekordbox_export_xml: Path
+    playlist_updated_tracks: str
 
 
 class SnapCuesConfig(MyBaseModel):
