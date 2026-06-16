@@ -40,6 +40,7 @@ cfg = CONFIG.mixxx_to_rekordbox
 
 SUFFIX_LIB = "_lib"
 SUFFIX_LOC = "_loc"
+RKBOX_COLOR = "rkbox_color"
 
 
 def is_non_empty_string(s: str) -> bool:
@@ -152,8 +153,8 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
         attrib["Comments"] = trk_row["comment"]
 
     # Add color if present
-    if not pd.isna(trk_row["color"]):
-        attrib["Colour"] = trk_row["color"]
+    if trk_row[RKBOX_COLOR]:
+        attrib["Colour"] = trk_row[RKBOX_COLOR]
 
     return get_elem("TRACK", attrib)
 
@@ -225,7 +226,7 @@ def main():
     df_lib = df_nostem
 
     # Convert the colors
-    convert_colors_for_rekordbox(df_lib["color"])
+    df_lib.loc[:, RKBOX_COLOR] = convert_colors_for_rekordbox(df_lib.loc[:, "color"])
 
     # the rest of the filtering is done with the merging
 
