@@ -29,7 +29,6 @@ If at some point you had such problem, clean the Rekordbox library by deleting a
 
 **My preference went for a Windows virtual machine with a shared folder**. If you want to follow this path, please see [my recommendations](tips_for_windows_virtual_machine.md).
 
-
 ## Import in Rekordbox
 
 To import the XML file in Rekorbox:
@@ -44,19 +43,18 @@ Since you already have the BPM, key, gain… from Mixxx, you can prevent Rekordb
 - untick BPM/key/etc...
 - (don't worry the waveform will still be computed during the export)
 
-
 Now… let's avoid a nervous meltdown because of the implicit/blackbox behaviour of Rekordbox:
 
 1. For the *XML > Rekordbox* import, always import the tracks, not the playlists. Else RB will skip the tracks that are already present (the track location exists) in its collection, to save analysis time. So open each playlist of your choice, select the tracks, and *right click > import*.
 2. For the *Rekordbox > USB key* export, always use *Right Click > Export* not the *Sync Manager*. I don't remember 100% TBH, but I think it also has to do with updating or not tracks informations when they are already present in the key database.
 
 Extreme case: it happened to me that some music files were damaged (they sounded like a scratched vinyle). In this case the only solution I've found was to… delete the content of the USB key, and export all my tracks once again :-(
+
 But to my surprise this actually does not take so long, here are my rough observations:
 
 1. Consider 30s for a *XML > Rekordbox* track first import (with all the extra files generation, like the waveforms files…)
 2. Consider 2s for a *XML > Rekordbox* track information update
 3. Consider 0.5s for a *Rekordbox > USB 3* track export
-
 
 ## Extra Ressources
 
