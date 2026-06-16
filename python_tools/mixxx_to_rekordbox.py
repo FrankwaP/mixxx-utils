@@ -10,7 +10,6 @@ from urllib.parse import quote
 from xml.etree import ElementTree as ET
 
 
-from python_tools import CONFIG
 from python_tools.mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
 from python_tools.mixxx_to_rekordbox_utils.color_tools import (
     convert_colors_for_rekordbox,
@@ -34,6 +33,10 @@ from python_tools.utils.track_utils import (
     guess_inizio_sec,
     position_frame_to_sec,
 )
+
+from python_tools import CONFIG
+
+cfg = CONFIG.mixxx_to_rekordbox
 
 SUFFIX_LIB = "_lib"
 SUFFIX_LOC = "_loc"
@@ -97,10 +100,11 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
             bpm,
             cfg.beats_per_bar,
         )
+        inizio += offset_start_beatgrid_ms / 1000
 
     attrib: AttribDict = {
-        "Inizio": inizio + offset_start_beatgrid_ms / 1000,
-        "Bpm": bpm,
+        "Inizio": f"{inizio:.3f}",
+        "Bpm": f"{bpm:.2f}",
         "Metro": f"{cfg.beats_per_bar}/{cfg.beats_per_bar}",
         "Battito": "1",
     }
@@ -162,11 +166,13 @@ def mixxx_cue_row_to_rekbox_xml(
     # -1 is to create a memory cue
     cue_nums = [-1, cue_row_["hotcue"]]
     for cnum in cue_nums:
+        start = (
+            position_frame_to_sec(cue_row_["position"], samplerate) + offset_ms / 1000
+        )
         attrib: AttribDict = {
             "Type": "0",
             "Num": cnum,
-            "Start": position_frame_to_sec(cue_row_["position"], samplerate)
-            + offset_ms / 1000,
+            "Start": f"{start:.3f}",
         }
         yield get_elem("POSITION_MARK", attrib)
 
@@ -191,9 +197,8 @@ def mixxx_playlist_track_to_rekordbox_xml(
     return get_elem("TRACK", attrib)
 
 
-if __name__ == "__main__":
+def main():
 
-    cfg = CONFIG.mixxx_to_rekordbox
     # %% checking the config
     if cfg.index_cue_bar_start != 0:
         answer = input(
@@ -287,9 +292,7 @@ if __name__ == "__main__":
     tree = ET.ElementTree(element=root_xml)
     ET.indent(tree, space="  ", level=0)
 
-    rek_fil = Path(cfg.mixxx_library_folder, cfg.rekordbox_xml_file)
-    with open(rek_fil, "w", encoding="utf-8") as fxml:
-        fxml.write('<?xml version="1.0" encoding="UTF-8"?>')
-    tree.write(rek_fil, encoding="unicode")
+    rek_fil = Path(cfg.mixxx_library_folder, cfg.mixxx_to_rekordbox_xml)
+    tree.write(rek_fil, encoding="utf-8", xml_declaration=True)
 
     print(f"==> {rek_fil}")
