@@ -171,12 +171,19 @@ def mixxx_cue_row_to_rekbox_xml(
         start = (
             position_frame_to_sec(cue_row_["position"], samplerate) + offset_ms / 1000
         )
-        attrib: AttribDict = {
-            "Type": "0",
-            "Num": cnum,
-            "Start": f"{start:.3f}",
-        }
-        yield get_elem("POSITION_MARK", attrib)
+        if start < 0:
+            # RkBox does not import negative cue position
+            logging.warning(
+                "A negative cue start position has been found and igored for cue %s",
+                cue_row_["id"],
+            )
+        else:
+            attrib: AttribDict = {
+                "Type": "0",
+                "Num": cnum,
+                "Start": f"{start:.3f}",
+            }
+            yield get_elem("POSITION_MARK", attrib)
 
 
 def mixxx_playlist_to_rekordbox_xml(
