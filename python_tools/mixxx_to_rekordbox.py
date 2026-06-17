@@ -150,35 +150,43 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
         logging.warning("Track name is empty for file: %s", location)
     if not (isinstance(trk_row["bpm"], float) and trk_row["bpm"] > 50.0):
         logging.warning("Incorrect BPM for file: %s", location)
-    if not (isinstance(trk_row["key_id"], int) and trk_row["key_id"] > 0):
+
+    try:
+        tonality = KEY_ID_LANCELOT[trk_row["key_id"]]
+    except KeyError:
         logging.warning("Incorrect key id for file: %s", location)
+        tonality = ""
 
     attrib: AttribDict = {
         "TrackID": trk_row["id" + SUFFIX_LIB],
         "Name": trk_row["title"],
         "Artist": trk_row["artist"],
+        "Composer": trk_row["composer"],
         "Album": trk_row["album"],
-        "TrackNumber": trk_row["tracknumber"],
+        # Grouping
         "Genre": trk_row["genre"],
+        "Kind": trk_row["filetype"],
+        "Size": trk_row["filesize"],
         "TotalTime": round(trk_row["duration"]),
+        # DiscNumber
+        "TrackNumber": trk_row["tracknumber"],
+        "Year": trk_row["year"],
         "AverageBpm": trk_row["bpm"],
-        "Location": quote("file://localhost/" + str(final_location)),
+        # DateModified
+        # DateAdded
+        "BitRate": trk_row["bitrate"],
         "SampleRate": trk_row["samplerate"],
+        "Comment": trk_row["comment"],
+        # PlayCount
+        # LastPlayed
         "Rating": RATING_MAPING[trk_row["rating"]],
+        "Location": quote("file://localhost/" + str(final_location)),
+        # Remixer
+        "Tonality": tonality,
+        # Label
+        # Mix
+        "Colour": trk_row[RKBOX_COLOR],
     }
-
-    try:
-        attrib["Tonality"] = KEY_ID_LANCELOT[trk_row["key_id"]]
-    except KeyError:
-        pass
-
-    # Add comment if present
-    if is_non_empty_string(trk_row["comment"]):
-        attrib["Comments"] = trk_row["comment"]
-
-    # Add color if present
-    if trk_row[RKBOX_COLOR]:
-        attrib["Colour"] = trk_row[RKBOX_COLOR]
 
     return get_elem("TRACK", attrib)
 
