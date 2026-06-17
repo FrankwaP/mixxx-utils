@@ -32,6 +32,7 @@ TEMPO_FIELDS: Final[list[str]] = [
     "Inizio",
     "Bpm",
     "Metro",
+    # DO NOT use Battito as RkBox does not export it correctly (always "4/4")
 ]
 
 MIXXX_SUFFIX = "_mixxx"
