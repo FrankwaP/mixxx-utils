@@ -1,4 +1,5 @@
 import logging
+import re
 import sys
 from pathlib import Path
 from typing import Generator
@@ -36,8 +37,9 @@ from python_tools.utils.track_utils import (
 
 from python_tools import CONFIG
 
-cfg = CONFIG.mixxx_to_rekordbox
+logging.basicConfig(level=logging.INFO)
 
+CFG = CONFIG.mixxx_to_rekordbox
 SUFFIX_LIB = "_lib"
 SUFFIX_LOC = "_loc"
 RKBOX_COLOR = "rkbox_color"
@@ -71,6 +73,27 @@ def get_node_xml(nb_pls: int) -> ET.Element:
     return get_elem("NODE", attrib)
 
 
+def get_time_signature_in_comment(trk_row: pd.Series) -> str:
+    # NOTE: the denominator is not used
+    if not isinstance(trk_row["comment"], str):
+        return f"{CFG.beats_per_bar}/4"
+    match = re.findall(r"\b\d+/\d\b", trk_row["comment"])
+    if len(match) == 0:
+        return f"{CFG.beats_per_bar}/4"
+    location = Path(trk_row["location" + SUFFIX_LOC])
+    if len(match) > 1:
+        logging.warning(
+            "More than one time signature candidates have been found in the comments of file %s.",
+            location,
+        )
+    logging.info(
+        "Time signature %s has been found in the comment of file %s.",
+        match[0],
+        location,
+    )
+    return match[0]
+
+
 def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
     trk_row: pd.Series,
     cue_rows: pd.DataFrame,
@@ -80,19 +103,19 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
     bpm = trk_row["bpm"]
     assert isinstance(bpm, float)
     if (
-        cfg.index_cue_bar_start <= 0
-        or cfg.index_cue_bar_start - 1 not in cue_rows["hotcue"].values
+        CFG.index_cue_bar_start <= 0
+        or CFG.index_cue_bar_start - 1 not in cue_rows["hotcue"].values
     ):
         beatgrid_info = BeatGridInfo(trk_row)
         inizio = beatgrid_info.start_sec
     else:
-        cue_point = cue_rows[cfg.index_cue_bar_start - 1 == cue_rows["hotcue"]]
+        cue_point = cue_rows[CFG.index_cue_bar_start - 1 == cue_rows["hotcue"]]
         if len(cue_point) != 1:
             logging.warning(
                 "More than one hotcue #%d has been found for file %s\n.",
                 "The first one has been kept to decide the start of the bars"
                 "… but you might want to re-create it!",
-                cfg.index_cue_bar_start,
+                CFG.index_cue_bar_start,
                 trk_row["location"],
             )
             cue_point = cue_point[0]
@@ -100,25 +123,25 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
             cue_point.iloc[0]["position"],
             trk_row["samplerate"],
             bpm,
-            cfg.beats_per_bar,
+            CFG.beats_per_bar,
         )
         inizio += offset_start_beatgrid_ms / 1000
 
     attrib: AttribDict = {
         "Inizio": f"{inizio:.3f}",
         "Bpm": f"{bpm:.2f}",
-        "Metro": f"{cfg.beats_per_bar}/{cfg.beats_per_bar}",
-        "Battito": "1",
+        "Metro": get_time_signature_in_comment(trk_row),
+        "Battito": "1",  # NOTE: means "1st beat of the bar" (not "1 beat per bar")
     }
     return get_elem("TEMPO", attrib)
 
 
 def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
     location = Path(trk_row["location" + SUFFIX_LOC])
-    if not location.is_relative_to(cfg.mixxx_library_folder):
+    if not location.is_relative_to(CFG.mixxx_library_folder):
         logging.warning("This track is not in the Mixxx library folder: %s", location)
-    final_location = cfg.rekordbox_library_folder / location.relative_to(
-        cfg.mixxx_library_folder
+    final_location = CFG.rekordbox_library_folder / location.relative_to(
+        CFG.mixxx_library_folder
     )
 
     if not is_non_empty_string(trk_row["artist"]):
@@ -173,8 +196,8 @@ def mixxx_cue_row_to_rekbox_xml(
         )
         if start < 0:
             # RkBox does not import negative cue position
-            logging.warning(
-                "A negative cue start position has been found and igored for cue %s",
+            logging.info(
+                "A negative cue start position has been found and ignored for cue %s",
                 cue_row_["id"],
             )
         else:
@@ -209,7 +232,7 @@ def mixxx_playlist_track_to_rekordbox_xml(
 def main():
 
     # %% checking the config
-    if cfg.index_cue_bar_start != 0:
+    if CFG.index_cue_bar_start != 0:
         answer = input(
             "Are you sure all these hot cues are snapped to the beatgrid (y/*)? : "
         )
@@ -229,10 +252,10 @@ def main():
     df_cues = open_mixxx_cues(only_hot_cues=True)
     df_pls, df_pls_trk = open_mixxx_playlists_with_tracks(
         filter_hidden=True,
-        add_crates_as_playlist=cfg.add_crates_as_playlist,
-        crate_suffix=cfg.crates_suffix,
+        add_crates_as_playlist=CFG.add_crates_as_playlist,
+        crate_suffix=CFG.crates_suffix,
     )
-    if cfg.export_only_tracks_in_playlists:
+    if CFG.export_only_tracks_in_playlists:
         df_lib = df_lib[df_lib["id"].isin(df_pls_trk["track_id"])]
 
     # Filter out tracks with "STEM" in comments
@@ -266,7 +289,7 @@ def main():
             track_cues = df_cues[df_cues["track_id"] == track_row["id" + SUFFIX_LIB]]
             rate = track_row["samplerate"]
             export_offset_ms = get_offset_ms(
-                track_row["location" + SUFFIX_LOC], cfg.mp3_decoder
+                track_row["location" + SUFFIX_LOC], CFG.mp3_decoder
             )
             for _, cue_row in track_cues.iterrows():
                 assert rate
@@ -308,7 +331,7 @@ def main():
     tree = ET.ElementTree(element=root_xml)
     ET.indent(tree, space="  ", level=0)
 
-    rek_fil = Path(cfg.mixxx_library_folder, cfg.mixxx_to_rekordbox_xml)
+    rek_fil = Path(CFG.mixxx_library_folder, CFG.mixxx_to_rekordbox_xml)
     tree.write(rek_fil, encoding="utf-8", xml_declaration=True)
 
     print(f"==> {rek_fil}")

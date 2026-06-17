@@ -16,11 +16,8 @@ export_only_tracks_in_playlists = true
 add_crates_as_playlist = true
 # Which suffix to use to create the playlist name from the crate name
 crates_suffix = "_crates"
-# How many beats are used to define a bar in RB
-# (of course it will fail with weird time signature)
-# ATTENTION: Wrong assumption (eg: 8 becomes 8/8 in the XML and becomes 4/4 once imported)
-#            Keep it to 4 so far.
-beats_per_bar = 4
+# How many beats are used to define a bar in RB when no time signature is mentionned in the comment
+beats_per_bar = 8
 # If one of your hot cue is always at the start of a bar (for example: a hot cue for the drop)
 # then we can use it to calculate the start of the bars
 # (some tracks do not start at the start of a bar so using the start of the beatgrid is incorrect)
