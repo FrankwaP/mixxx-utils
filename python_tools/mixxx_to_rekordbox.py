@@ -165,7 +165,7 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
         "Album": trk_row["album"],
         # Grouping
         "Genre": trk_row["genre"],
-        "Kind": trk_row["filetype"],
+        # Kind: we let Rekordbox find it
         "Size": trk_row["filesize"],
         "TotalTime": round(trk_row["duration"]),
         # DiscNumber
@@ -174,7 +174,7 @@ def mixxx_track_row_to_rekbox_track_xml(trk_row: pd.Series) -> ET.Element:
         "AverageBpm": trk_row["bpm"],
         # DateModified
         # DateAdded
-        "BitRate": trk_row["bitrate"],
+        # BitRate: we let Rekrodbox calculate it
         "SampleRate": trk_row["samplerate"],
         "Comment": trk_row["comment"],
         # PlayCount
