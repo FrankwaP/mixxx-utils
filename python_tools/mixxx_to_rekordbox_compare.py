@@ -14,7 +14,8 @@ TRACK_FIELDS: Final[list[str]] = [
     "Location",
     "Artist",
     "Album",
-    "Title",  # the "Name" field is renamed in this script!
+    # The "Name" field is renamed to "Title" in this script!
+    "Title",
     "Tonality",
     "Rating",
     "Colour",
@@ -31,8 +32,8 @@ TEMPO_FIELDS: Final[list[str]] = [
     "Location",
     "Inizio",
     "Bpm",
-    "Metro",
-    # DO NOT use Battito as RkBox does not export it correctly (always "4/4")
+    # DO NOT use Metro as RkBox does not export it correctly (always "4/4")
+    # "Metro",
 ]
 
 MIXXX_SUFFIX = "_mixxx"
