@@ -32,6 +32,8 @@ PLAYER_PATH = "PLAYER_PATH"
 cfg = CONFIG.fix_track_paths
 cfg_mixxx = CONFIG.mixxx
 
+pd.set_option("display.max_rows", 100)
+
 
 def _check_and_format_df_player(df_player: pd.DataFrame) -> pd.DataFrame:
     """Check that the provided DataFrame contains the necessary columns and that they are consistent with each other."""
@@ -103,7 +105,7 @@ def _get_perfect_match(
 
     if len(df_match) > 0:
         print(
-            f"{len(df_match)} perfect matches found! They will be automatically fixed.",
+            f"\n{len(df_match)} perfect matches found! They will be automatically fixed.",
             df_match[COLS_PERFECT_MATCH],
         )
     return df_match
@@ -274,6 +276,7 @@ def fix_with_player_db(df_player: pd.DataFrame):
     df_perfect_match = _get_perfect_match(df_mixxx_missing, df_player)
     df_close_match = _get_close_match(df_mixxx_missing, df_player, df_perfect_match)
     df_match = pd.concat([df_perfect_match, df_close_match])
+    print(df_match[df_match["location"].duplicated()])
     assert (
         df_match["location"].duplicated().sum() == 0
     ), "Error: there are duplicated locations (IDs) in the matched DataFrame, this should not happen."
