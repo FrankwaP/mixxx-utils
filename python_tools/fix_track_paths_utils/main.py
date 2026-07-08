@@ -1,5 +1,5 @@
 from pathlib import Path
-from sys import exit
+from sys import exit as sysexit
 from typing import Final
 
 import pandas as pd
@@ -11,6 +11,7 @@ from python_tools.utils.music_db_utils import (
     create_mixxx_db_backup,
     update_mixxx_db_table,
     delete_rows_mixxx_db_table,
+    COLS_FOR_DUP,
 )
 from python_tools.utils.track_utils import (
     get_closest_matches_indices,
@@ -19,7 +20,7 @@ from python_tools.utils.track_utils import (
 
 from python_tools import CONFIG
 
-COLS_PERFECT_MATCH: Final[list[str]] = ["artist", "album", "title"]
+COLS_PERFECT_MATCH: Final[list[str]] = COLS_FOR_DUP
 COLS_CLOSE_MATCH: Final[list[str]] = ["artist", "title"]
 IDX_MIXXX_LIB: Final[str] = "saved_indices_mixxx_library"
 IDX_PLAYER: Final[str] = "saved_indices_player"
@@ -78,7 +79,7 @@ def _ask_match_index(df_player_nomatch: pd.DataFrame, close_indices: pd.Index) -
     df_choices = df_player_nomatch.loc[close_indices, COLS_PERFECT_MATCH].reset_index(
         drop=True
     )
-    print(df_choices)
+    print(f"Available choices:\n{df_choices}")
     choices = [""] + [str(i) for i in df_choices.index]
     while True:
         ans = input(
@@ -102,10 +103,20 @@ def _get_perfect_match(
         right_on=COLS_PERFECT_MATCH,
         suffixes=["_player", None],
     )
+    #
+    df_dup = df_match[df_match.duplicated(COLS_PERFECT_MATCH)]
+    if len(df_dup):
+        print(
+            "\nDuplicate (perfect) matches have been found!\n"
+            f"They are likely from duplicated {COLS_PERFECT_MATCH} information in the player database.\n"
+            "Please clean them manually <3\n\n"
+            f"{df_dup[COLS_PERFECT_MATCH]}"
+        )
+        sysexit(47)
 
     if len(df_match) > 0:
         print(
-            f"\n{len(df_match)} perfect matches found! They will be automatically fixed.",
+            f"\n{len(df_match)} perfect matches found! They will be automatically fixed.\n",
             df_match[COLS_PERFECT_MATCH],
         )
     return df_match
@@ -140,8 +151,8 @@ def _get_close_track_match(
     track_row: pd.Series, df_player_nomatch: pd.DataFrame
 ) -> pd.DataFrame:
     print(
-        "\nFinding the closest match for Mixxx entry \n"
-        f"{track_row[COLS_PERFECT_MATCH].to_frame().T}"
+        "\nFinding the closest match for Mixxx entry: \n"
+        f"{track_row[COLS_PERFECT_MATCH].to_frame().T}\n"
     )
     close_indices = get_closest_matches_indices(
         track_row,
@@ -259,7 +270,7 @@ def fix_with_player_db(df_player: pd.DataFrame):
     df_mixxx_missing = open_mixxx_library(existing_tracks=False, missing_tracks=True)
     if len(df_mixxx_missing) == 0:
         print("No missing tracks, congratulation!")
-        exit()
+        sysexit()
 
     # open the player database and check that it is consistent with the expected format
     df_player = _check_and_format_df_player(df_player)
@@ -276,10 +287,9 @@ def fix_with_player_db(df_player: pd.DataFrame):
     df_perfect_match = _get_perfect_match(df_mixxx_missing, df_player)
     df_close_match = _get_close_match(df_mixxx_missing, df_player, df_perfect_match)
     df_match = pd.concat([df_perfect_match, df_close_match])
-    print(df_match[df_match["location"].duplicated()])
     assert (
         df_match["location"].duplicated().sum() == 0
-    ), "Error: there are duplicated locations (IDs) in the matched DataFrame, this should not happen."
+    ), "Error: there are duplicated locations IDs in the matched DataFrame, this should not happen."
 
     # update Mixxx database
     create_mixxx_db_backup()
