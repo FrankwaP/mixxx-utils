@@ -1,4 +1,4 @@
-from sys import exit
+from sys import exit as sysexit
 
 import pandas as pd
 from python_tools.utils.music_db_utils import open_table_as_df
@@ -18,7 +18,7 @@ def get_clementine_db() -> pd.DataFrame:
     answer = input("Did you refresh Clementine's library (y/*)? ")
     if answer != "y":
         print("Well do it <3")
-        exit()
+        sysexit()
     df_clem = open_table_as_df(cfg.clem_db, "songs")
     df_clem.rename(columns={"filename": PLAYER_PATH}, inplace=True)
     return df_clem
