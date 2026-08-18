@@ -110,7 +110,8 @@ def write_new_playlist(track_id_mixxx: set[str]) -> None:
         xml_declaration=True,
     )
     print(
-        f"A new playlist {cfg.playlist_updated_tracks} has been added to the Mixxx to Rekordbox XML file {cfg.mixxx_to_rekordbox_xml}."
+        f"A new playlist {cfg.playlist_updated_tracks} has been added to "
+        f"the Mixxx to Rekordbox XML file {cfg.mixxx_to_rekordbox_xml}."
     )
 
 
@@ -124,8 +125,8 @@ def main():
     ###
     # Checking updated track info
     mrg_track = pd.merge(
-        df_mixxx_track,
-        df_rkbox_track,
+        df_mixxx_track.fillna(""),
+        df_rkbox_track.fillna(""),
         on=TRACK_FIELDS,
         how="left_anti",
         suffixes=[MIXXX_SUFFIX, RKBOX_SUFFIX],
