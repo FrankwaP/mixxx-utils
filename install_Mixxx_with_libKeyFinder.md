@@ -48,7 +48,7 @@ Then we use the [recommended commands](https://github.com/mixxxdj/mixxx/wiki/Com
 
 ```bash
 source tools/debian_buildenv.sh setup
-# rm -rf build  # this might help if you've had issues with libraries 
+# rm -rf build  # this might help if you've had issues with libraries
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -S . -B build
 
 # choose how many processors to use
@@ -73,7 +73,7 @@ cd ..
 In case you want to share the installer:
 ```bash
 INSTALLER_FOLDER=".."  # pick the one you want
-mv build/mixxx*.deb $INSTALLER_FOLDER 
+mv build/mixxx*.deb $INSTALLER_FOLDER
 ```
 
 ### (Optionnal) Cleaning
@@ -81,7 +81,6 @@ mv build/mixxx*.deb $INSTALLER_FOLDER
 
 If your computer is short on memory, you can delete the build folder:
 ```bash
-mv build/*deb ..
 rm -rf build
 ```
 

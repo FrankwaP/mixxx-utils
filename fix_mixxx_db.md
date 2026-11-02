@@ -2,14 +2,14 @@
 
 As mentionned in [this GitHub issue](https://github.com/mixxxdj/mixxx/issues/12328) several foreign key constraints defined in Mixxx's database are incorrect, and SQL Alchemy (Python's library) does not like it.
 
-Two methods are proposed:  
+Two methods are proposed:
 
-- using "mouse actions" on a graphical tool  
+- using "mouse actions" on a graphical tool
 - using SQL commands
 
 In both cases, please make a backup of the database!
 
-## Using a graphical tool  
+## Using a graphical tool
 
 I fixed these quite easily using a GUI called "DB  Browser for SQlite" (`sqlitebrowser`).
 
@@ -44,4 +44,4 @@ Now you can save and close the database. And from now you're life will be very s
 
 ## Using SQL commands
 
-@vespadj has shared the corresponding command in [the GitHub issue](https://github.com/mixxxdj/mixxx/issues/12328). Please note that I haven't tried them…  
+@vespadj has shared the corresponding command in [the GitHub issue](https://github.com/mixxxdj/mixxx/issues/12328). Please note that I haven't tried them…
