@@ -7,12 +7,14 @@
 -- If you want to keep only the results from "keyfinder", do:
 
 UPDATE library
-
-SET key = "",
+SET
+    "key" = '',
     keys = NULL,
     key_id = 0,
-    keys_version = "",
-    keys_sub_version = ""
-    WHERE keys_sub_version != "vamp_plugin_id=keyfinder:2" OR keys_sub_version is NULL;
-VACUUM;
-ANALYZE;
+    keys_version = '',
+    keys_sub_version = ''
+WHERE
+    keys_sub_version != 'vamp_plugin_id=keyfinder:2'
+    OR keys_sub_version IS NULL;
+VACUUM; -- noqa: PRS
+ANALYZE; -- noqa: PRS

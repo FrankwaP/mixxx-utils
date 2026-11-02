@@ -2,5 +2,5 @@
 
 DELETE FROM cues
 WHERE type = 6 OR type = 7;
-VACUUM;
-ANALYZE;
+VACUUM; -- noqa: PRS
+ANALYZE; -- noqa: PRS

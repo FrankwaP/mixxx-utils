@@ -7,5 +7,5 @@
 UPDATE track_locations
 SET fs_deleted = 0
 WHERE fs_deleted = 1;
-VACUUM;
-ANALYZE;
+VACUUM; -- noqa: PRS
+ANALYZE; -- noqa: PRS
