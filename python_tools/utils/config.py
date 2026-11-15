@@ -2,14 +2,18 @@ import sys
 from pathlib import Path
 import os
 import tomllib
-from typing import Literal
+from typing import Literal, Annotated
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, AfterValidator
 from pydantic.fields import Field
 from pydantic.types import FilePath, DirectoryPath
 from pydantic_core import ErrorDetails
 
 CONFIG_ENV_VAR = "MIXXX_UTILS_CONFIG"
+
+
+def ressolve(path: Path) -> Path:
+    return path.resolve()
 
 
 class MyBaseModel(BaseModel):
@@ -23,20 +27,20 @@ class UserInteractions(MyBaseModel):
 
 
 class MixxxConfig(MyBaseModel):
-    mixxx_db: FilePath
+    mixxx_db: Annotated[FilePath, AfterValidator(ressolve)]
 
 
 class MixxxToRekordboxConfig(MyBaseModel):
-    mixxx_to_rekordbox_xml: Path
-    mixxx_library_folder: DirectoryPath
-    rekordbox_library_folder: Path
+    mixxx_to_rekordbox_xml: Annotated[Path, AfterValidator(ressolve)]
+    mixxx_library_folder: Annotated[DirectoryPath, AfterValidator(ressolve)]
+    rekordbox_library_folder: Annotated[Path, AfterValidator(ressolve)]
     export_only_tracks_in_playlists: bool = True
     add_crates_as_playlist: bool = True
     crates_suffix: str = "_crates"
     beats_per_bar: int = Field(default=8, gt=0)
     index_cue_bar_start: int = Field(ge=0)
     mp3_decoder: Literal["MAD", "CoreAudio", "FFmpeg"] = "MAD"
-    rekordbox_export_xml: Path
+    rekordbox_export_xml: Annotated[Path, AfterValidator(ressolve)]
     playlist_updated_tracks: str
 
 
