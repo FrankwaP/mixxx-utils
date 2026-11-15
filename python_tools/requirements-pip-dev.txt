@@ -7,3 +7,4 @@ types-protobuf
 pandas-stubs
 types-tqdm
 pre-commit
+pytest
