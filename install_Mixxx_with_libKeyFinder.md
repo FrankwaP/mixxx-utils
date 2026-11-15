@@ -3,6 +3,11 @@
 Since there is no Debian/Ubuntu package with libKeyFinder, we must install it from sources.
 Here are instructions on how to do it.
 
+… but if you are lazy and (more importantly) trust me, I'm sharing the last version I have compile
+[here](https://drive.google.com/drive/folders/1gHLzEZRoG4nVdqrjZdmwyXs1kIGS10-W?usp=sharing).
+The SHA256 check is used to verify that you have downloaded the proper file,
+so now you trust me AND your download :-p
+
 ## Why libKeyFinder?
 
 From [KEY DETECTION COMPARISON 2020](https://www.reddit.com/r/DJs/comments/hwlzyt/key_detection_comparison_2020/):
@@ -73,7 +78,12 @@ cd ..
 In case you want to share the installer:
 ```bash
 INSTALLER_FOLDER=".."  # pick the one you want
-mv build/mixxx*.deb $INSTALLER_FOLDER
+cd build
+deb=$(echo mixxx*.deb)
+sha=${deb/.deb/.sha256}
+sha256sum $deb > $sha
+mv $deb $sha ../$INSTALLER_FOLDER
+cd ..
 ```
 
 ### (Optionnal) Cleaning
