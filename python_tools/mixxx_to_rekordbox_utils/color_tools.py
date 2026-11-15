@@ -36,10 +36,14 @@ def _dec_to_rgb(rgb_int: int) -> RGB_TUPPLE:
     return red, green, blue
 
 
-def _convert(val: float) -> str:
-    assert isinstance(val, float)
-    if np.isnan(val):
+def _convert(val: float | None) -> str:
+    # the SQL Schema defines it as an Integer column, but beacuse of the None values,
+    # it is importeed as:
+    # - all None columns (in case no colors are defined)
+    # - np.float column to handle both the integer values and None
+    if val is None or np.isnan(val):
         return ""
+    assert isinstance(val, float)
     intval = int(val)
     assert intval == val
     try:
