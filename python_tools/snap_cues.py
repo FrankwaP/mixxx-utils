@@ -1,20 +1,23 @@
 from tqdm import tqdm
 import pandas as pd
+from typing import cast
 
 
-from python_tools import CONFIG
 from python_tools.utils.music_db_utils import (
     open_mixxx_library,
     open_mixxx_cues,
     update_mixxx_db_table,
 )
 from python_tools.utils.track_utils import BeatGridInfo, snap_cue_frame
+from python_tools.utils.config import get_config
 
 
 def main():
-    cfg = CONFIG.snap_cues
-    df_lib = open_mixxx_library()
-    df_cues = open_mixxx_cues(only_hot_cues=False)
+    config = get_config()
+    mixxx_config = config.mixxx
+    snap_config = config.snap_cues
+    df_lib = open_mixxx_library(mixxx_config.mixxx_db)
+    df_cues = open_mixxx_cues(mixxx_config.mixxx_db, only_hot_cues=False)
     error_log = []
     df_update = pd.DataFrame()
     for _, lib_row in tqdm(df_lib.iterrows(), total=len(df_lib)):
@@ -38,8 +41,9 @@ def main():
             beat_interval_sec = 60 / beatgrid_info.bpm
             samplerate = lib_row["samplerate"]
             for idx in cues_idx.index:
-                if df_cues.loc[idx, "hotcue"] + 1 in cfg.idx_snapped_cues:
-                    old_pos = df_cues.loc[idx, "position"]
+                hotcue_idx = cast(int, df_cues.loc[idx, "hotcue"]) + 1
+                if hotcue_idx in snap_config.idx_snapped_cues:
+                    old_pos = cast(int, df_cues.loc[idx, "position"])
                     new_pos = snap_cue_frame(
                         old_pos,
                         samplerate,
@@ -48,7 +52,7 @@ def main():
                     )
                     if new_pos != old_pos:
                         print(
-                            f"Snapping cue {df_cues.loc[idx, 'hotcue'] + 1} for "
+                            f"Snapping cue {hotcue_idx} for "
                             f"{lib_row['artist']} - {lib_row['title']} from "
                             f"frame {old_pos:d} to frame {new_pos:d}"
                         )
@@ -56,4 +60,6 @@ def main():
                         pd.concat([df_update, df_cues])
 
     print("\n".join(error_log))
-    update_mixxx_db_table(df_cues, "cues", set_cols=["position"], where_cols=["id"])
+    update_mixxx_db_table(
+        mixxx_config.mixxx_db, df_cues, "cues", set_cols=["position"], where_cols=["id"]
+    )

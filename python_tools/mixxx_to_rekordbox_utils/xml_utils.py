@@ -1,7 +1,6 @@
 from typing import Optional, MutableMapping, Any
 from xml.etree import ElementTree as ET
 
-
 AttribDict = MutableMapping[str, Any]
 
 

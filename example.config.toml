@@ -1,6 +1,11 @@
 # Note: do not use variables such as "~", "$HOME" or "%TMP" in the paths
 # ex: $HOME/Music => /home/francois/Music
 
+[user_interactions]
+confirm_config = true
+confirm_player_refresh = true
+confirm_snaped = true
+
 
 [mixxx]
 mixxx_db = "/home/francois/.mixxx/mixxxdb.sqlite"

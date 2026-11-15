@@ -1,13 +1,10 @@
 from typing import Final
-from pathlib import Path
 
 import pandas as pd
 import xml.etree.ElementTree as ET
 from urllib.parse import unquote
 
-from python_tools import CONFIG
-
-cfg = CONFIG.mixxx_to_rekordbox
+from python_tools.utils.config import get_config, MixxxToRekordboxConfig
 
 TRACK_ID = "TrackID"
 TRACK_FIELDS: Final[list[str]] = [
@@ -41,10 +38,10 @@ RKBOX_SUFFIX = "_rkbox"
 
 
 def extract_tracks_with_marks_and_tempo(
-    xml_file: Path,
+    mtr_config: MixxxToRekordboxConfig,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Extract POSITION_MARKs with their parent TRACK info"""
-    tree = ET.parse(xml_file)
+    tree = ET.parse(mtr_config.mixxx_to_rekordbox_xml)
     root = tree.getroot()
 
     track_rows = []
@@ -81,8 +78,10 @@ def extract_tracks_with_marks_and_tempo(
     return pd.DataFrame(track_rows), pd.DataFrame(mark_rows), pd.DataFrame(tempo_rows)
 
 
-def write_new_playlist(track_id_mixxx: set[str]) -> None:
-    tree = ET.parse(CONFIG.mixxx_to_rekordbox.mixxx_to_rekordbox_xml)
+def write_new_playlist(
+    mtr_config: MixxxToRekordboxConfig, track_id_mixxx: set[str]
+) -> None:
+    tree = ET.parse(mtr_config.mixxx_to_rekordbox_xml)
     root = tree.getroot()
 
     NODE0 = root.find(".//PLAYLISTS/NODE")
@@ -93,7 +92,7 @@ def write_new_playlist(track_id_mixxx: set[str]) -> None:
         NODE0,
         "NODE",
         attrib={
-            "Name": cfg.playlist_updated_tracks,
+            "Name": mtr_config.playlist_updated_tracks,
             "Type": "1",
             "KeyType": "0",
             "Entries": str(len(track_id_mixxx)),
@@ -105,23 +104,29 @@ def write_new_playlist(track_id_mixxx: set[str]) -> None:
 
     ET.indent(tree, space="  ", level=0)
     tree.write(
-        cfg.mixxx_to_rekordbox_xml,
+        mtr_config.mixxx_to_rekordbox_xml,
         encoding="utf-8",
         xml_declaration=True,
     )
     print(
-        f"A new playlist {cfg.playlist_updated_tracks} has been added to "
-        f"the Mixxx to Rekordbox XML file {cfg.mixxx_to_rekordbox_xml}."
+        f"A new playlist {mtr_config.playlist_updated_tracks} has been added to "
+        f"the Mixxx to Rekordbox XML file {mtr_config.mixxx_to_rekordbox_xml}."
     )
 
 
 def main():
+
+    config = get_config()
+    mtr_config = config.mixxx_to_rekordbox
+
     df_mixxx_track, df_mixxx_mark, df_mixxx_tempo = extract_tracks_with_marks_and_tempo(
-        cfg.mixxx_to_rekordbox_xml
+        mtr_config
     )
+
     df_rkbox_track, df_rkbox_mark, df_rkbox_tempo = extract_tracks_with_marks_and_tempo(
-        cfg.rekordbox_export_xml
+        mtr_config
     )
+
     ###
     # Checking updated track info
     mrg_track = pd.merge(
@@ -165,4 +170,4 @@ def main():
         track_id_track.tolist() + track_id_mark.tolist() + track_id_tempo.tolist()
     )
     print(f"After combining, {len(track_ids)} tracks need to be (re-)imported")
-    write_new_playlist(track_ids)
+    write_new_playlist(mtr_config, track_ids)

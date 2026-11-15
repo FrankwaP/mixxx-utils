@@ -4,7 +4,6 @@ from typing import Literal
 
 import eyed3.mp3.headers  # type: ignore
 
-
 accepted_mp3_decoders = Literal["MAD", "CoreAudio", "FFmpeg"]
 ACCEPTED_MP3_DECODERS: list[accepted_mp3_decoders] = [
     "MAD",

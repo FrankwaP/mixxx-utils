@@ -10,15 +10,10 @@ import sqlite3
 import pandas as pd
 from sqlalchemy.exc import NoSuchTableError
 
-from python_tools import CONFIG
-
 # columns used to relate the Mixxx and music player databases
 # also used to detect duplicate entries which would crash the database
 # due to a faile UNIQUE constraint
-COLS_FOR_DUP: Final[list[str]] = ["artist", "album", "title"]
-
-
-MIXXX_DB = CONFIG.mixxx.mixxx_db
+COLS_FOR_DUP: Final[list[str]] = ["tracknumber", "artist", "album", "title"]
 
 
 def propose_fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
@@ -56,21 +51,23 @@ def quit_if_duplicates(df: pd.DataFrame) -> None:
 
 
 def open_mixxx_library(
-    existing_tracks: bool = True, missing_tracks: bool = True
+    db_path: Path,
+    existing_tracks: bool = True,
+    missing_tracks: bool = True,
 ) -> pd.DataFrame:
 
     # we add a check for duplicates because the will make
     # the final SQL fusion fail due to unique constraint
     # this can happen when there's both the correct and incorrect path for a track
     # and after the correction we end up with twice the correct path (so... duplicate)
-    print(f"Openning the Mixxx library {MIXXX_DB}.")
-    df_lib = open_table_as_df(MIXXX_DB, "library")
+    print(f"Openning the Mixxx library {db_path}.")
+    df_lib = open_table_as_df(db_path, "library")
     df_lib[COLS_FOR_DUP] = df_lib[COLS_FOR_DUP].fillna("")
     quit_if_duplicates(df_lib)
     if existing_tracks and missing_tracks:
         return df_lib
     # else we need to know which tracks exist/miss
-    df_loc = open_table_as_df(MIXXX_DB, "track_locations")
+    df_loc = open_table_as_df(db_path, "track_locations")
     if missing_tracks:
         print("Keeping the missing locations only.")
         id_loc = df_loc["id"][~df_loc["location"].apply(exists)]
@@ -82,7 +79,7 @@ def open_mixxx_library(
 
 def fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
     """Fix incorrect foreign key constraints in the database."""
-    create_mixxx_db_backup()
+    create_mixxx_db_backup(db_path)
     # Expand environment variables in the path
     db_path = expandvars(db_path)
     print(f"Fixing foreign key constraints in database: {db_path}")
@@ -131,39 +128,40 @@ def fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
     connection.close()
 
 
-def open_mixxx_cues(only_hot_cues) -> pd.DataFrame:
-    print(f"Openning the Mixxx cues from {MIXXX_DB}.")
-    df = open_table_as_df(MIXXX_DB, "cues")
+def open_mixxx_cues(db_path: Path, only_hot_cues: bool) -> pd.DataFrame:
+    print(f"Openning the Mixxx cues from {db_path}.")
+    df = open_table_as_df(db_path, "cues")
     if only_hot_cues:
         df = df[df["hotcue"] >= 0]
     return df
 
 
-def open_mixxx_track_locations() -> pd.DataFrame:
-    print(f"Openning the Mixxx track locations from {MIXXX_DB}.")
-    df = open_table_as_df(MIXXX_DB, "track_locations")
+def open_mixxx_track_locations(db_path: Path) -> pd.DataFrame:
+    print(f"Openning the Mixxx track locations from {db_path}.")
+    df = open_table_as_df(db_path, "track_locations")
     return df
 
 
-def open_mixxx_track_analysis() -> pd.DataFrame:
-    print(f"Openning the Mixxx track analysis from {MIXXX_DB}.")
-    df = open_table_as_df(MIXXX_DB, "track_analysis")
+def open_mixxx_track_analysis(db_path: Path) -> pd.DataFrame:
+    print(f"Openning the Mixxx track analysis from {db_path}.")
+    df = open_table_as_df(db_path, "track_analysis")
     return df
 
 
 def open_mixxx_playlists_with_tracks(
+    db_path: Path,
     filter_hidden: bool,
     add_crates_as_playlist: bool,
     crate_suffix: str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
-    df_pls = _open_mixxx_playlists(filter_hidden)
-    df_pls_trk = _open_mixxx_playlist_tracks()
+    df_pls = _open_mixxx_playlists(db_path, filter_hidden)
+    df_pls_trk = _open_mixxx_playlist_tracks(db_path)
     df_pls_trk = df_pls_trk[df_pls_trk["playlist_id"].isin(df_pls["id"])]
 
     if add_crates_as_playlist:
-        df_crt = _open_mixxx_crates(filter_hidden)
-        df_crt_trk = _open_mixxx_crate_tracks()
+        df_crt = _open_mixxx_crates(db_path, filter_hidden)
+        df_crt_trk = _open_mixxx_crate_tracks(db_path)
         df_crt_trk = df_crt_trk[df_crt_trk["crate_id"].isin(df_crt["id"])]
         # conversion
         idx_pls_max = df_pls["id"].max()
@@ -180,30 +178,30 @@ def open_mixxx_playlists_with_tracks(
     return df_pls, df_pls_trk
 
 
-def _open_mixxx_playlists(filter_hidden: bool) -> pd.DataFrame:
-    print(f"Openning the Mixxx playlists from {MIXXX_DB}.")
-    df = open_table_as_df(MIXXX_DB, "Playlists")
+def _open_mixxx_playlists(db_path: Path, filter_hidden: bool) -> pd.DataFrame:
+    print(f"Openning the Mixxx playlists from {db_path}.")
+    df = open_table_as_df(db_path, "Playlists")
     if filter_hidden:
         df = df[df["hidden"] == 0]
     return df
 
 
-def _open_mixxx_playlist_tracks() -> pd.DataFrame:
-    print(f"Openning the Mixxx playlist tracks from {MIXXX_DB}.")
-    return open_table_as_df(MIXXX_DB, "PlaylistTracks")
+def _open_mixxx_playlist_tracks(db_path: Path) -> pd.DataFrame:
+    print(f"Openning the Mixxx playlist tracks from {db_path}.")
+    return open_table_as_df(db_path, "PlaylistTracks")
 
 
-def _open_mixxx_crates(filter_hidden: bool) -> pd.DataFrame:
-    print(f"Openning the Mixxx crates from {MIXXX_DB}.")
-    df = open_table_as_df(MIXXX_DB, "crates")
+def _open_mixxx_crates(db_path: Path, filter_hidden: bool) -> pd.DataFrame:
+    print(f"Openning the Mixxx crates from {db_path}.")
+    df = open_table_as_df(db_path, "crates")
     if filter_hidden:
         df = df[df["show"] == 1]  # not very consistent with the playlist :-p
     return df
 
 
-def _open_mixxx_crate_tracks() -> pd.DataFrame:
-    print(f"Openning the Mixxx crate tracks from {MIXXX_DB}.")
-    df = open_table_as_df(MIXXX_DB, "crate_tracks")
+def _open_mixxx_crate_tracks(db_path: Path) -> pd.DataFrame:
+    print(f"Openning the Mixxx crate tracks from {db_path}.")
+    df = open_table_as_df(db_path, "crate_tracks")
     return df
 
 
@@ -242,8 +240,8 @@ def db_path_to_url(db_path: Union[str, Path]) -> str:
     raise NotImplementedError
 
 
-def create_mixxx_db_backup() -> None:
-    db_path = Path(CONFIG.mixxx.mixxx_db)
+def create_mixxx_db_backup(db_path: Union[str, Path]) -> None:
+    db_path = Path(db_path)
     now = strftime("%y%m%d.%H%M%S")
     backup = db_path.with_suffix(db_path.suffix + ".bak." + now).resolve()
     copy(db_path, backup)
@@ -251,7 +249,11 @@ def create_mixxx_db_backup() -> None:
 
 
 def update_mixxx_db_table(
-    df: pd.DataFrame, table_name: str, set_cols: list[str], where_cols: list[str]
+    db_path: Path,
+    df: pd.DataFrame,
+    table_name: str,
+    set_cols: list[str],
+    where_cols: list[str],
 ) -> None:
     """Update the Mixxx database table using a pandas DataFrame."""
     assert isinstance(set_cols, list)
@@ -273,12 +275,12 @@ def update_mixxx_db_table(
         for _, row in df.iterrows()
     ]
 
-    with sqlite3.connect(CONFIG.mixxx.mixxx_db) as conn:
+    with sqlite3.connect(db_path) as conn:
         conn.executemany(sql, params)
 
 
 def delete_rows_mixxx_db_table(
-    df: pd.DataFrame, table_name: str, where_cols: list[str]
+    db_path: Path, df: pd.DataFrame, table_name: str, where_cols: list[str]
 ) -> None:
     assert isinstance(where_cols, list)
     assert all(c in df.columns for c in where_cols)
@@ -292,5 +294,5 @@ def delete_rows_mixxx_db_table(
 
     params = [[row[col] for col in where_cols] for _, row in df.iterrows()]
 
-    with sqlite3.connect(CONFIG.mixxx.mixxx_db) as conn:
+    with sqlite3.connect(db_path) as conn:
         conn.executemany(sql, params)

@@ -4,23 +4,25 @@ import pandas as pd
 from python_tools.utils.music_db_utils import open_table_as_df
 
 
-from python_tools import CONFIG
+from python_tools.utils.config import get_config
 from .main import (
     fix_with_player_db,
     PLAYER_PATH,
 )
 
-cfg = CONFIG.fix_track_paths
-
 
 def get_clementine_db() -> pd.DataFrame:
+    config = get_config()
+    clem_db = config.fix_track_paths.clem_db
+
     """Load and prepare the Clementine database as a pandas DataFrame."""
     answer = input("Did you refresh Clementine's library (y/*)? ")
     if answer != "y":
         print("Well do it <3")
         sysexit()
-    df_clem = open_table_as_df(cfg.clem_db, "songs")
+    df_clem = open_table_as_df(clem_db, "songs")
     df_clem.rename(columns={"filename": PLAYER_PATH}, inplace=True)
+    df_clem["tracknumber"] = df_clem["track"].apply(lambda x: str(x))
     return df_clem
 
 

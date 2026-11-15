@@ -18,7 +18,7 @@ from python_tools.utils.track_utils import (
     remove_feat,
 )
 
-from python_tools import CONFIG
+from python_tools.utils.config import get_config, MixxxConfig, FixTrackPathsUtilsConfig
 
 COLS_PERFECT_MATCH: Final[list[str]] = COLS_FOR_DUP
 COLS_CLOSE_MATCH: Final[list[str]] = ["artist", "title"]
@@ -29,9 +29,6 @@ IDX_MIXXX_TANA: Final[str] = "saved_indices_mixxx_analysis"
 
 PLAYER_PATH = "PLAYER_PATH"
 
-
-cfg = CONFIG.fix_track_paths
-cfg_mixxx = CONFIG.mixxx
 
 pd.set_option("display.max_rows", 100)
 
@@ -123,6 +120,7 @@ def _get_perfect_match(
 
 
 def _get_close_match(
+    config_fix: FixTrackPathsUtilsConfig,
     df_mixxx_missing: pd.DataFrame,
     df_player: pd.DataFrame,
     df_perfect_match: pd.DataFrame,
@@ -141,14 +139,16 @@ def _get_close_match(
         "let's find the closest match for each one…"
     )
     df_close = [
-        _get_close_track_match(track_row, df_player_nomatch)
+        _get_close_track_match(config_fix, track_row, df_player_nomatch)
         for _, track_row in df_mixxx_nomatch.iterrows()
     ]
     return pd.concat(df_close)
 
 
 def _get_close_track_match(
-    track_row: pd.Series, df_player_nomatch: pd.DataFrame
+    config_fix: FixTrackPathsUtilsConfig,
+    track_row: pd.Series,
+    df_player_nomatch: pd.DataFrame,
 ) -> pd.DataFrame:
     print(
         "\nFinding the closest match for Mixxx entry: \n"
@@ -158,14 +158,14 @@ def _get_close_track_match(
         track_row,
         df_player_nomatch,
         COLS_CLOSE_MATCH,
-        cfg.threshold_name_similarity,
-        cfg.n_similar_track_proposal,
+        config_fix.threshold_name_similarity,
+        config_fix.n_similar_track_proposal,
     )
 
     if len(close_indices) == 0:
         print(
             f"\tCould not find a track with similar name with actual setting "
-            f"of max similarity distance ({cfg.threshold_name_similarity})."
+            f"of max similarity distance ({config_fix.threshold_name_similarity})."
         )
     else:
         ans = _ask_match_index(df_player_nomatch, close_indices)
@@ -177,8 +177,10 @@ def _get_close_track_match(
     return pd.DataFrame()
 
 
-def _update_mixxx_track_location(df_match: pd.DataFrame) -> None:
-    df_mixxx_loc = open_mixxx_track_locations()
+def _update_mixxx_track_location(
+    config_mixxx: MixxxConfig, df_match: pd.DataFrame
+) -> None:
+    df_mixxx_loc = open_mixxx_track_locations(config_mixxx.mixxx_db)
     df_mixxx_loc[IDX_MIXXX_TLOC] = df_mixxx_loc.index
     df_merge = pd.merge(
         left=df_match,
@@ -199,6 +201,7 @@ def _update_mixxx_track_location(df_match: pd.DataFrame) -> None:
     )
     df_merge.loc[:, "fs_deleted"] = 0
     update_mixxx_db_table(
+        config_mixxx.mixxx_db,
         df_merge,
         "track_locations",
         set_cols=["location", "filename", "directory", "fs_deleted"],
@@ -206,11 +209,15 @@ def _update_mixxx_track_location(df_match: pd.DataFrame) -> None:
     )
 
 
-def _update_mixxx_library(df_match: pd.DataFrame) -> None:
-    if not (cfg.delete_keys or cfg.delete_gains):
+def _update_mixxx_library(
+    config_fix: FixTrackPathsUtilsConfig,
+    config_mixxx: MixxxConfig,
+    df_match: pd.DataFrame,
+) -> None:
+    if not (config_fix.delete_keys or config_fix.delete_gains):
         return
     #
-    if cfg.delete_keys:
+    if config_fix.delete_keys:
         print(
             "Deleting keys information corresponding to the updated track locations..."
         )
@@ -220,19 +227,21 @@ def _update_mixxx_library(df_match: pd.DataFrame) -> None:
         df_match.loc[:, "keys_version"] = ""
         df_match.loc[:, "keys_sub_version"] = ""
         update_mixxx_db_table(
+            config_mixxx.mixxx_db,
             df_match,
             "library",
             set_cols=["key", "keys", "key_id", "keys_version", "keys_sub_version"],
             where_cols=["id"],
         )
 
-    if cfg.delete_gains:
+    if config_fix.delete_gains:
         print(
             "Deleting gains information corresponding to the updated track locations..."
         )
         df_match.loc[:, "replaygain"] = 0
         df_match.loc[:, "replaygain_peak"] = -1
         update_mixxx_db_table(
+            config_mixxx.mixxx_db,
             df_match,
             "library",
             set_cols=["replaygain", "replaygain_peak"],
@@ -240,12 +249,16 @@ def _update_mixxx_library(df_match: pd.DataFrame) -> None:
         )
 
 
-def _update_mixxx_analysis(df_match: pd.DataFrame) -> None:
-    if not cfg.delete_waveforms:
+def _update_mixxx_analysis(
+    config_fix: FixTrackPathsUtilsConfig,
+    config_mixxx: MixxxConfig,
+    df_match: pd.DataFrame,
+) -> None:
+    if not config_fix.delete_waveforms:
         return
     #
     print("Deleting waveforms corresponding to the updated track locations...")
-    df_mixxx_analysis = open_mixxx_track_analysis()
+    df_mixxx_analysis = open_mixxx_track_analysis(config_mixxx.mixxx_db)
     df_mixxx_analysis[IDX_MIXXX_TANA] = df_mixxx_analysis.index
     df_merge = pd.merge(
         left=df_match,
@@ -256,18 +269,26 @@ def _update_mixxx_analysis(df_match: pd.DataFrame) -> None:
         right_on="track_id",
         suffixes=("_match", None),
     )
-    dir_ana = Path(cfg_mixxx.mixxx_db).parent / "analysis"
+    dir_ana = Path(config_mixxx.mixxx_db).parent / "analysis"
     for id_ana in df_merge["id"].values:
         ana_path = dir_ana / f"{id_ana}"
         ana_path.unlink(missing_ok=True)
-    delete_rows_mixxx_db_table(df_merge, "track_analysis", where_cols=["id"])
+    delete_rows_mixxx_db_table(
+        config_mixxx.mixxx_db, df_merge, "track_analysis", where_cols=["id"]
+    )
 
 
 def fix_with_player_db(df_player: pd.DataFrame):
     """Fix the Mixxx tracks locations using the ones from a music player database."""
 
+    config = get_config()
+    config_fix = config.fix_track_paths
+    config_mixxx = config.mixxx
+
     # open Mixxx library and keep only the missing tracks (i.e. the ones we want to fix)
-    df_mixxx_missing = open_mixxx_library(existing_tracks=False, missing_tracks=True)
+    df_mixxx_missing = open_mixxx_library(
+        config_mixxx.mixxx_db, existing_tracks=False, missing_tracks=True
+    )
     if len(df_mixxx_missing) == 0:
         print("No missing tracks, congratulation!")
         sysexit()
@@ -285,14 +306,16 @@ def fix_with_player_db(df_player: pd.DataFrame):
 
     # matching the tracks between Mixxx and player
     df_perfect_match = _get_perfect_match(df_mixxx_missing, df_player)
-    df_close_match = _get_close_match(df_mixxx_missing, df_player, df_perfect_match)
+    df_close_match = _get_close_match(
+        config_fix, df_mixxx_missing, df_player, df_perfect_match
+    )
     df_match = pd.concat([df_perfect_match, df_close_match])
     assert (
         df_match["location"].duplicated().sum() == 0
     ), "Error: there are duplicated locations IDs in the matched DataFrame, this should not happen."
 
     # update Mixxx database
-    create_mixxx_db_backup()
-    _update_mixxx_track_location(df_match)
-    _update_mixxx_library(df_match)
-    _update_mixxx_analysis(df_match)
+    create_mixxx_db_backup(config_mixxx.mixxx_db)
+    _update_mixxx_track_location(config_mixxx, df_match)
+    _update_mixxx_library(config_fix, config_mixxx, df_match)
+    _update_mixxx_analysis(config_fix, config_mixxx, df_match)
