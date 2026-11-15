@@ -1,8 +1,8 @@
 import sys
 from shutil import copy
-from os.path import exists, expandvars
+from os.path import exists
 from pathlib import Path
-from typing import Final, Tuple, Union
+from typing import Final, Tuple
 from time import strftime
 
 from urllib.parse import unquote
@@ -16,7 +16,7 @@ from sqlalchemy.exc import NoSuchTableError
 COLS_FOR_DUP: Final[list[str]] = ["tracknumber", "artist", "album", "title"]
 
 
-def propose_fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
+def propose_fix_foreign_key_constraints(db_path: Path) -> None:
     db_path = Path(db_path)
     answer = input(
         "The Mixxx database cannot be opened and we must fix the foreign key constraints...\n"
@@ -29,8 +29,7 @@ def propose_fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
     fix_foreign_key_constraints(db_path)
 
 
-def open_table_as_df(db_path: Union[str, Path], table_name: str) -> pd.DataFrame:
-    db_path = Path(db_path)
+def open_table_as_df(db_path: Path, table_name: str) -> pd.DataFrame:
     try:
         return pd.read_sql_table(table_name, db_path_to_url(db_path))
     except NoSuchTableError:
@@ -77,11 +76,9 @@ def open_mixxx_library(
     return df_lib[df_lib["location"].isin(id_loc)]
 
 
-def fix_foreign_key_constraints(db_path: Union[str, Path]) -> None:
+def fix_foreign_key_constraints(db_path: Path) -> None:
     """Fix incorrect foreign key constraints in the database."""
     create_mixxx_db_backup(db_path)
-    # Expand environment variables in the path
-    db_path = expandvars(db_path)
     print(f"Fixing foreign key constraints in database: {db_path}")
 
     connection = sqlite3.connect(db_path)
@@ -228,22 +225,17 @@ def file_url_to_path(file_url: str) -> str:
     return unquote(file_url).replace("file://", "")
 
 
-def db_path_to_url(db_path: Union[str, Path]) -> str:
+def db_path_to_url(db_path: Path) -> str:
     # sqlite:///relative/path/to/file.db
     # sqlite:////absolute/path/to/file.db
-    db_path = expandvars(db_path)
-    path = Path(db_path)
-    if path.is_absolute():
-        return "sqlite:///" + path.as_posix()
-    if path.is_relative_to(Path.cwd()):
-        return "sqlite://" + path.as_posix()
-    raise NotImplementedError
+    path = Path(db_path).resolve()
+    return "sqlite:///" + path.as_posix()
 
 
-def create_mixxx_db_backup(db_path: Union[str, Path]) -> None:
+def create_mixxx_db_backup(db_path: Path) -> None:
     db_path = Path(db_path)
     now = strftime("%y%m%d.%H%M%S")
-    backup = db_path.with_suffix(db_path.suffix + ".bak." + now).resolve()
+    backup = db_path.with_suffix(db_path.suffix + ".bak." + now)
     copy(db_path, backup)
     print(f"Backup created: {backup}")
 
