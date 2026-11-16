@@ -37,6 +37,7 @@ class MixxxToRekordboxConfig(_MyBaseModel):
     mixxx_library_folder: Annotated[DirectoryPath, AfterValidator(_resolve)]
     rekordbox_library_folder: PureWindowsPath
     export_only_tracks_in_playlists: bool = True
+    export_only_locked_tracks: bool = True
     add_crates_as_playlist: bool = True
     crates_suffix: str = "_crates"
     beats_per_bar: int = Field(default=8, gt=0)

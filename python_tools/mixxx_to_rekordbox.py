@@ -322,6 +322,14 @@ def _filter_only_in_playlists(rows_lib_loc: Rows, rows_plst_trk: Rows) -> Rows:
     return rows
 
 
+def _filter_locked_tracks(rows_lib_loc: Rows) -> Rows:
+    rows = [row for row in rows_lib_loc if row["bpm_lock"] == 1]
+    diff = len(rows_lib_loc) - len(rows)
+    if diff:
+        logging.warning("Filtered out %d tracks without locked beatgrid.", diff)
+    return rows
+
+
 def main() -> None:
     config = get_config()
     mtr_config = config.mixxx_to_rekordbox
@@ -350,6 +358,9 @@ def main() -> None:
     )
     if mtr_config.export_only_tracks_in_playlists:
         rows_lib_loc = _filter_only_in_playlists(rows_lib_loc, rows_plst_trks)
+
+    if mtr_config.export_only_locked_tracks:
+        rows_lib_loc = _filter_locked_tracks(rows_lib_loc)
 
     for row in rows_lib_loc:
         row[RKBOX_COLOR] = _convert_color_for_rekordbox(row["color"])
