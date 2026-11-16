@@ -28,9 +28,6 @@ from python_tools.utils.music_db_utils_no_pandas import (
 )
 from python_tools.utils.proto import beats_pb2
 
-logging.basicConfig(level=logging.INFO)
-
-
 RKBOX_COLOR = "rkbox_color"
 NOT_ALLOWED = "ogg", "opus"
 REKORDBOX_COLORS = {

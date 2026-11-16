@@ -2,9 +2,15 @@
 # ex: $HOME/Music => /home/francois/Music
 
 [user_interactions]
+# confirm that this configuration is ok?
 confirm_config = true
+# for fixing the tracks paths, confirm that the player library is refreshed?
 confirm_player_refresh = true
+# before exporting to RekordBox, confirm that the hot cues are snapped to the grid?
+# (see the "index_cue_bar_start" parameter)
 confirm_snaped = true
+# level can be "info", "warning", "error" (also "debug")
+logging_level = "info"
 
 
 [mixxx]
