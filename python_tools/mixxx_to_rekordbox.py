@@ -1,47 +1,68 @@
 import logging
 import re
 import sys
+from math import isnan
+from numbers import Real
 from pathlib import Path
-from typing import Generator
-
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
-import pandas as pd
+from typing import Any, Generator
 from urllib.parse import quote
 from xml.etree import ElementTree as ET
 
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from python_tools.mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
-from python_tools.mixxx_to_rekordbox_utils.color_tools import (
-    convert_colors_for_rekordbox,
-)
 from python_tools.mixxx_to_rekordbox_utils.xml_utils import (
     AttribDict,
     get_elem,
 )
-from python_tools.utils.misc import (
-    RATING_MAPING,
-    KEY_ID_LANCELOT,
-)
-from python_tools.utils.music_db_utils import (
-    open_mixxx_cues,
-    open_mixxx_library,
-    open_mixxx_playlists_with_tracks,
-    open_mixxx_track_locations,
-)
-from python_tools.utils.track_utils import (
-    BeatGridInfo,
-    guess_inizio_sec,
-    position_frame_to_sec,
-)
 from python_tools.utils.config import get_config, MixxxToRekordboxConfig
+from python_tools.utils.misc import (
+    KEY_ID_LANCELOT,
+    RATING_MAPING,
+)
+from python_tools.utils.music_db_utils_no_pandas import (
+    Row,
+    Rows,
+    open_mixxx_cues,
+    open_mixxx_library_and_location,
+    open_mixxx_playlists_with_tracks,
+)
+from python_tools.utils.proto import beats_pb2
 
 logging.basicConfig(level=logging.INFO)
 
-SUFFIX_LIB = "_lib"
-SUFFIX_LOC = "_loc"
+
 RKBOX_COLOR = "rkbox_color"
 NOT_ALLOWED = "ogg", "opus"
+REKORDBOX_COLORS = {
+    (255, 0, 0): "0xFF0000",
+    (255, 165, 0): "0xFFA500",
+    (255, 255, 0): "0xFFFF00",
+    (0, 255, 0): "0x00FF00",
+    (37, 253, 233): "0x25FDE9",
+    (0, 0, 255): "0x0000FF",
+    (102, 0, 153): "0x660099",
+    (255, 0, 127): "0xFF007F",
+}
+
+
+def _convert_color_for_rekordbox(value: Any) -> str:
+    if value is None:
+        return ""
+    assert isinstance(value, Real)
+    if isnan(float(value)):
+        return ""
+    color = int(float(value))
+    assert color == value
+    rgb = ((color >> 16) & 255, (color >> 8) & 255, color & 255)
+    nearest = min(
+        REKORDBOX_COLORS,
+        key=lambda palette_rgb: sum(
+            (left - right) ** 2 for left, right in zip(palette_rgb, rgb)
+        ),
+    )
+    return REKORDBOX_COLORS[nearest]
 
 
 def is_non_empty_string(s: str) -> bool:
@@ -56,7 +77,6 @@ def get_root_xml() -> ET.Element:
 
 
 def get_collection_xml(nb_tracks: int) -> ET.Element:
-    assert isinstance(nb_tracks, int)
     attrib = {"Entries": nb_tracks}
     return get_elem("COLLECTION", attrib)
 
@@ -66,25 +86,24 @@ def get_playlists_xml() -> ET.Element:
 
 
 def get_node_xml(nb_pls: int) -> ET.Element:
-    assert isinstance(nb_pls, int)
     attrib = {"Type": 0, "Name": "ROOT", "Count": nb_pls}
     return get_elem("NODE", attrib)
 
 
-def get_time_signature_in_comment(
-    trk_row: pd.Series, config: MixxxToRekordboxConfig
-) -> str:
+def get_time_signature_in_comment(trk_row: Row, config: MixxxToRekordboxConfig) -> str:
     # NOTE: the denominator is not used
     if not isinstance(trk_row["comment"], str):
         return f"{config.beats_per_bar}/4"
     match = re.findall(r"\b\d+/\d\b", trk_row["comment"])
     if len(match) == 0:
         return f"{config.beats_per_bar}/4"
-    location = Path(trk_row["location" + SUFFIX_LOC])
+    location = Path(trk_row["track_locations.location"])
     if len(match) > 1:
         logging.warning(
-            "More than one time signature candidates have been found in the comments of file %s.",
+            "More than one time signature candidates have been found in the "
+            "comments of file %s (%s).",
             location,
+            trk_row["comment"],
         )
     logging.info(
         "Time signature %s has been found in the comment of file %s.",
@@ -94,34 +113,51 @@ def get_time_signature_in_comment(
     return match[0]
 
 
+def _position_frame_to_sec(frame: int, samplerate: float) -> float:
+    return frame / (2 * samplerate)
+
+
+def _guess_inizio_sec(
+    hot_cue_frame_pos: int, samplerate: float, bpm: float, beats_per_bar: int
+) -> float:
+    hot_cue_sec = _position_frame_to_sec(hot_cue_frame_pos, samplerate)
+    interval_sec = 60 / bpm
+    return hot_cue_sec % (beats_per_bar * interval_sec)
+
+
+def _beatgrid_start_sec(track_row: Row) -> float:
+    beatgrid = beats_pb2.BeatGrid()  # type: ignore[attr-defined]
+    beatgrid.ParseFromString(track_row["beats"])
+    return beatgrid.first_beat.frame_position / track_row["samplerate"]
+
+
 def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
-    trk_row: pd.Series,
-    cue_rows: pd.DataFrame,
+    trk_row: Row,
+    cue_rows: Rows,
     offset_start_beatgrid_ms: int,
     config: MixxxToRekordboxConfig,
 ) -> ET.Element:
     assert isinstance(offset_start_beatgrid_ms, int)
     bpm = trk_row["bpm"]
     assert isinstance(bpm, float)
-    if (
-        config.index_cue_bar_start <= 0
-        or config.index_cue_bar_start - 1 not in cue_rows["hotcue"].values
-    ):
-        beatgrid_info = BeatGridInfo(trk_row)
-        inizio = beatgrid_info.start_sec
+    hotcue_bar_index = config.index_cue_bar_start - 1
+    matching_cues = [
+        cue_row for cue_row in cue_rows if cue_row["hotcue"] == hotcue_bar_index
+    ]
+    if config.index_cue_bar_start <= 0 or not matching_cues:
+        inizio = _beatgrid_start_sec(trk_row)
     else:
-        cue_point = cue_rows[config.index_cue_bar_start - 1 == cue_rows["hotcue"]]
-        if len(cue_point) != 1:
+        if len(matching_cues) != 1:
             logging.warning(
-                "More than one hotcue #%d has been found for file %s\n.",
+                "More than one hotcue #%d has been found for file %s\n."
                 "The first one has been kept to decide the start of the bars"
                 "… but you might want to re-create it!",
                 config.index_cue_bar_start,
-                trk_row["location"],
+                trk_row["track_locations.location"],
             )
-            cue_point = cue_point[0]
-        inizio = guess_inizio_sec(
-            cue_point.iloc[0]["position"],
+        cue_row = matching_cues[0]
+        inizio = _guess_inizio_sec(
+            cue_row["position"],
             trk_row["samplerate"],
             bpm,
             config.beats_per_bar,
@@ -138,14 +174,16 @@ def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
 
 
 def mixxx_track_row_to_rekbox_track_xml(
-    trk_row: pd.Series, config: MixxxToRekordboxConfig
+    trk_row: Row, config: MixxxToRekordboxConfig
 ) -> ET.Element:
-    location = Path(trk_row["location" + SUFFIX_LOC])
-    if not location.is_relative_to(config.mixxx_library_folder):
+    location = Path(trk_row["track_locations.location"])
+    try:
+        final_location = config.rekordbox_library_folder / location.relative_to(
+            config.mixxx_library_folder
+        )
+    except ValueError as err:
         logging.warning("This track is not in the Mixxx library folder: %s", location)
-    final_location = config.rekordbox_library_folder / location.relative_to(
-        config.mixxx_library_folder
-    )
+        raise err
 
     if not is_non_empty_string(trk_row["artist"]):
         logging.warning("Artist name is empty for file: %s", location)
@@ -161,33 +199,22 @@ def mixxx_track_row_to_rekbox_track_xml(
         tonality = ""
 
     attrib: AttribDict = {
-        "TrackID": trk_row["id" + SUFFIX_LIB],
+        "TrackID": trk_row["library.id"],
         "Name": trk_row["title"],
         "Artist": trk_row["artist"],
         "Composer": trk_row["composer"],
         "Album": trk_row["album"],
-        # Grouping
         "Genre": trk_row["genre"],
-        # Kind: we let Rekordbox find it
         "Size": trk_row["filesize"],
         "TotalTime": round(trk_row["duration"]),
-        # DiscNumber
         "TrackNumber": trk_row["tracknumber"],
         "Year": trk_row["year"],
         "AverageBpm": trk_row["bpm"],
-        # DateModified
-        # DateAdded
-        # BitRate: we let Rekrodbox calculate it
         "SampleRate": trk_row["samplerate"],
         "Comment": trk_row["comment"],
-        # PlayCount
-        # LastPlayed
         "Rating": RATING_MAPING[trk_row["rating"]],
         "Location": quote("file://localhost/" + str(final_location)),
-        # Remixer
         "Tonality": tonality,
-        # Label
-        # Mix
         "Colour": trk_row[RKBOX_COLOR],
     }
 
@@ -195,23 +222,20 @@ def mixxx_track_row_to_rekbox_track_xml(
 
 
 def mixxx_cue_row_to_rekbox_xml(
-    cue_row_: pd.Series, samplerate: float, offset_ms: int
+    track_row: Row, cue_row_: Row, samplerate: float, offset_ms: int
 ) -> Generator[ET.Element, None, None]:
     assert isinstance(samplerate, float)
     assert isinstance(offset_ms, int)
-    # -1 is to create a memory cue
-    cue_nums = [-1, cue_row_["hotcue"]]
-    for cnum in cue_nums:
-        start = (
-            position_frame_to_sec(cue_row_["position"], samplerate) + offset_ms / 1000
+    start = _position_frame_to_sec(cue_row_["position"], samplerate) + offset_ms / 1000
+    if start < 0:
+        logging.info(
+            "A negative cue start position has been found and ignored for hotcue #%d of file %s",
+            int(cue_row_["hotcue"]) + 1,
+            track_row["track_locations.location"],
         )
-        if start < 0:
-            # RkBox does not import negative cue position
-            logging.info(
-                "A negative cue start position has been found and ignored for cue %s",
-                cue_row_["id"],
-            )
-        else:
+    else:
+        cue_nums = [-1, cue_row_["hotcue"]]
+        for cnum in cue_nums:
             attrib: AttribDict = {
                 "Type": "0",
                 "Num": cnum,
@@ -220,9 +244,7 @@ def mixxx_cue_row_to_rekbox_xml(
             yield get_elem("POSITION_MARK", attrib)
 
 
-def mixxx_playlist_to_rekordbox_xml(
-    plst_row: pd.Series, track_numbers: int
-) -> ET.Element:
+def mixxx_playlist_to_rekordbox_xml(plst_row: Row, track_numbers: int) -> ET.Element:
     assert isinstance(track_numbers, int)
     attrib: AttribDict = {
         "Name": plst_row["name"],
@@ -234,19 +256,58 @@ def mixxx_playlist_to_rekordbox_xml(
 
 
 def mixxx_playlist_track_to_rekordbox_xml(
-    pls_trk_row: pd.Series,
+    pls_trk_row: Row,
 ) -> ET.Element:
     attrib = {"Key": pls_trk_row["track_id"]}
     return get_elem("TRACK", attrib)
 
 
-def main() -> None:
+def _sort_value(value: Any) -> tuple[bool, Any]:
+    return value is None, value
 
+
+def _filter_stems(rows_lib_loc: Rows) -> Rows:
+    rows = [
+        row
+        for row in rows_lib_loc
+        if row["comment"] is None or "stem" not in row["comment"].lower()
+    ]
+
+    diff = len(rows_lib_loc) - len(rows)
+    if diff:
+        logging.info(
+            "Filtered out %d tracks with STEM in comments",
+            diff,
+        )
+    return rows
+
+
+def _filter_filetypes(rows_lib_loc: Rows) -> Rows:
+    rows = [row for row in rows_lib_loc if not row["filetype"] in NOT_ALLOWED]
+    diff = len(rows_lib_loc) - len(rows)
+    if diff:
+        logging.warning(
+            "Filtered out %d tracks with incorrect filetypes %s.",
+            diff,
+            list(NOT_ALLOWED),
+        )
+    return rows
+
+
+def _filter_only_in_playlists(rows_lib_loc: Rows, rows_plst_trk: Rows) -> Rows:
+    trk_ids = {row["track_id"] for row in rows_plst_trk}
+    rows = [row for row in rows_lib_loc if row["library.id"] in trk_ids]
+    diff = len(rows_lib_loc) - len(rows)
+    if diff:
+        logging.warning("Filtered out %d tracks not in playlists.", diff)
+    return rows
+
+
+def main() -> None:
     config = get_config()
     mtr_config = config.mixxx_to_rekordbox
     db_path = config.mixxx.mixxx_db
 
-    # %% checking the config
     if config.user_interactions.confirm_snaped and mtr_config.index_cue_bar_start != 0:
         answer = input(
             "Are you sure all these hot cues are snapped to the beatgrid (y/*)? : "
@@ -254,92 +315,75 @@ def main() -> None:
         if answer != "y":
             sys.exit(2)
 
-    # %% opening/filtering
-    df_lib = open_mixxx_library(db_path, missing_tracks=False)
-    idx_not_allowed = df_lib["filetype"].isin(NOT_ALLOWED)
-    if any(idx_not_allowed):
-        filestypes = df_lib[idx_not_allowed]["filetype"].unique().tolist()
-        logging.warning(
-            "Files with incorrect filetypes %s have been found and removed.", filestypes
-        )
-    df_lib = df_lib[~idx_not_allowed]
-    df_trk_loc = open_mixxx_track_locations(db_path)
-    df_cues = open_mixxx_cues(db_path, only_hot_cues=True)
-    df_pls, df_pls_trk = open_mixxx_playlists_with_tracks(
+    #
+    rows_lib_loc = open_mixxx_library_and_location(
+        db_path, quit_if_duplicates=False, existing_tracks=True, missing_tracks=False
+    )
+    rows_lib_loc = _filter_stems(rows_lib_loc)
+    rows_lib_loc = _filter_filetypes(rows_lib_loc)
+    #
+    rows_cues = open_mixxx_cues(db_path, only_hot_cues=True)
+    rows_playlists, rows_plst_trks = open_mixxx_playlists_with_tracks(
         db_path,
         filter_hidden=True,
         add_crates_as_playlist=mtr_config.add_crates_as_playlist,
         crate_suffix=mtr_config.crates_suffix,
     )
     if mtr_config.export_only_tracks_in_playlists:
-        df_lib = df_lib[df_lib["id"].isin(df_pls_trk["track_id"])]
+        rows_lib_loc = _filter_only_in_playlists(rows_lib_loc, rows_plst_trks)
 
-    # Filter out tracks with "STEM" in comments
-    df_nostem = df_lib[~df_lib["comment"].str.contains("STEM", case=False, na=False)]
-    print(f"Filtered out {len(df_lib)-len(df_nostem)} tracks with STEM in comments")
-    df_lib = df_nostem
+    for row in rows_lib_loc:
+        row[RKBOX_COLOR] = _convert_color_for_rekordbox(row["color"])
 
-    # Convert the colors
-    df_lib.loc[:, RKBOX_COLOR] = convert_colors_for_rekordbox(df_lib.loc[:, "color"])
+    logging.info("Writing the XML file")
 
-    # the rest of the filtering is done with the merging
-
-    # %% Writing the XML file
-    print("Writing the XML file")
-
-    # %%% tracks and cues => collection XML
-    df_merge_lib_loc = pd.merge(
-        left=df_lib,
-        right=df_trk_loc,
-        left_on="location",
-        right_on="id",
-        suffixes=(SUFFIX_LIB, SUFFIX_LOC),
-    )
-
-    collection_xml = get_collection_xml(len(df_merge_lib_loc))
+    collection_xml = get_collection_xml(len(rows_lib_loc))
     with logging_redirect_tqdm():
-        for _, track_row in tqdm(
-            df_merge_lib_loc.iterrows(), total=len(df_merge_lib_loc)
-        ):
-            track_xml = mixxx_track_row_to_rekbox_track_xml(track_row, mtr_config)
-            track_cues = df_cues[df_cues["track_id"] == track_row["id" + SUFFIX_LIB]]
-            rate = track_row["samplerate"]
+        for track_row in tqdm(rows_lib_loc, total=len(rows_lib_loc)):
+            try:
+                track_xml = mixxx_track_row_to_rekbox_track_xml(track_row, mtr_config)
+            except ValueError:
+                continue
+
             export_offset_ms = get_offset_ms(
-                track_row["location" + SUFFIX_LOC], mtr_config.mp3_decoder
+                track_row["track_locations.location"], mtr_config.mp3_decoder
             )
-            for _, cue_row in track_cues.iterrows():
-                assert rate
-                frate = float(rate)
+            frame_rate = float(track_row["samplerate"])
+            track_cues = [
+                cue_row
+                for cue_row in rows_cues
+                if cue_row["track_id"] == track_row["library.id"]
+            ]
+            for cue_row in track_cues:
                 for cue_xml in mixxx_cue_row_to_rekbox_xml(
-                    cue_row, frate, export_offset_ms
+                    track_row, cue_row, frame_rate, export_offset_ms
                 ):
                     track_xml.append(cue_xml)
             if track_row["beats_version"] == "BeatGrid-2.0":
-                # do we allow other versions of BeatGrid ?
                 tempo_xml = mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
                     track_row, track_cues, export_offset_ms, mtr_config
                 )
                 track_xml.append(tempo_xml)
             collection_xml.append(track_xml)
 
-    # %%% playlists => playlist XML
     playlists_xml = get_playlists_xml()
+    node_xml = get_node_xml(len(rows_playlists))
 
-    node_xml = get_node_xml(len(df_pls))
-
-    for _, pls_row in df_pls.sort_values("name").iterrows():
-        pls_tracks = df_pls_trk[df_pls_trk["playlist_id"] == pls_row["id"]].sort_values(
-            "position"
+    for playlist_row in sorted(rows_playlists, key=lambda row: row["name"]):
+        playlist_tracks = sorted(
+            (row for row in rows_plst_trks if row["playlist_id"] == playlist_row["id"]),
+            key=lambda row: _sort_value(row["position"]),
         )
-        playlist_node_xml = mixxx_playlist_to_rekordbox_xml(pls_row, len(pls_tracks))
-        for _, pls_track_row in pls_tracks.iterrows():
+        playlist_node_xml = mixxx_playlist_to_rekordbox_xml(
+            playlist_row, len(playlist_tracks)
+        )
+        for playlist_track_row in playlist_tracks:
             playlist_node_xml.append(
-                mixxx_playlist_track_to_rekordbox_xml(pls_track_row)
+                mixxx_playlist_track_to_rekordbox_xml(playlist_track_row)
             )
         node_xml.append(playlist_node_xml)
     playlists_xml.append(node_xml)
 
-    # %%% final XML structure
     root_xml = get_root_xml()
     root_xml.append(collection_xml)
     root_xml.append(playlists_xml)
@@ -347,7 +391,13 @@ def main() -> None:
     tree = ET.ElementTree(element=root_xml)
     ET.indent(tree, space="  ", level=0)
 
-    rek_fil = Path(mtr_config.mixxx_library_folder, mtr_config.mixxx_to_rekordbox_xml)
-    tree.write(rek_fil, encoding="utf-8", xml_declaration=True)
+    rekordbox_file = Path(
+        mtr_config.mixxx_library_folder, mtr_config.mixxx_to_rekordbox_xml
+    )
+    tree.write(rekordbox_file, encoding="utf-8", xml_declaration=True)
 
-    print(f"==> {rek_fil}")
+    logging.info("==> %s", rekordbox_file)
+
+
+if __name__ == "__main__":
+    main()
