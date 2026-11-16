@@ -1,8 +1,6 @@
 import logging
 import re
 import sys
-from math import isnan
-from numbers import Real
 from pathlib import Path
 from typing import Any, Generator
 from urllib.parse import quote
@@ -47,14 +45,10 @@ REKORDBOX_COLORS = {
 }
 
 
-def _convert_color_for_rekordbox(value: Any) -> str:
-    if value is None:
+def _convert_color_for_rekordbox(color: Any) -> str:
+    if color is None:
         return ""
-    assert isinstance(value, Real)
-    if isnan(float(value)):
-        return ""
-    color = int(float(value))
-    assert color == value
+    assert isinstance(color, int)
     rgb = ((color >> 16) & 255, (color >> 8) & 255, color & 255)
     nearest = min(
         REKORDBOX_COLORS,
@@ -66,7 +60,7 @@ def _convert_color_for_rekordbox(value: Any) -> str:
 
 
 def is_non_empty_string(s: str) -> bool:
-    return isinstance(s, str) and s.replace(" ", "") != ""
+    return isinstance(s, str) and s.strip() != ""
 
 
 def get_root_xml() -> ET.Element:
@@ -114,66 +108,94 @@ def get_time_signature_in_comment(trk_row: Row, config: MixxxToRekordboxConfig) 
 
 
 def _position_frame_to_sec(frame: int, samplerate: float) -> float:
+    assert isinstance(frame, int)
+    assert isinstance(samplerate, float), samplerate
     return frame / (2 * samplerate)
 
 
-def _guess_inizio_sec(
+def _guess_inizio_from_hotcue(
     hot_cue_frame_pos: int, samplerate: float, bpm: float, beats_per_bar: int
 ) -> float:
+    assert isinstance(bpm, float)
+    assert isinstance(beats_per_bar, int)
     hot_cue_sec = _position_frame_to_sec(hot_cue_frame_pos, samplerate)
     interval_sec = 60 / bpm
     return hot_cue_sec % (beats_per_bar * interval_sec)
 
 
-def _beatgrid_start_sec(track_row: Row) -> float:
+def _beatgrid_inizio(track_row: Row) -> float:
     beatgrid = beats_pb2.BeatGrid()  # type: ignore[attr-defined]
     beatgrid.ParseFromString(track_row["beats"])
-    return beatgrid.first_beat.frame_position / track_row["samplerate"]
+    return beatgrid.first_beat.frame_position / float(track_row["samplerate"])
 
 
-def mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
+def _get_inizio(
     trk_row: Row,
     cue_rows: Rows,
-    offset_start_beatgrid_ms: int,
+    offset_ms: int,
     config: MixxxToRekordboxConfig,
-) -> ET.Element:
-    assert isinstance(offset_start_beatgrid_ms, int)
-    bpm = trk_row["bpm"]
-    assert isinstance(bpm, float)
-    hotcue_bar_index = config.index_cue_bar_start - 1
-    matching_cues = [
-        cue_row for cue_row in cue_rows if cue_row["hotcue"] == hotcue_bar_index
-    ]
-    if config.index_cue_bar_start <= 0 or not matching_cues:
-        inizio = _beatgrid_start_sec(trk_row)
-    else:
-        if len(matching_cues) != 1:
-            logging.warning(
-                "More than one hotcue #%d has been found for file %s\n."
-                "The first one has been kept to decide the start of the bars"
-                "… but you might want to re-create it!",
+) -> float | None:
+    # we fisrt try to use config.index_cue_bar_start so we can
+    # have the start of the bars
+    if config.index_cue_bar_start > 0:
+        hotcue_bar_index = config.index_cue_bar_start - 1
+        matching_cues = [
+            cue_row for cue_row in cue_rows if cue_row["hotcue"] == hotcue_bar_index
+        ]
+        if not matching_cues:
+            logging.info(
+                "No hotcue #%d been found for file %s. "
+                "You might want to add one to make sure the start of the bars are detected.",
                 config.index_cue_bar_start,
                 trk_row["track_locations.location"],
             )
-        cue_row = matching_cues[0]
-        inizio = _guess_inizio_sec(
-            cue_row["position"],
-            trk_row["samplerate"],
-            bpm,
-            config.beats_per_bar,
-        )
-        inizio += offset_start_beatgrid_ms / 1000
+        else:
+            if len(matching_cues) > 1:
+                logging.warning(
+                    "More than one hotcue #%d has been found for file %s. "
+                    "The first one has been kept to decide the start of the bars"
+                    "… but you might want to re-create it!",
+                    config.index_cue_bar_start,
+                    trk_row["track_locations.location"],
+                )
+            cue_row = matching_cues[0]
+            return (
+                _guess_inizio_from_hotcue(
+                    int(cue_row["position"]),
+                    float(trk_row["samplerate"]),
+                    float(trk_row["bpm"]),
+                    config.beats_per_bar,
+                )
+                + offset_ms / 1000
+            )
+    # we can maybe have the start of the grid
+    if trk_row["beats"] is not None:
+        return _beatgrid_inizio(trk_row)
+
+    return None
+
+
+def _mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
+    trk_row: Row,
+    cue_rows: Rows,
+    offset_ms: int,
+    config: MixxxToRekordboxConfig,
+) -> ET.Element:
+
+    bpm = float(trk_row["bpm"])
+    inizio = _get_inizio(trk_row, cue_rows, offset_ms, config)
 
     attrib: AttribDict = {
-        "Inizio": f"{inizio:.3f}",
         "Bpm": f"{bpm:.2f}",
         "Metro": get_time_signature_in_comment(trk_row, config),
         "Battito": "1",  # NOTE: means "1st beat of the bar" (not "1 beat per bar")
     }
+    if inizio is not None:
+        attrib["Inizio"] = f"{inizio:.3f}"
     return get_elem("TEMPO", attrib)
 
 
-def mixxx_track_row_to_rekbox_track_xml(
+def _mixxx_track_row_to_rekbox_track_xml(
     trk_row: Row, config: MixxxToRekordboxConfig
 ) -> ET.Element:
     location = Path(trk_row["track_locations.location"])
@@ -221,12 +243,15 @@ def mixxx_track_row_to_rekbox_track_xml(
     return get_elem("TRACK", attrib)
 
 
-def mixxx_cue_row_to_rekbox_xml(
-    track_row: Row, cue_row_: Row, samplerate: float, offset_ms: int
+def _mixxx_cue_row_to_rekbox_xml(
+    track_row: Row, cue_row_: Row, offset_ms: int
 ) -> Generator[ET.Element, None, None]:
-    assert isinstance(samplerate, float)
-    assert isinstance(offset_ms, int)
-    start = _position_frame_to_sec(cue_row_["position"], samplerate) + offset_ms / 1000
+    start = (
+        _position_frame_to_sec(
+            int(cue_row_["position"]), float(track_row["samplerate"])
+        )
+        + offset_ms / 1000
+    )
     if start < 0:
         logging.info(
             "A negative cue start position has been found and ignored for hotcue #%d of file %s",
@@ -244,8 +269,7 @@ def mixxx_cue_row_to_rekbox_xml(
             yield get_elem("POSITION_MARK", attrib)
 
 
-def mixxx_playlist_to_rekordbox_xml(plst_row: Row, track_numbers: int) -> ET.Element:
-    assert isinstance(track_numbers, int)
+def _mixxx_playlist_to_rekordbox_xml(plst_row: Row, track_numbers: int) -> ET.Element:
     attrib: AttribDict = {
         "Name": plst_row["name"],
         "Type": "1",
@@ -255,9 +279,7 @@ def mixxx_playlist_to_rekordbox_xml(plst_row: Row, track_numbers: int) -> ET.Ele
     return get_elem("NODE", attrib)
 
 
-def mixxx_playlist_track_to_rekordbox_xml(
-    pls_trk_row: Row,
-) -> ET.Element:
+def _mixxx_playlist_track_to_rekordbox_xml(pls_trk_row: Row) -> ET.Element:
     attrib = {"Key": pls_trk_row["track_id"]}
     return get_elem("TRACK", attrib)
 
@@ -341,26 +363,25 @@ def main() -> None:
     with logging_redirect_tqdm():
         for track_row in tqdm(rows_lib_loc, total=len(rows_lib_loc)):
             try:
-                track_xml = mixxx_track_row_to_rekbox_track_xml(track_row, mtr_config)
+                track_xml = _mixxx_track_row_to_rekbox_track_xml(track_row, mtr_config)
             except ValueError:
                 continue
 
             export_offset_ms = get_offset_ms(
                 track_row["track_locations.location"], mtr_config.mp3_decoder
             )
-            frame_rate = float(track_row["samplerate"])
             track_cues = [
                 cue_row
                 for cue_row in rows_cues
                 if cue_row["track_id"] == track_row["library.id"]
             ]
             for cue_row in track_cues:
-                for cue_xml in mixxx_cue_row_to_rekbox_xml(
-                    track_row, cue_row, frame_rate, export_offset_ms
+                for cue_xml in _mixxx_cue_row_to_rekbox_xml(
+                    track_row, cue_row, export_offset_ms
                 ):
                     track_xml.append(cue_xml)
-            if track_row["beats_version"] == "BeatGrid-2.0":
-                tempo_xml = mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
+            if isinstance(track_row["bpm"], float):
+                tempo_xml = _mixxx_track_and_cue_rows_to_rekbox_tempo_xml(
                     track_row, track_cues, export_offset_ms, mtr_config
                 )
                 track_xml.append(tempo_xml)
@@ -374,12 +395,12 @@ def main() -> None:
             (row for row in rows_plst_trks if row["playlist_id"] == playlist_row["id"]),
             key=lambda row: _sort_value(row["position"]),
         )
-        playlist_node_xml = mixxx_playlist_to_rekordbox_xml(
+        playlist_node_xml = _mixxx_playlist_to_rekordbox_xml(
             playlist_row, len(playlist_tracks)
         )
         for playlist_track_row in playlist_tracks:
             playlist_node_xml.append(
-                mixxx_playlist_track_to_rekordbox_xml(playlist_track_row)
+                _mixxx_playlist_track_to_rekordbox_xml(playlist_track_row)
             )
         node_xml.append(playlist_node_xml)
     playlists_xml.append(node_xml)
