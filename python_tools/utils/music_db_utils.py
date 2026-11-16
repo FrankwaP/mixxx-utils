@@ -17,7 +17,6 @@ COLS_FOR_DUP: Final[list[str]] = ["tracknumber", "artist", "album", "title"]
 
 
 def propose_fix_foreign_key_constraints(db_path: Path) -> None:
-    db_path = Path(db_path)
     answer = input(
         "The Mixxx database cannot be opened and we must fix the foreign key constraints...\n"
         "A backup file will be created.\n\n"
@@ -54,7 +53,6 @@ def open_mixxx_library(
     existing_tracks: bool = True,
     missing_tracks: bool = True,
 ) -> pd.DataFrame:
-
     # we add a check for duplicates because the will make
     # the final SQL fusion fail due to unique constraint
     # this can happen when there's both the correct and incorrect path for a track
@@ -228,12 +226,10 @@ def file_url_to_path(file_url: str) -> str:
 def db_path_to_url(db_path: Path) -> str:
     # sqlite:///relative/path/to/file.db
     # sqlite:////absolute/path/to/file.db
-    path = Path(db_path).resolve()
-    return "sqlite:///" + path.as_posix()
+    return "sqlite:///" + db_path.as_posix()
 
 
 def create_mixxx_db_backup(db_path: Path) -> None:
-    db_path = Path(db_path)
     now = strftime("%y%m%d.%H%M%S")
     backup = db_path.with_suffix(db_path.suffix + ".bak." + now)
     copy(db_path, backup)
