@@ -5,6 +5,7 @@ from time import strftime
 from typing import Any, Final, Tuple
 from urllib.parse import unquote
 from collections import Counter
+import logging
 
 import sqlite3
 
@@ -144,7 +145,14 @@ def open_mixxx_library_and_location(
     if existing_tracks and missing_tracks:
         return rows
     if existing_tracks:
-        return [row for row in rows if Path(row["track_locations.location"]).exists()]
+        out = []
+        for row in rows:
+            tloc = Path(row["track_locations.location"])
+            if tloc.exists():
+                out.append(row)
+            else:
+                logging.warning("Removing entry with missing location: %s", tloc)
+        return out
     if missing_tracks:
         return [
             row for row in rows if not Path(row["track_locations.location"]).exists()
@@ -155,7 +163,7 @@ def open_mixxx_library_and_location(
 def fix_foreign_key_constraints(db_path: Path) -> None:
     """Fix incorrect foreign key constraints in the database."""
     create_mixxx_db_backup(db_path)
-    print(f"Fixing foreign key constraints in database: {db_path}")
+    logging.info(f"Fixing foreign key constraints in database: {db_path}")
 
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
@@ -169,7 +177,7 @@ def fix_foreign_key_constraints(db_path: Path) -> None:
     tables_to_fix = [row[0] for row in cursor.fetchall()]
 
     for table in tables_to_fix:
-        print(f"Fixing foreign key constraints in table: {table}")
+        logging.info(f"Fixing foreign key constraints in table: {table}")
         cursor.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name=?;",
             (table,),
@@ -189,7 +197,6 @@ def fix_foreign_key_constraints(db_path: Path) -> None:
 
 
 def open_mixxx_cues(db_path: Path, *, only_hot_cues: bool) -> Rows:
-    print(f"Openning the Mixxx cues from {db_path}.")
     rows = _open_table_as_df(db_path, "cues")
     if only_hot_cues:
         rows = [row for row in rows if row["hotcue"] is not None and row["hotcue"] >= 0]
@@ -197,7 +204,6 @@ def open_mixxx_cues(db_path: Path, *, only_hot_cues: bool) -> Rows:
 
 
 def open_mixxx_track_analysis(db_path: Path) -> Rows:
-    print(f"Openning the Mixxx track analysis from {db_path}.")
     return _open_table_as_df(db_path, "track_analysis")
 
 
@@ -240,7 +246,6 @@ def open_mixxx_playlists_with_tracks(
 
 
 def _open_mixxx_playlists(db_path: Path, filter_hidden: bool) -> Rows:
-    print(f"Openning the Mixxx playlists from {db_path}.")
     rows = _open_table_as_df(db_path, "Playlists")
     if filter_hidden:
         rows = [row for row in rows if row["hidden"] == 0]
@@ -248,12 +253,10 @@ def _open_mixxx_playlists(db_path: Path, filter_hidden: bool) -> Rows:
 
 
 def _open_mixxx_playlist_tracks(db_path: Path) -> Rows:
-    print(f"Openning the Mixxx playlist tracks from {db_path}.")
     return _open_table_as_df(db_path, "PlaylistTracks")
 
 
 def _open_mixxx_crates(db_path: Path, filter_hidden: bool) -> Rows:
-    print(f"Openning the Mixxx crates from {db_path}.")
     rows = _open_table_as_df(db_path, "crates")
     if filter_hidden:
         rows = [row for row in rows if row["show"] == 1]
@@ -261,7 +264,6 @@ def _open_mixxx_crates(db_path: Path, filter_hidden: bool) -> Rows:
 
 
 def _open_mixxx_crate_tracks(db_path: Path) -> Rows:
-    print(f"Openning the Mixxx crate tracks from {db_path}.")
     return _open_table_as_df(db_path, "crate_tracks")
 
 
@@ -299,7 +301,7 @@ def create_mixxx_db_backup(db_path: Path) -> None:
     now = strftime("%y%m%d.%H%M%S")
     backup = db_path.with_suffix(db_path.suffix + ".bak." + now)
     copy(db_path, backup)
-    print(f"Backup created: {backup}")
+    logging.info(f"Backup created: {backup}")
 
 
 def update_mixxx_db_table(
