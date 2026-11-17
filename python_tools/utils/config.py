@@ -74,11 +74,10 @@ def _get_config_path() -> Path:
         config_path = Path(os.environ[_CONFIG_ENV_VAR])
         if not config_path.exists():
             raise FileNotFoundError(
-                f"The file defined in {_CONFIG_ENV_VAR} environment variable "
-                " does not exists."
+                f"The file defined in {_CONFIG_ENV_VAR} environment variable does not exists: {config_path}"
             )
         print(
-            f"Reading the config file defined in {_CONFIG_ENV_VAR} environment variable"
+            f"Reading the config file defined in {_CONFIG_ENV_VAR} environment variable: {config_path}"
         )
     else:
         pytool_dir = Path(__file__).resolve().parents[1]
