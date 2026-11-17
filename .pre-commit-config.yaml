@@ -1,4 +1,9 @@
 exclude: python_tools/utils/proto/.*
+
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+
 repos:
 -   repo: meta
     hooks:
@@ -19,10 +24,11 @@ repos:
     rev: 26.1.0
     hooks:
       - id: black
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
-    hooks:
-    -   id: mypy
+#   I run it locally else I have to define the stubs here AND in the requirements (and I don't like the idea)
+# -   repo: https://github.com/pre-commit/mirrors-mypy
+#     rev: v1.19.1
+#     hooks:
+#     -   id: mypy
 -   repo: https://github.com/pycqa/flake8
     rev: 7.3.0
     hooks:
@@ -38,6 +44,20 @@ repos:
     -   id: markdownlint-fix
         files: '.*\.md'
         args: [--disable, MD013]
+-   repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+    -   id: actionlint
+# local runs
+- repo: local  # use requirements-pip-mypy.txt
+  hooks:
+    - id: mypy
+      name: mypy
+      entry: mypy .
+      language: system
+      pass_filenames: false
+      always_run: true
+      stages: [pre-commit]
 - repo: local
   hooks:
     - id: pytest
@@ -46,3 +66,4 @@ repos:
       language: system
       pass_filenames: false
       always_run: true
+      stages: [pre-push]
