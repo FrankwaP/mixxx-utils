@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from math import prod
 from re import sub
 
@@ -6,6 +5,7 @@ import pandas as pd
 from jellyfish import levenshtein_distance
 
 from .proto import beats_pb2  # type: ignore
+from .music_db_utils_no_pandas import Row
 
 
 def position_frame_to_sec(frame: int, samplerate: float) -> float:
@@ -20,22 +20,15 @@ def beatgrid_frame_to_sec(frame: int, samplerate: float) -> float:
     return frame / samplerate
 
 
-# YAGNI
-# def beatgrid_sec_to_frame(time_sec: float, samplerate: float) -> int:
-#     return round(time_sec * samplerate)
-
-
-@dataclass
 class BeatGridInfo:
-    start: int
-    start_sec: float
-    bpm: float
 
-    def __init__(self, library_row: pd.Series):
+    def __init__(self, library_row: Row):
         beatgrid = beats_pb2.BeatGrid()  # type: ignore
         beatgrid.ParseFromString(library_row["beats"])
-        self.start = beatgrid.first_beat.frame_position
-        self.start_sec = beatgrid_frame_to_sec(self.start, library_row["samplerate"])
+        self.start_frame = beatgrid.first_beat.frame_position
+        self.start_sec = beatgrid_frame_to_sec(
+            self.start_frame, library_row["samplerate"]
+        )
         self.bpm = beatgrid.bpm.bpm
 
 

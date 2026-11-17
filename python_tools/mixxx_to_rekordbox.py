@@ -15,10 +15,7 @@ from python_tools.mixxx_to_rekordbox_utils.xml_utils import (
     get_elem,
 )
 from python_tools.utils.config import get_config, MixxxToRekordboxConfig
-from python_tools.utils.misc import (
-    KEY_ID_LANCELOT,
-    RATING_MAPING,
-)
+from python_tools.utils.misc import KEY_ID_LANCELOT, RATING_MAPING
 from python_tools.utils.music_db_utils_no_pandas import (
     Row,
     Rows,
@@ -26,7 +23,7 @@ from python_tools.utils.music_db_utils_no_pandas import (
     open_mixxx_library_and_location,
     open_mixxx_playlists_with_tracks,
 )
-from python_tools.utils.proto import beats_pb2
+from python_tools.utils.track_utils import BeatGridInfo
 
 RKBOX_COLOR = "rkbox_color"
 NOT_ALLOWED = "ogg", "opus"
@@ -121,9 +118,8 @@ def _guess_inizio_from_hotcue(
 
 
 def _beatgrid_inizio(track_row: Row) -> float:
-    beatgrid = beats_pb2.BeatGrid()  # type: ignore[attr-defined]
-    beatgrid.ParseFromString(track_row["beats"])
-    return beatgrid.first_beat.frame_position / float(track_row["samplerate"])
+    beat_info = BeatGridInfo(track_row)
+    return beat_info.start_sec
 
 
 def _get_inizio(
