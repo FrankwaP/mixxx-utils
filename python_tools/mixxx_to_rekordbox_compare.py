@@ -1,86 +1,85 @@
 from typing import Final
 from pathlib import Path
-
-import pandas as pd
+import logging
 import xml.etree.ElementTree as ET
 from urllib.parse import unquote
 
 from python_tools.utils.config import get_config, MixxxToRekordboxConfig
 
-TRACK_ID = "TrackID"
-TRACK_FIELDS: Final[list[str]] = [
-    "Location",
+MATCHING_KEY = "Location"
+TRACK_FIELDS: Final[tuple[str, ...]] = (
+    "Name",
     "Artist",
     "Album",
-    # The "Name" field is renamed to "Title" in this script!
-    "Title",
-    "Tonality",
     "Rating",
+    # "Location",
+    "Tonality",
     "Colour",
-]
-MARK_FIELDS: Final[list[str]] = [
-    "Location",
-    "Name",
+)
+
+MARK_FIELDS: Final[tuple[str, ...]] = (
     "Type",
     "Start",
     "End",
     "Num",
-]
-TEMPO_FIELDS: Final[list[str]] = [
+)
+
+TEMPO_FIELDS: Final[tuple[str, ...]] = (
     "Location",
     "Inizio",
     "Bpm",
     # DO NOT use Metro as RkBox does not export it correctly (always "4/4")
     # "Metro",
-]
+)
 
 MIXXX_SUFFIX = "_mixxx"
 RKBOX_SUFFIX = "_rkbox"
 
 
-def extract_tracks_with_marks_and_tempo(
+STR_TUPLE = tuple[str, ...]
+STR_TUTUPLE = tuple[STR_TUPLE, ...]
+
+
+def _get_tuple(xml_element: ET.Element, fields: tuple[str, ...]) -> STR_TUPLE:
+    return tuple(xml_element.attrib.get(field, "") for field in fields)
+
+
+def _get_tuple_tuple(
+    xml_element: ET.Element, path: str, fields: tuple[str, ...]
+) -> STR_TUTUPLE:
+    out = []
+    for elem in xml_element.findall(path):
+        out.append(_get_tuple(elem, fields))
+    return tuple(sorted(out))
+
+
+def _normalize_location(loc: str) -> str:
+    loc = unquote(loc)
+    loc = loc.removeprefix("file://localhost/")
+    loc = loc.replace("\\", "/")
+    return loc
+
+
+def _extract_tracks_with_marks_and_tempo(
     xml_path: Path,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Extract POSITION_MARKs with their parent TRACK info"""
+) -> dict[str, tuple[STR_TUPLE, STR_TUTUPLE, STR_TUTUPLE]]:
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
-    track_rows = []
-    mark_rows = []
-    tempo_rows = []
-
+    dict_track = {}
     for track in root.findall(".//COLLECTION/TRACK"):
-        # !!! we rename this field to avoid confusion with other "Name" field
-        track.attrib["Title"] = track.attrib.pop("Name")
-        track.attrib["Location"] = unquote(track.attrib["Location"])
-        track.attrib = {
-            k: v for k, v in track.attrib.items() if k in [TRACK_ID] + TRACK_FIELDS
-        }
-        track_rows.append(track.attrib)
+        track.attrib["Location"] = _normalize_location(track.attrib["Location"])
         #
-        # marks/cue info
-        track_attrib_mark = {
-            k: v for k, v in track.attrib.items() if k in [TRACK_ID] + MARK_FIELDS
-        }
-        for mark in track.findall("POSITION_MARK"):
-            if "Name" not in mark.attrib.keys():
-                mark.attrib["Name"] = ""
-            if "End" not in mark.attrib.keys():
-                mark.attrib["End"] = ""
-            mark_rows.append(dict(**track_attrib_mark, **mark.attrib))
-        #
-        # tempo info
-        track_attrib_tempo = {
-            k: v for k, v in track.attrib.items() if k in [TRACK_ID] + TEMPO_FIELDS
-        }
-        for tempo in track.findall("TEMPO"):
-            tempo_rows.append(dict(**track_attrib_tempo, **tempo.attrib))
+        tuple_track = _get_tuple(track, TRACK_FIELDS)
+        tuple_mark = _get_tuple_tuple(track, "POSITION_MARK", MARK_FIELDS)
+        tuple_tempo = _get_tuple_tuple(track, "POSITION_MARK", MARK_FIELDS)
 
-    return pd.DataFrame(track_rows), pd.DataFrame(mark_rows), pd.DataFrame(tempo_rows)
+        dict_track[track.attrib[MATCHING_KEY]] = (tuple_track, tuple_mark, tuple_tempo)
+    return dict_track
 
 
-def write_new_playlist(
-    mtr_config: MixxxToRekordboxConfig, track_id_mixxx: set[str]
+def _write_new_playlist(
+    mtr_config: MixxxToRekordboxConfig, track_id_mixxx: list[str]
 ) -> None:
     tree = ET.parse(mtr_config.mixxx_to_rekordbox_xml)
     root = tree.getroot()
@@ -120,55 +119,22 @@ def main():
     config = get_config()
     mtr_config = config.mixxx_to_rekordbox
 
-    df_mixxx_track, df_mixxx_mark, df_mixxx_tempo = extract_tracks_with_marks_and_tempo(
+    tracks_mixxx = _extract_tracks_with_marks_and_tempo(
         mtr_config.mixxx_to_rekordbox_xml
     )
 
-    df_rkbox_track, df_rkbox_mark, df_rkbox_tempo = extract_tracks_with_marks_and_tempo(
+    tracks_rkbox = _extract_tracks_with_marks_and_tempo(
         mtr_config.rekordbox_compare_export_xml
     )
 
-    ###
-    # Checking updated track info
-    mrg_track = pd.merge(
-        df_mixxx_track.fillna(""),
-        df_rkbox_track.fillna(""),
-        on=TRACK_FIELDS,
-        how="left_anti",
-        suffixes=[MIXXX_SUFFIX, RKBOX_SUFFIX],
-    )
-    track_id_track = mrg_track[TRACK_ID + MIXXX_SUFFIX].unique()
-    print(f"{len(mrg_track)} tracks info have been updated")
-    assert len(track_id_track) == len(mrg_track)
-    ####
-    # Checking updated mark/cue info
-    mrg_mark = pd.merge(
-        df_mixxx_mark,
-        df_rkbox_mark,
-        on=MARK_FIELDS,
-        how="left_anti",
-        suffixes=[MIXXX_SUFFIX, RKBOX_SUFFIX],
-    )
-    track_id_mark = mrg_mark[TRACK_ID + MIXXX_SUFFIX].unique()
-    print(
-        f"{len(mrg_mark)} marks/cues info have been updated on {len(track_id_mark)} tracks"
-    )
-    ####
-    # Checking updated tempo info
-    mrg_tempo = pd.merge(
-        df_mixxx_tempo,
-        df_rkbox_tempo,
-        on=TEMPO_FIELDS,
-        how="left_anti",
-        suffixes=[MIXXX_SUFFIX, RKBOX_SUFFIX],
-    )
-    track_id_tempo = mrg_tempo[TRACK_ID + MIXXX_SUFFIX].unique()
-    print(
-        f"{len(mrg_tempo)} tempo info have been updated on {len(track_id_tempo)} tracks"
-    )
-    #
-    track_ids = set(
-        track_id_track.tolist() + track_id_mark.tolist() + track_id_tempo.tolist()
-    )
+    track_ids = []
+    for track_id in tracks_mixxx.keys():
+        if track_id not in tracks_rkbox.keys():
+            logging.info("This track is new: %s", track_id)
+            track_ids.append(track_id)
+        elif tracks_mixxx[track_id] != tracks_rkbox[track_id]:
+            logging.info("This track is updated: %s", track_id)
+            track_ids.append(track_id)
+
     print(f"After combining, {len(track_ids)} tracks need to be (re-)imported")
-    write_new_playlist(mtr_config, track_ids)
+    _write_new_playlist(mtr_config, track_ids)
