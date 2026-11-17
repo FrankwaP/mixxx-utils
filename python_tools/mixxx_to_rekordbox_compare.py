@@ -6,6 +6,7 @@ from urllib.parse import unquote
 
 from python_tools.utils.config import get_config, MixxxToRekordboxConfig
 
+TRACK_ID = "TrackID"
 MATCHING_KEY = "Location"
 TRACK_FIELDS: Final[tuple[str, ...]] = (
     "Name",
@@ -62,11 +63,12 @@ def _normalize_location(loc: str) -> str:
 
 def _extract_tracks_with_marks_and_tempo(
     xml_path: Path,
-) -> dict[str, tuple[STR_TUPLE, STR_TUTUPLE, STR_TUTUPLE]]:
+) -> tuple[dict[str, tuple[STR_TUPLE, STR_TUTUPLE, STR_TUTUPLE]], dict[str, str]]:
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
     dict_track = {}
+    dict_track_id = {}
     for track in root.findall(".//COLLECTION/TRACK"):
         track.attrib["Location"] = _normalize_location(track.attrib["Location"])
         #
@@ -75,7 +77,8 @@ def _extract_tracks_with_marks_and_tempo(
         tuple_tempo = _get_tuple_tuple(track, "POSITION_MARK", MARK_FIELDS)
 
         dict_track[track.attrib[MATCHING_KEY]] = (tuple_track, tuple_mark, tuple_tempo)
-    return dict_track
+        dict_track_id[track.attrib[MATCHING_KEY]] = track.attrib[TRACK_ID]
+    return dict_track, dict_track_id
 
 
 def _write_new_playlist(
@@ -119,22 +122,22 @@ def main():
     config = get_config()
     mtr_config = config.mixxx_to_rekordbox
 
-    tracks_mixxx = _extract_tracks_with_marks_and_tempo(
+    tracks_mixxx, tracks_ids_mixxx = _extract_tracks_with_marks_and_tempo(
         mtr_config.mixxx_to_rekordbox_xml
     )
 
-    tracks_rkbox = _extract_tracks_with_marks_and_tempo(
+    tracks_rkbox, _ = _extract_tracks_with_marks_and_tempo(
         mtr_config.rekordbox_compare_export_xml
     )
 
     track_ids = []
-    for track_id in tracks_mixxx.keys():
-        if track_id not in tracks_rkbox.keys():
-            logging.info("This track is new: %s", track_id)
-            track_ids.append(track_id)
-        elif tracks_mixxx[track_id] != tracks_rkbox[track_id]:
-            logging.info("This track is updated: %s", track_id)
-            track_ids.append(track_id)
+    for match_key in tracks_mixxx.keys():
+        if match_key not in tracks_rkbox.keys():
+            logging.info("This track is new: %s", match_key)
+            track_ids.append(tracks_ids_mixxx[match_key])
+        elif tracks_mixxx[match_key] != tracks_rkbox[match_key]:
+            logging.info("This track is updated: %s", match_key)
+            track_ids.append(tracks_ids_mixxx[match_key])
 
     print(f"After combining, {len(track_ids)} tracks need to be (re-)imported")
     _write_new_playlist(mtr_config, track_ids)

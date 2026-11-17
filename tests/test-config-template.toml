@@ -13,7 +13,7 @@ mixxx_to_rekordbox_xml = "__TEMP_FOLDER__/mixxx_to_rekordbox.xml"
 
 # the next 2 value are only use for text replacement (not reding/writing files)
 # keep them as they are
-mixxx_library_folder = "/home/francois/Musique/"
+mixxx_library_folder = "tests/music/"
 rekordbox_library_folder = "E:/"
 
 

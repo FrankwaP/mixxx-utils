@@ -1,5 +1,8 @@
 exclude: python_tools/utils/proto/.*
 
+default_stages:
+  - pre-commit
+
 default_install_hook_types:
   - pre-commit
   - pre-push

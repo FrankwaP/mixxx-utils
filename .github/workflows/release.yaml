@@ -16,9 +16,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -28,7 +28,7 @@ jobs:
 
       - name: Build mixxx_to_rekordbox with Nuitka
         run: |
-          python -m nuitka --standalone --onefile --nofollow-import-to=numpy mixxx_to_rekordbox.py
+          python -m nuitka --onefile --nofollow-import-to=numpy --assume-yes-for-downloads mixxx_to_rekordbox.py
 
       - name: Upload mixxx_to_rekordbox binary to release
         uses: softprops/action-gh-release@v2
@@ -38,7 +38,7 @@ jobs:
 
       - name: Build mixxx_to_rekordbox_compare with Nuitka
         run: |
-          python -m nuitka --standalone --onefile --nofollow-import-to=numpy mixxx_to_rekordbox_compare.py
+          python -m nuitka --onefile --nofollow-import-to=numpy --assume-yes-for-downloads mixxx_to_rekordbox_compare.py
 
       - name: Upload binary to release
         uses: softprops/action-gh-release@v2
