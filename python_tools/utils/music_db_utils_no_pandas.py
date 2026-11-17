@@ -318,7 +318,7 @@ def update_mixxx_db_table(
     assert all(column in rows[0] for column in where_cols) if rows else True
     if not rows:
         return
-
+    create_mixxx_db_backup(db_path)
     sql = (
         f"UPDATE {table_name}"
         + " SET "
@@ -342,7 +342,7 @@ def delete_rows_mixxx_db_table(
     assert all(column in row for row in rows for column in where_cols)
     if not rows:
         return
-
+    create_mixxx_db_backup(db_path)
     sql = (
         f"DELETE FROM {table_name}"
         + " WHERE "
