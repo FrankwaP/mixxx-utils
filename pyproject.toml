@@ -1,0 +1,9 @@
+[project]
+name = "python-tools"
+version = "0.1.0"
+requires-python = ">=3.11"
+readme = {file = "README.txt", content-type = "text/markdown"}
+keywords = ["mixxx", "rekordbox", "export", "tools"]
+
+[tool.mypy]
+exclude = '^python_tools/utils/proto/keys_pb2\.py$'
