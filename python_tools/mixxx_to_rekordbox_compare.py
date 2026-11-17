@@ -1,4 +1,5 @@
 from typing import Final
+from pathlib import Path
 
 import pandas as pd
 import xml.etree.ElementTree as ET
@@ -38,10 +39,10 @@ RKBOX_SUFFIX = "_rkbox"
 
 
 def extract_tracks_with_marks_and_tempo(
-    mtr_config: MixxxToRekordboxConfig,
+    xml_path: Path,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Extract POSITION_MARKs with their parent TRACK info"""
-    tree = ET.parse(mtr_config.mixxx_to_rekordbox_xml)
+    tree = ET.parse(xml_path)
     root = tree.getroot()
 
     track_rows = []
@@ -120,11 +121,11 @@ def main():
     mtr_config = config.mixxx_to_rekordbox
 
     df_mixxx_track, df_mixxx_mark, df_mixxx_tempo = extract_tracks_with_marks_and_tempo(
-        mtr_config
+        mtr_config.mixxx_to_rekordbox_xml
     )
 
     df_rkbox_track, df_rkbox_mark, df_rkbox_tempo = extract_tracks_with_marks_and_tempo(
-        mtr_config
+        mtr_config.rekordbox_compare_export_xml
     )
 
     ###

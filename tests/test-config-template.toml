@@ -47,7 +47,7 @@ index_cue_bar_start = 3
 mp3_decoder = "MAD"
 ######
 # parameters for the "mixxx_to_rekordbox_compare" utility
-rekordbox_export_xml = "tests/test_rekordbox_compare.xml"
+rekordbox_compare_export_xml = "tests/test_rekordbox_compare.xml"
 playlist_updated_tracks = "TRACKS_TO_UPDATE"
 
 [snap_cues]

@@ -43,7 +43,7 @@ class MixxxToRekordboxConfig(_MyBaseModel):
     beats_per_bar: int = Field(default=8, gt=0)
     index_cue_bar_start: int = Field(ge=0)
     mp3_decoder: Literal["MAD", "CoreAudio", "FFmpeg"] = "MAD"
-    rekordbox_export_xml: Annotated[Path, AfterValidator(_resolve)]
+    rekordbox_compare_export_xml: Annotated[Path, AfterValidator(_resolve)]
     playlist_updated_tracks: str
 
 
