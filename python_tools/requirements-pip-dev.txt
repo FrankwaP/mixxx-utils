@@ -8,3 +8,4 @@ pandas-stubs
 types-tqdm
 pre-commit
 pytest
+nuitka[onefile]
