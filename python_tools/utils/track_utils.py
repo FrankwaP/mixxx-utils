@@ -4,8 +4,8 @@ from re import sub
 import pandas as pd
 from jellyfish import levenshtein_distance
 
-from .proto import beats_pb2  # type: ignore
 from .music_db_utils_no_pandas import Row
+from .proto import beats_pb2  # type: ignore
 
 
 def position_frame_to_sec(frame: int, samplerate: float) -> float:

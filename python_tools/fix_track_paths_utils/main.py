@@ -3,22 +3,19 @@ from sys import exit as sysexit
 from typing import Final
 
 import pandas as pd
+
+from python_tools.utils.config import FixTrackPathsUtilsConfig, MixxxConfig, get_config
 from python_tools.utils.music_db_utils import (
+    COLS_FOR_DUP,
+    create_mixxx_db_backup,
+    delete_rows_mixxx_db_table,
     file_url_to_path,
     open_mixxx_library,
-    open_mixxx_track_locations,
     open_mixxx_track_analysis,
-    create_mixxx_db_backup,
+    open_mixxx_track_locations,
     update_mixxx_db_table,
-    delete_rows_mixxx_db_table,
-    COLS_FOR_DUP,
 )
-from python_tools.utils.track_utils import (
-    get_closest_matches_indices,
-    remove_feat,
-)
-
-from python_tools.utils.config import get_config, MixxxConfig, FixTrackPathsUtilsConfig
+from python_tools.utils.track_utils import get_closest_matches_indices, remove_feat
 
 COLS_PERFECT_MATCH: Final[list[str]] = COLS_FOR_DUP
 COLS_CLOSE_MATCH: Final[list[str]] = ["artist", "title"]
