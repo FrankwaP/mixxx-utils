@@ -1,0 +1,152 @@
+<?xml version='1.0' encoding='utf-8'?>
+<DJ_PLAYLISTS Version="1.0.0">
+  <PRODUCT Name="rekordbox" Version="6.7.7" Company="AlphaTheta" />
+  <COLLECTION Entries="9">
+    <TRACK TrackID="84" Name="Extraction" Artist="Hybris" Composer="None" Album="Extraction" Genre="None" Size="6343804" TotalTime="248" TrackNumber="01" Year="2016" AverageBpm="172.0" SampleRate="44100" Comment="None" Rating="153" Location="file%3A//localhost/E%3A%5CHybris%20-%20Extraction%5C01%20-%20Extraction.mp3" Tonality="11A" Colour="">
+      <POSITION_MARK Type="0" Num="-1" Start="22.347" />
+      <POSITION_MARK Type="0" Num="2" Start="22.347" />
+      <POSITION_MARK Type="0" Num="-1" Start="11.184" />
+      <POSITION_MARK Type="0" Num="1" Start="11.184" />
+      <POSITION_MARK Type="0" Num="-1" Start="0.021" />
+      <POSITION_MARK Type="0" Num="0" Start="0.021" />
+      <POSITION_MARK Type="0" Num="-1" Start="111.649" />
+      <POSITION_MARK Type="0" Num="4" Start="111.649" />
+      <POSITION_MARK Type="0" Num="-1" Start="133.975" />
+      <POSITION_MARK Type="0" Num="6" Start="133.975" />
+      <TEMPO Bpm="172.00" Metro="8/4" Battito="1" Inizio="0.021" />
+    </TRACK>
+    <TRACK TrackID="2526" Name="It's Okay" Artist="Misanthrop" Composer="None" Album="Universe" Genre="None" Size="4754310" TotalTime="116" TrackNumber="1" Year="2022" AverageBpm="87.0" SampleRate="44100" Comment="Visit https://msnthrp.bandcamp.com" Rating="0" Location="file%3A//localhost/E%3A%5CMisanthrop%20-%20Universe%5C01%20-%20It%27s%20Okay.mp3" Tonality="4A" Colour="">
+      <TEMPO Bpm="87.00" Metro="8/4" Battito="1" Inizio="0.144" />
+    </TRACK>
+    <TRACK TrackID="3634" Name="Posthuman" Artist="Abstract Elements &amp; Subwave" Composer="None" Album="Join Us" Genre="None" Size="5598619" TotalTime="346" TrackNumber="3" Year="2018-07-13" AverageBpm="170.0" SampleRate="44100" Comment="None" Rating="102" Location="file%3A//localhost/E%3A%5CAbstract%20Elements%20-%20Join%20Us%5C03%20-%20Posthuman.m4a" Tonality="6A" Colour="">
+      <POSITION_MARK Type="0" Num="-1" Start="46.331" />
+      <POSITION_MARK Type="0" Num="2" Start="46.331" />
+      <POSITION_MARK Type="0" Num="-1" Start="35.037" />
+      <POSITION_MARK Type="0" Num="1" Start="35.037" />
+      <POSITION_MARK Type="0" Num="-1" Start="23.743" />
+      <POSITION_MARK Type="0" Num="0" Start="23.743" />
+      <POSITION_MARK Type="0" Num="-1" Start="1.155" />
+      <POSITION_MARK Type="0" Num="3" Start="1.155" />
+      <POSITION_MARK Type="0" Num="-1" Start="227.037" />
+      <POSITION_MARK Type="0" Num="6" Start="227.037" />
+      <POSITION_MARK Type="0" Num="-1" Start="215.743" />
+      <POSITION_MARK Type="0" Num="5" Start="215.743" />
+      <POSITION_MARK Type="0" Num="-1" Start="204.449" />
+      <POSITION_MARK Type="0" Num="4" Start="204.449" />
+      <TEMPO Bpm="170.00" Metro="8/4" Battito="1" Inizio="1.155" />
+    </TRACK>
+    <TRACK TrackID="4903" Name="Self Doubt Injector" Artist="Client_03" Composer="None" Album="Thought Disposal" Genre="None" Size="4734715" TotalTime="295" TrackNumber="5" Year="2020" AverageBpm="130.0" SampleRate="44100" Comment="None" Rating="153" Location="file%3A//localhost/E%3A%5CClient_03%20-%20Thought%20Disposal%5C05%20-%20Self%20Doubt%20Injector.mp3" Tonality="6A" Colour="">
+      <POSITION_MARK Type="0" Num="-1" Start="59.104" />
+      <POSITION_MARK Type="0" Num="2" Start="59.104" />
+      <POSITION_MARK Type="0" Num="-1" Start="44.334" />
+      <POSITION_MARK Type="0" Num="1" Start="44.334" />
+      <POSITION_MARK Type="0" Num="-1" Start="29.565" />
+      <POSITION_MARK Type="0" Num="0" Start="29.565" />
+      <POSITION_MARK Type="0" Num="-1" Start="0.027" />
+      <POSITION_MARK Type="0" Num="3" Start="0.027" />
+      <POSITION_MARK Type="0" Num="-1" Start="147.719" />
+      <POSITION_MARK Type="0" Num="6" Start="147.719" />
+      <POSITION_MARK Type="0" Num="-1" Start="132.950" />
+      <POSITION_MARK Type="0" Num="5" Start="132.950" />
+      <POSITION_MARK Type="0" Num="-1" Start="118.181" />
+      <POSITION_MARK Type="0" Num="4" Start="118.181" />
+      <TEMPO Bpm="130.00" Metro="8/4" Battito="1" Inizio="0.027" />
+    </TRACK>
+    <TRACK TrackID="5575" Name="Die Clubnummer" Artist="Modeselektor" Composer="None" Album="Hello Mom!" Genre="None" Size="5482568" TotalTime="274" TrackNumber="2" Year="2005" AverageBpm="135.0" SampleRate="44100" Comment="None" Rating="153" Location="file%3A//localhost/E%3A%5CModeselektor%20-%20Hello%20Mom%21%5C02%20-%20Die%20Clubnummer.mp3" Tonality="7A" Colour="">
+      <POSITION_MARK Type="0" Num="-1" Start="42.842" />
+      <POSITION_MARK Type="0" Num="2" Start="42.842" />
+      <POSITION_MARK Type="0" Num="-1" Start="28.620" />
+      <POSITION_MARK Type="0" Num="1" Start="28.620" />
+      <POSITION_MARK Type="0" Num="-1" Start="14.398" />
+      <POSITION_MARK Type="0" Num="0" Start="14.398" />
+      <POSITION_MARK Type="0" Num="-1" Start="0.176" />
+      <POSITION_MARK Type="0" Num="3" Start="0.176" />
+      <POSITION_MARK Type="0" Num="-1" Start="185.065" />
+      <POSITION_MARK Type="0" Num="6" Start="185.065" />
+      <POSITION_MARK Type="0" Num="-1" Start="156.620" />
+      <POSITION_MARK Type="0" Num="4" Start="156.620" />
+      <POSITION_MARK Type="0" Num="-1" Start="241.953" />
+      <POSITION_MARK Type="0" Num="7" Start="241.953" />
+      <POSITION_MARK Type="0" Num="-1" Start="243.731" />
+      <POSITION_MARK Type="0" Num="5" Start="243.731" />
+      <TEMPO Bpm="135.00" Metro="8/4" Battito="1" Inizio="0.176" />
+    </TRACK>
+    <TRACK TrackID="7746" Name="A1 Ama" Artist="UFO!" Composer="None" Album="Hyper Norm" Genre="None" Size="4423502" TotalTime="110" TrackNumber="1" Year="2017-12-01" AverageBpm="87.0" SampleRate="44100" Comment="None" Rating="0" Location="file%3A//localhost/E%3A%5CUFO%21%20-%20Hyper%20Norm%5C01%20-%20A1%20Ama.mp3" Tonality="8A" Colour="">
+      <TEMPO Bpm="87.00" Metro="8/4" Battito="1" Inizio="0.022" />
+    </TRACK>
+    <TRACK TrackID="8456" Name="Sieta" Artist="Bala Bala Boyz" Composer="None" Album="vrac" Genre="House" Size="7992414" TotalTime="198" TrackNumber="3" Year="2019-11-29" AverageBpm="160.0" SampleRate="44100" Comment="None" Rating="255" Location="file%3A//localhost/E%3A%5CBala%20Bala%20Boyz%20-%20Sieta.mp3" Tonality="9A" Colour="">
+      <POSITION_MARK Type="0" Num="-1" Start="48.022" />
+      <POSITION_MARK Type="0" Num="2" Start="48.022" />
+      <POSITION_MARK Type="0" Num="-1" Start="24.022" />
+      <POSITION_MARK Type="0" Num="0" Start="24.022" />
+      <POSITION_MARK Type="0" Num="-1" Start="0.022" />
+      <POSITION_MARK Type="0" Num="3" Start="0.022" />
+      <POSITION_MARK Type="0" Num="-1" Start="36.022" />
+      <POSITION_MARK Type="0" Num="1" Start="36.022" />
+      <TEMPO Bpm="160.00" Metro="8/4" Battito="1" Inizio="0.022" />
+    </TRACK>
+    <TRACK TrackID="8579" Name="whodat Theme" Artist="whodat" Composer="None" Album="None" Genre="None" Size="9123048" TotalTime="228" TrackNumber="None" Year="None" AverageBpm="160.0" SampleRate="44100" Comment="None" Rating="204" Location="file%3A//localhost/E%3A%5Cwhodat%20-%20whodat%20Theme.mp3" Tonality="11A" Colour="">
+      <POSITION_MARK Type="0" Num="-1" Start="48.026" />
+      <POSITION_MARK Type="0" Num="2" Start="48.026" />
+      <POSITION_MARK Type="0" Num="-1" Start="36.026" />
+      <POSITION_MARK Type="0" Num="1" Start="36.026" />
+      <POSITION_MARK Type="0" Num="-1" Start="24.026" />
+      <POSITION_MARK Type="0" Num="0" Start="24.026" />
+      <POSITION_MARK Type="0" Num="-1" Start="0.026" />
+      <POSITION_MARK Type="0" Num="3" Start="0.026" />
+      <POSITION_MARK Type="0" Num="-1" Start="132.026" />
+      <POSITION_MARK Type="0" Num="6" Start="132.026" />
+      <POSITION_MARK Type="0" Num="-1" Start="120.026" />
+      <POSITION_MARK Type="0" Num="5" Start="120.026" />
+      <TEMPO Bpm="160.00" Metro="8/4" Battito="1" Inizio="0.026" />
+    </TRACK>
+    <TRACK TrackID="8587" Name="Zoo (OGUSTIN Bouyon edit)" Artist="Kaaris" Composer="None" Album="VRAC" Genre="None" Size="5007257" TotalTime="236" TrackNumber="None" Year="None" AverageBpm="158.0" SampleRate="44100" Comment="None" Rating="153" Location="file%3A//localhost/E%3A%5CZOO%2C%20Kaaris%20%28Bouyon%20edit%29.mp3" Tonality="1A" Colour="">
+      <POSITION_MARK Type="0" Num="-1" Start="36.453" />
+      <POSITION_MARK Type="0" Num="2" Start="36.453" />
+      <POSITION_MARK Type="0" Num="-1" Start="24.301" />
+      <POSITION_MARK Type="0" Num="1" Start="24.301" />
+      <POSITION_MARK Type="0" Num="-1" Start="12.149" />
+      <POSITION_MARK Type="0" Num="0" Start="12.149" />
+      <TEMPO Bpm="158.00" Metro="8/4" Battito="1" Inizio="3.035" />
+    </TRACK>
+  </COLLECTION>
+  <PLAYLISTS>
+    <NODE Type="0" Name="ROOT" Count="10">
+      <NODE Name="00_atmosphere_crates" Type="1" KeyType="0" Entries="2">
+        <TRACK Key="2526" />
+        <TRACK Key="7746" />
+      </NODE>
+      <NODE Name="01" Type="1" KeyType="0" Entries="2">
+        <TRACK Key="84" />
+        <TRACK Key="3634" />
+      </NODE>
+      <NODE Name="03-henokeen" Type="1" KeyType="0" Entries="0" />
+      <NODE Name="07 135 mix" Type="1" KeyType="0" Entries="2">
+        <TRACK Key="5575" />
+        <TRACK Key="4903" />
+      </NODE>
+      <NODE Name="120-140-techno-breaks_crates" Type="1" KeyType="0" Entries="2">
+        <TRACK Key="4903" />
+        <TRACK Key="5575" />
+      </NODE>
+      <NODE Name="160-vrac_crates" Type="1" KeyType="0" Entries="2">
+        <TRACK Key="8456" />
+        <TRACK Key="8579" />
+      </NODE>
+      <NODE Name="160-zouky_crates" Type="1" KeyType="0" Entries="3">
+        <TRACK Key="8456" />
+        <TRACK Key="8579" />
+        <TRACK Key="8587" />
+      </NODE>
+      <NODE Name="170-expe_crates" Type="1" KeyType="0" Entries="1">
+        <TRACK Key="84" />
+      </NODE>
+      <NODE Name="170-extra_crates" Type="1" KeyType="0" Entries="1">
+        <TRACK Key="84" />
+      </NODE>
+      <NODE Name="170-techy_crates" Type="1" KeyType="0" Entries="1">
+        <TRACK Key="84" />
+      </NODE>
+    </NODE>
+  </PLAYLISTS>
+</DJ_PLAYLISTS>
