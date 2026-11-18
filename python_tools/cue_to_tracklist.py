@@ -1,7 +1,7 @@
 """A tool to generate a tracklist for Soundcloud/Youtube/… from a Mixxx's cue file"""
 
-from sys import argv
 from pathlib import Path
+from sys import argv
 
 
 class TrackObj:

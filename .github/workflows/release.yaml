@@ -5,7 +5,6 @@ on:
     tags:
       - "v*"
 
-
 permissions:
   contents: write
 
@@ -47,3 +46,13 @@ jobs:
         with:
           files: |
             mixxx_to_rekordbox_compare${{ runner.os == 'Windows' && '.exe' || '.bin' }}
+
+      - name: Build snap_cues with Nuitka
+        run: |
+          python -m nuitka --onefile --nofollow-import-to=numpy --assume-yes-for-downloads snap_cues.py
+
+      - name: Upload binary to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            snap_cues${{ runner.os == 'Windows' && '.exe' || '.bin' }}

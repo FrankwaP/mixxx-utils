@@ -1,10 +1,10 @@
-from typing import Final
-from pathlib import Path
 import logging
 import xml.etree.ElementTree as ET
+from pathlib import Path
+from typing import Final
 from urllib.parse import unquote
 
-from python_tools.utils.config import get_config, MixxxToRekordboxConfig
+from python_tools.utils.config import MixxxToRekordboxConfig, get_config
 
 TRACK_ID = "TrackID"
 MATCHING_KEY = "Location"

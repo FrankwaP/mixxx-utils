@@ -1,4 +1,4 @@
-from logging import ERROR
+import logging
 from pathlib import Path
 from typing import Literal
 
@@ -11,9 +11,9 @@ ACCEPTED_MP3_DECODERS: list[accepted_mp3_decoders] = [
     "FFmpeg",
 ]
 
-eyed3.core.log.setLevel(ERROR)
-eyed3.id3.frames.log.setLevel(ERROR)
-eyed3.mp3.headers.log.setLevel(ERROR)
+eyed3.core.log.setLevel(logging.ERROR)
+eyed3.id3.frames.log.setLevel(logging.ERROR)
+eyed3.mp3.headers.log.setLevel(logging.ERROR)
 
 
 def has_xing_info(audiofile: eyed3.mp3.Mp3AudioFile) -> bool:
@@ -82,10 +82,10 @@ def get_offset_ms(track_path: str | Path, mp3_decoder: accepted_mp3_decoders) ->
     if path.suffix == ".mp3":
         audiofile = eyed3.load(track_path)
         if audiofile is None:
-            print(
-                "Could not open the mp3 file to compute the grid offset:",
-                f" {track_path}",
+            logging.warning(
+                "Could not open the mp3 file to compute the grid offset: %s", track_path
             )
             return 0
+        assert isinstance(audiofile, eyed3.mp3.Mp3AudioFile)
         return get_offset_mp3(audiofile, mp3_decoder)
     return 0

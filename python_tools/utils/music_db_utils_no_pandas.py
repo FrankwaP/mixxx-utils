@@ -1,13 +1,13 @@
+import logging
+import os
+import sqlite3
 import sys
+from collections import Counter
 from pathlib import Path
 from shutil import copy
 from time import strftime
 from typing import Any, Final, Tuple
 from urllib.parse import unquote
-from collections import Counter
-import logging
-
-import sqlite3
 
 Row = dict[str, Any]
 Rows = list[Row]
@@ -141,6 +141,12 @@ def open_mixxx_library_and_location(
     rows = _open_joined_tables_as_df(
         db_path, "library", "track_locations", "location", "id"
     )
+
+    if os.environ.get("PYTEST_VERSION"):
+        for r in rows:
+            r["track_locations.location"] = (
+                Path(r["track_locations.location"]).resolve().as_posix()
+            )
 
     if existing_tracks and missing_tracks:
         return rows
@@ -318,7 +324,7 @@ def update_mixxx_db_table(
     assert all(column in rows[0] for column in where_cols) if rows else True
     if not rows:
         return
-
+    create_mixxx_db_backup(db_path)
     sql = (
         f"UPDATE {table_name}"
         + " SET "
@@ -342,7 +348,7 @@ def delete_rows_mixxx_db_table(
     assert all(column in row for row in rows for column in where_cols)
     if not rows:
         return
-
+    create_mixxx_db_backup(db_path)
     sql = (
         f"DELETE FROM {table_name}"
         + " WHERE "

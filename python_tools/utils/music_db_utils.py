@@ -1,12 +1,12 @@
+import sqlite3
 import sys
-from shutil import copy
 from os.path import exists
 from pathlib import Path
-from typing import Final, Tuple
+from shutil import copy
 from time import strftime
-
+from typing import Final, Tuple
 from urllib.parse import unquote
-import sqlite3
+
 import pandas as pd
 from sqlalchemy.exc import NoSuchTableError
 
