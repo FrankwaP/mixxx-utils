@@ -10,11 +10,8 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 from python_tools.mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
-from python_tools.mixxx_to_rekordbox_utils.xml_utils import (
-    AttribDict,
-    get_elem,
-)
-from python_tools.utils.config import get_config, MixxxToRekordboxConfig
+from python_tools.mixxx_to_rekordbox_utils.xml_utils import AttribDict, get_elem
+from python_tools.utils.config import MixxxToRekordboxConfig, get_config
 from python_tools.utils.misc import KEY_ID_LANCELOT, RATING_MAPING
 from python_tools.utils.music_db_utils_no_pandas import (
     Row,

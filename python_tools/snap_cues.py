@@ -1,17 +1,16 @@
 import logging
+from typing import cast
+
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from typing import cast
-
-
+from python_tools.utils.config import get_config
 from python_tools.utils.music_db_utils_no_pandas import (
-    open_mixxx_library_and_location,
     open_mixxx_cues,
+    open_mixxx_library_and_location,
     update_mixxx_db_table,
 )
 from python_tools.utils.track_utils import BeatGridInfo, snap_cue_frame
-from python_tools.utils.config import get_config
 
 
 def main():

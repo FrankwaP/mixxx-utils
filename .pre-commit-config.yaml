@@ -51,6 +51,11 @@ repos:
     rev: v1.7.12
     hooks:
     -   id: actionlint
+-   repo: https://github.com/pycqa/isort
+    rev: 6.1.0
+    hooks:
+      - id: isort
+        name: isort (python)
 # local runs
 - repo: local  # use requirements-pip-mypy.txt
   hooks:

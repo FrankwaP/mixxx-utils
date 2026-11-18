@@ -1,13 +1,13 @@
-import sys
 import logging
-from pathlib import Path, PureWindowsPath
 import os
-from typing import Literal, Annotated
-
+import sys
 import tomllib
-from pydantic import BaseModel, ValidationError, AfterValidator
+from pathlib import Path, PureWindowsPath
+from typing import Annotated, Literal
+
+from pydantic import AfterValidator, BaseModel, ValidationError
 from pydantic.fields import Field
-from pydantic.types import FilePath, DirectoryPath
+from pydantic.types import DirectoryPath, FilePath
 from pydantic_core import ErrorDetails
 
 _CONFIG_ENV_VAR = "MIXXX_UTILS_CONFIG"

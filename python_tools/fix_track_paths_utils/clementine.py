@@ -1,14 +1,11 @@
 from sys import exit as sysexit
 
 import pandas as pd
-from python_tools.utils.music_db_utils import open_table_as_df
-
 
 from python_tools.utils.config import get_config
-from .main import (
-    fix_with_player_db,
-    PLAYER_PATH,
-)
+from python_tools.utils.music_db_utils import open_table_as_df
+
+from .main import PLAYER_PATH, fix_with_player_db
 
 
 def get_clementine_db() -> pd.DataFrame:

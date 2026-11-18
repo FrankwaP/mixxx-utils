@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from python_tools.utils.config import get_config, Config
+from python_tools.utils.config import Config, get_config
 
 
 @pytest.fixture
