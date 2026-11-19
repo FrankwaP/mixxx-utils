@@ -13,21 +13,27 @@ Please see the [fix_mixxx_db.md](fix_mixxx_db.md) file.
 After installing the requirements, please run `pre-commit install` to prepare the different "hooks" that will be executed when you commit stuff.
 **Watch out** as one hook enforces to not commit on the `main` branch so start by creating a branch to work in it!
 
-## Configuration
 
-Each executable uses a separate TOML configuration file:
+## Python tools
+
+### Configuration
+
+Each executable uses a separate TOML configuration file. For each this file, you can either:
+
+- set the corresponding environement variable to declare its full path
+- or simply place it:
+  - in the same directory as the executable
+  - at the root of this project folder (if you use the source code)
+
+Here is the list of the configuration file with their environment variable:
 
 - `mixxx_to_rekordbox.toml`: `MIXXX_TO_REKORDBOX_CONF`
 - `mixxx_to_rekordbox_compare.toml`: `MIXXX_TO_REKORDBOX_COMPARE_CONF`
 - `snap_cues.toml`: `SNAP_CUES_CONF`
 - `fix_track_paths.toml`: `FIX_TRACK_PATHS_CONF`
 
-Set the corresponding environment variable to use a configuration file outside the executable directory.
-
-## Python tools
 
 ### Tools with a Linux/Windows binary executables
-
 
 You will find the executables for Linux (`.bin` files) and Windows (`.exe` files) in the [release](https://github.com/FrankwaP/mixxx-utils/releases).
 
