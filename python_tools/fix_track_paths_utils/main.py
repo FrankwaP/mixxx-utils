@@ -4,7 +4,10 @@ from typing import Final
 
 import pandas as pd
 
-from python_tools.utils.config import FixTrackPathsUtilsConfig, MixxxConfig, get_config
+from python_tools.utils.config import (
+    FixTrackPathsUtilsConfig,
+    get_fix_track_paths_config,
+)
 from python_tools.utils.music_db_utils import (
     COLS_FOR_DUP,
     create_mixxx_db_backup,
@@ -175,9 +178,9 @@ def _get_close_track_match(
 
 
 def _update_mixxx_track_location(
-    config_mixxx: MixxxConfig, df_match: pd.DataFrame
+    config_fix: FixTrackPathsUtilsConfig, df_match: pd.DataFrame
 ) -> None:
-    df_mixxx_loc = open_mixxx_track_locations(config_mixxx.mixxx_db)
+    df_mixxx_loc = open_mixxx_track_locations(config_fix.mixxx_db)
     df_mixxx_loc[IDX_MIXXX_TLOC] = df_mixxx_loc.index
     df_merge = pd.merge(
         left=df_match,
@@ -198,7 +201,7 @@ def _update_mixxx_track_location(
     )
     df_merge.loc[:, "fs_deleted"] = 0
     update_mixxx_db_table(
-        config_mixxx.mixxx_db,
+        config_fix.mixxx_db,
         df_merge,
         "track_locations",
         set_cols=["location", "filename", "directory", "fs_deleted"],
@@ -208,7 +211,6 @@ def _update_mixxx_track_location(
 
 def _update_mixxx_library(
     config_fix: FixTrackPathsUtilsConfig,
-    config_mixxx: MixxxConfig,
     df_match: pd.DataFrame,
 ) -> None:
     if not (config_fix.delete_keys or config_fix.delete_gains):
@@ -224,7 +226,7 @@ def _update_mixxx_library(
         df_match.loc[:, "keys_version"] = ""
         df_match.loc[:, "keys_sub_version"] = ""
         update_mixxx_db_table(
-            config_mixxx.mixxx_db,
+            config_fix.mixxx_db,
             df_match,
             "library",
             set_cols=["key", "keys", "key_id", "keys_version", "keys_sub_version"],
@@ -238,7 +240,7 @@ def _update_mixxx_library(
         df_match.loc[:, "replaygain"] = 0
         df_match.loc[:, "replaygain_peak"] = -1
         update_mixxx_db_table(
-            config_mixxx.mixxx_db,
+            config_fix.mixxx_db,
             df_match,
             "library",
             set_cols=["replaygain", "replaygain_peak"],
@@ -248,14 +250,13 @@ def _update_mixxx_library(
 
 def _update_mixxx_analysis(
     config_fix: FixTrackPathsUtilsConfig,
-    config_mixxx: MixxxConfig,
     df_match: pd.DataFrame,
 ) -> None:
     if not config_fix.delete_waveforms:
         return
     #
     print("Deleting waveforms corresponding to the updated track locations...")
-    df_mixxx_analysis = open_mixxx_track_analysis(config_mixxx.mixxx_db)
+    df_mixxx_analysis = open_mixxx_track_analysis(config_fix.mixxx_db)
     df_mixxx_analysis[IDX_MIXXX_TANA] = df_mixxx_analysis.index
     df_merge = pd.merge(
         left=df_match,
@@ -266,25 +267,23 @@ def _update_mixxx_analysis(
         right_on="track_id",
         suffixes=("_match", None),
     )
-    dir_ana = Path(config_mixxx.mixxx_db).parent / "analysis"
+    dir_ana = Path(config_fix.mixxx_db).parent / "analysis"
     for id_ana in df_merge["id"].values:
         ana_path = dir_ana / f"{id_ana}"
         ana_path.unlink(missing_ok=True)
     delete_rows_mixxx_db_table(
-        config_mixxx.mixxx_db, df_merge, "track_analysis", where_cols=["id"]
+        config_fix.mixxx_db, df_merge, "track_analysis", where_cols=["id"]
     )
 
 
 def fix_with_player_db(df_player: pd.DataFrame):
     """Fix the Mixxx tracks locations using the ones from a music player database."""
 
-    config = get_config()
-    config_fix = config.fix_track_paths
-    config_mixxx = config.mixxx
+    config_fix = get_fix_track_paths_config()
 
     # open Mixxx library and keep only the missing tracks (i.e. the ones we want to fix)
     df_mixxx_missing = open_mixxx_library(
-        config_mixxx.mixxx_db, existing_tracks=False, missing_tracks=True
+        config_fix.mixxx_db, existing_tracks=False, missing_tracks=True
     )
     if len(df_mixxx_missing) == 0:
         print("No missing tracks, congratulation!")
@@ -312,7 +311,7 @@ def fix_with_player_db(df_player: pd.DataFrame):
     ), "Error: there are duplicated locations IDs in the matched DataFrame, this should not happen."
 
     # update Mixxx database
-    create_mixxx_db_backup(config_mixxx.mixxx_db)
-    _update_mixxx_track_location(config_mixxx, df_match)
-    _update_mixxx_library(config_fix, config_mixxx, df_match)
-    _update_mixxx_analysis(config_fix, config_mixxx, df_match)
+    create_mixxx_db_backup(config_fix.mixxx_db)
+    _update_mixxx_track_location(config_fix, df_match)
+    _update_mixxx_library(config_fix, df_match)
+    _update_mixxx_analysis(config_fix, df_match)

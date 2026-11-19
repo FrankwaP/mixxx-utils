@@ -1,0 +1,10 @@
+confirm_config = false
+confirm_player_refresh = false
+
+mixxx_db = "tests/test-mixxxdb.sqlite"
+clem_db = "tests/test_clementine.db"
+threshold_name_similarity = 50
+n_similar_track_proposal = 3
+delete_keys = true
+delete_gains = true
+delete_waveforms = true

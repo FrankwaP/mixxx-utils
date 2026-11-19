@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Final
 from urllib.parse import unquote
 
-from python_tools.utils.config import MixxxToRekordboxConfig, get_config
+from python_tools.utils.config import (
+    MixxxToRekordboxCompareConfig,
+    get_mixxx_to_rekordbox_compare_config,
+)
 
 TRACK_ID = "TrackID"
 MATCHING_KEY = "Location"
@@ -82,7 +85,7 @@ def _extract_tracks_with_marks_and_tempo(
 
 
 def _write_new_playlist(
-    mtr_config: MixxxToRekordboxConfig, track_id_mixxx: list[str]
+    mtr_config: MixxxToRekordboxCompareConfig, track_id_mixxx: list[str]
 ) -> None:
     tree = ET.parse(mtr_config.mixxx_to_rekordbox_xml)
     root = tree.getroot()
@@ -119,8 +122,7 @@ def _write_new_playlist(
 
 def main():
 
-    config = get_config()
-    mtr_config = config.mixxx_to_rekordbox
+    mtr_config = get_mixxx_to_rekordbox_compare_config()
 
     tracks_mixxx, tracks_ids_mixxx = _extract_tracks_with_marks_and_tempo(
         mtr_config.mixxx_to_rekordbox_xml

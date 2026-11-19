@@ -11,7 +11,10 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 
 from python_tools.mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
 from python_tools.mixxx_to_rekordbox_utils.xml_utils import AttribDict, get_elem
-from python_tools.utils.config import MixxxToRekordboxConfig, get_config
+from python_tools.utils.config import (
+    MixxxToRekordboxConfig,
+    get_mixxx_to_rekordbox_config,
+)
 from python_tools.utils.misc import KEY_ID_LANCELOT, RATING_MAPING
 from python_tools.utils.music_db_utils_no_pandas import (
     Row,
@@ -218,6 +221,7 @@ def _mixxx_track_row_to_rekbox_track_xml(
         "Album": trk_row["album"],
         "Genre": trk_row["genre"],
         "Size": trk_row["filesize"],
+        # TotalTime is mandatory for cue points to work !!!
         "TotalTime": round(trk_row["duration"]),
         "TrackNumber": trk_row["tracknumber"],
         "Year": trk_row["year"],
@@ -324,11 +328,10 @@ def _filter_locked_tracks(rows_lib_loc: Rows) -> Rows:
 
 
 def main() -> None:
-    config = get_config()
-    mtr_config = config.mixxx_to_rekordbox
-    db_path = config.mixxx.mixxx_db
+    mtr_config = get_mixxx_to_rekordbox_config()
+    db_path = mtr_config.mixxx_db
 
-    if config.user_interactions.confirm_snaped and mtr_config.index_cue_bar_start != 0:
+    if mtr_config.confirm_snaped and mtr_config.index_cue_bar_start != 0:
         answer = input(
             "Are you sure all these hot cues are snapped to the beatgrid (y/*)? : "
         )

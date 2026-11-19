@@ -1,0 +1,5 @@
+confirm_config = false
+
+mixxx_to_rekordbox_xml = "__TEMP_FOLDER__/mixxx_to_rekordbox.xml"
+rekordbox_compare_export_xml = "tests/test_rekordbox_compare.xml"
+playlist_updated_tracks = "TRACKS_TO_UPDATE"
