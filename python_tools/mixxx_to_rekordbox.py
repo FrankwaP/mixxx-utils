@@ -218,6 +218,7 @@ def _mixxx_track_row_to_rekbox_track_xml(
         "Album": trk_row["album"],
         "Genre": trk_row["genre"],
         "Size": trk_row["filesize"],
+        # TotalTime is mandatory for cue points to work !!!
         "TotalTime": round(trk_row["duration"]),
         "TrackNumber": trk_row["tracknumber"],
         "Year": trk_row["year"],

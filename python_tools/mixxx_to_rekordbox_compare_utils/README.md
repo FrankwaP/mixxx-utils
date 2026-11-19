@@ -14,4 +14,4 @@ To do so it compares:
  1. the XML (freshly) exported from Mixxx, using `mixxx_to_rekordbox.py`
  2. the XML (freshly) exported from Rekordbox clicking on `File > Export collection in XML format`
 
-Edit the corresponding paths in the configuration file `python_tools/config.toml`.
+Edit the corresponding paths in the configuration file.

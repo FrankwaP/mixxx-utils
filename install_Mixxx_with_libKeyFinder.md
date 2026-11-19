@@ -35,7 +35,7 @@ git clone git@github.com:mixxxdj/mixxx.git
 cd mixxx
 ```
 
-### Optionnal: Use modifications that have not been implemented yet in Mixxx's official deposit
+### Optional: Use modifications that have not been implemented yet in Mixxx's official repository
 
 ```bash
 # Set this variables
@@ -86,7 +86,7 @@ mv $deb $sha ../$INSTALLER_FOLDER
 cd ..
 ```
 
-### (Optionnal) Cleaning
+### (Optional) Cleaning
 
 
 If your computer is short on memory, you can delete the build folder:

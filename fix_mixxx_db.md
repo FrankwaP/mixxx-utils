@@ -1,6 +1,6 @@
 # Fixing Mixxx's Database
 
-As mentionned in [this GitHub issue](https://github.com/mixxxdj/mixxx/issues/12328) several foreign key constraints defined in Mixxx's database are incorrect, and SQL Alchemy (Python's library) does not like it.
+As mentioned in [this GitHub issue](https://github.com/mixxxdj/mixxx/issues/12328), several foreign key constraints defined in Mixxx's database are incorrect, and SQLAlchemy (Python's library) does not like them.
 
 Two methods are proposed:
 
@@ -11,14 +11,14 @@ In both cases, please make a backup of the database!
 
 ## Using a graphical tool
 
-I fixed these quite easily using a GUI called "DB  Browser for SQlite" (`sqlitebrowser`).
+I fixed these quite easily using a GUI called "DB Browser for SQLite" (`sqlitebrowser`).
 
-**First** remove the foreign keys contraints check:
+**First** remove the foreign key constraints check:
 
 1. Click on "Edit Pragma"
 2. Untick the "Foreign Keys" box
 
-**Now** edit the foreign keys constraints of all the tables mentionned in [this issue](https://github.com/mixxxdj/mixxx/issues/12328). Here I take the example of the incorrect foreign key of the `cue` table:
+**Now** edit the foreign key constraints of all the tables mentioned in [this issue](https://github.com/mixxxdj/mixxx/issues/12328). Here I take the example of the incorrect foreign key of the `cue` table:
 
 1. Select the table and click on "Modify a Table"
 
@@ -31,7 +31,7 @@ I fixed these quite easily using a GUI called "DB  Browser for SQlite" (`sqliteb
 **Then**, to modify the default value of the `filetype` field of the `library` table:
 
 1. Select the `library` table and click on "Modify a Table"
-2. Find the row mentionning `filetype` and the "Default" column
+2. Find the row mentioning `filetype` and the "Default" column
 3. Double click on the "?" then delete it to leave an empty field.
 
 **Finally** you can reactivate the foreign key pragma (BTW if you use the [mixxxdb_cleanup.sql](https://github.com/mixxxdj/mixxx/blob/main/tools/mixxxdb_cleanup.sql) utility, you can now remove the `PRAGMA foreign_keys = OFF;` line):
@@ -39,7 +39,7 @@ I fixed these quite easily using a GUI called "DB  Browser for SQlite" (`sqliteb
 1. Click on "Edit Pragma"
 2. Tick the "Foreign Keys" box
 
-Now you can save and close the database. And from now you're life will be very slightly better. :-)
+Now you can save and close the database. From now on, your life will be very slightly better. :-)
 
 
 ## Using SQL commands

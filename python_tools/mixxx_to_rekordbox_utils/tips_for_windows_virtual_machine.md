@@ -1,5 +1,10 @@
 # Tips for Linux users using a Windows virtual machine
 
+**IMPORTANT**
+[rbxport](https://github.com/chrisle/rbxport) will soon make a VM useless <3
+But as of 2026-11-19, there's still some fix to do… at least [this one](https://github.com/chrisle/rbxport/pull/856).
+
+
 I have chosen [Virtual Box](https://www.virtualbox.org/) to create a Windows [Tiny11](https://tiny11.net/) virtual machine (VM).
 
 This means that from Linux, I open the Virtual Box software to launch my Windows instance/VM.
@@ -14,12 +19,20 @@ Now you need to:
 1. (On the Windows VM) Install the [Guest Additions](https://docs.oracle.com/en/virtualization/virtualbox/6.0/user/guestadd-install.html)
 2. (On Linux) Add your user name to the `vboxusers` group so you can access the USB key from the VM: `sudo usermod -a -G vboxusers $USER`
 
+
+## Note on the folder names
+
+In the following explanations I have used the names in my actual configuration.
+
+Of course you will probably need to adapt to your case.
+
+Just remember to:
+
+- edit the configuration file
+- make sure that you pick the Windows drive letters once and for all.
+
+
 ## Shared folders
-
-### Note on drive letters
-
-I am using the (Windows) drives letters I use (`E:` and `Z:`).
-You can change them, but remember that life will be easier if you pick them once and for all.
 
 ### "Linux folder > Windows drive" Virtual Box link
 
@@ -28,7 +41,7 @@ It's the basic one you have to use. In Virtual Box, click on the VM then "Config
 ### "Windows drive > Windows path" Windows symbolic link
 
 Virtual Box can only link a Linux folder to a Windows drive (not a path). In some "advanced" cases you might want your Linux shared folder to be used as a Windows path.
-Symbolic links are the answer: in Windows open a cmd prompt as administrator and use `mklink windows_drive windows_path`.
+Symbolic links are the answer: in Windows open a cmd prompt as administrator and use `mklink /D windows_drive windows_path`.
 
 ### Rekordbox data folder
 
@@ -37,30 +50,31 @@ On Windows, the Rekordbox data folder is `%APPDATA%\Pioneer\`.
 
 One can decide not to do anything special about it, in this case the Rekordbox data (with the libraries, the analysis…) will be stored into the VM file.
 
-I have decided to use a shared Linux folder to store it, as I like the idea of easily accessing it through Linux alone. As an example, I use [Unison synchroniser](https://github.com/bcpierce00/unison)) to maintain a backup of this folder on a hard drive.
+I have decided to use a shared Linux folder to store it, as I like the idea of easily accessing it through Linux alone. As an example, I use [Unison synchroniser](https://github.com/bcpierce00/unison) to maintain a backup of this folder.
+
+Let's say this shared folder is named `rekordbox_virtualbox` on Linux.
 
 In this case you can create:
 
-1. A Virtual Box link between "rekordbox_preferences" and "Z:"
-2. A symbolic link between "Z:" and `%APPDATA%\Pioneer\`: `mklink Z: %APPDATA%\Pioneer\`
+1. On the Linux side, a Virtual Box link between `rekordbox_virtualbox` and `Z:`
+2. On the (virtual) Windows side, a symbolic link between `Z:` and `%APPDATA%\Pioneer\`.
 
 
-If you want to use an existing Rekordbox library, this is the time to paste the content of the `%APPDATA%\Pioneer\` folder !
+If you want to use an existing Rekordbox library, this is the time to paste the corresponding content (your existing `%APPDATA%\Pioneer\` folder) into the `rekordbox_virtualbox` folder!
 
 ### Music folder
 
-If you start with a blank Rekordbox library, you can create a Virtual Box link between "rekordbox_preferences" and "E:".
+Let's say your music folder is named `Music` on Linux.
 
-If you want to use an existing Rekordbox library, and your music was stored in `C:\Users\your_user_name\Music` for example, you can create:
 
-1. A Virtual Box link between "rekordbox_preferences" and "E:"
-2. A symbolic link between "E:" and `C:\Users\your_user_name\Music`: `mklink E: C:\Users\your_user_name\Music`
+1. On the Linux side, a Virtual Box link between `Music` and `E:`
+2. On the (virtual) Windows side, a symbolic link between `E:` and `%USERPROFILE%\Music`
 
 Note that the drive letter must be used for the `rekordbox_library_folder` variable defined in the `config.toml` file.
 
 ## Handling the USB key when exporting
 
-This is how I **avoid having a corrupted USB drive that crashes Pionner hardware**:
+This is how I **avoid having a corrupted USB drive that crashes Pioneer hardware**:
 
 1. Plug the USB key on your PC. **Do not** mount the USB key on Linux. You may need to disable auto-mount on your system.
 2. On Virtual Box, right click on the USB key symbol in the bottom right of the window,
