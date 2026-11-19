@@ -80,8 +80,8 @@ def _get_config_path() -> Path:
             f"Reading the config file defined in {_CONFIG_ENV_VAR} environment variable: {config_path}"
         )
     else:
-        pytool_dir = Path(__file__).resolve().parents[1]
-        config_path = pytool_dir / "config.toml"
+        # https://nuitka.net/user-documentation/common-issue-solutions.html#onefile-finding-files
+        config_path = Path(sys.argv[0]).parent / Path("config.toml")
         if not config_path.exists():
             raise FileNotFoundError(
                 "No config file detected either using:\n",
