@@ -1,0 +1,4 @@
+confirm_config = false
+
+mixxx_db = "tests/test-mixxxdb.sqlite"
+idx_snapped_cues = [1, 2, 3, 4, 5, 6, 7, 8]

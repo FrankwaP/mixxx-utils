@@ -1,0 +1,6 @@
+confirm_config = true
+logging_level = "info"
+
+mixxx_to_rekordbox_xml = "/home/francois/Musique/mixxx_to_rekordbox.xml"
+rekordbox_compare_export_xml = "/home/francois/Documents/francois/Pioneer_virtualbox/rekordbox_compare.xml"
+playlist_updated_tracks = "TRACKS_TO_UPDATE"

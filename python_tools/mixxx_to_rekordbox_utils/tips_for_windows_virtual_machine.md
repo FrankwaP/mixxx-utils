@@ -70,7 +70,7 @@ Let's say your music folder is named `Music` on Linux.
 1. On the Linux side, a Virtual Box link between `Music` and `E:`
 2. On the (virtual) Windows side, a symbolic link between `E:` and `%USERPROFILE%\Music`
 
-Note that the drive letter must be used for the `rekordbox_library_folder` variable defined in the `config.toml` file.
+Note that the drive letter must be used for the `rekordbox_library_folder` variable in `mixxx_to_rekordbox.toml`.
 
 ## Handling the USB key when exporting
 

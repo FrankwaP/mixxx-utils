@@ -4,7 +4,7 @@ from typing import cast
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from python_tools.utils.config import get_config
+from python_tools.utils.config import get_snap_cues_config
 from python_tools.utils.music_db_utils_no_pandas import (
     open_mixxx_cues,
     open_mixxx_library_and_location,
@@ -14,16 +14,14 @@ from python_tools.utils.track_utils import BeatGridInfo, snap_cue_frame
 
 
 def main():
-    config = get_config()
-    mixxx_config = config.mixxx
-    snap_config = config.snap_cues
+    snap_config = get_snap_cues_config()
     rows_lib_loc = open_mixxx_library_and_location(
-        mixxx_config.mixxx_db,
+        snap_config.mixxx_db,
         quit_if_duplicates=False,
         existing_tracks=True,
         missing_tracks=True,
     )
-    rows_cues = open_mixxx_cues(mixxx_config.mixxx_db, only_hot_cues=True)
+    rows_cues = open_mixxx_cues(snap_config.mixxx_db, only_hot_cues=True)
     cues_update = []
     with logging_redirect_tqdm():
         for lib_row in tqdm(rows_lib_loc, total=len(rows_lib_loc)):
@@ -69,7 +67,7 @@ def main():
                             cues_update.append(cue_row)
 
         update_mixxx_db_table(
-            mixxx_config.mixxx_db,
+            snap_config.mixxx_db,
             cues_update,
             "cues",
             set_cols=["position"],

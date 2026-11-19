@@ -1,0 +1,11 @@
+mixxx_db = "/home/francois/.mixxx/mixxxdb.sqlite"
+confirm_config = true
+confirm_player_refresh = true
+logging_level = "info"
+
+clem_db = "/home/francois/.config/Clementine/clementine.db"
+threshold_name_similarity = 50
+n_similar_track_proposal = 3
+delete_keys = true
+delete_gains = true
+delete_waveforms = true
