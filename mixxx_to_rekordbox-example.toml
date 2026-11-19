@@ -1,16 +1,47 @@
-# Note: do not use variables such as "~", "$HOME" or "%TMP" in the paths
+# Note: do not use variables such as "~", "$HOME" or "%TMP" in the paths.
+# For example, use /home/user/Music instead of $HOME/Music.
+
+
+# Confirm that this configuration is OK before continuing.
 confirm_config = true
+# Before exporting to Rekordbox, confirm that the hot cues are snapped to the grid.
+# See the index_cue_bar_start setting below.
 confirm_snaped = true
+# Log level: "debug", "info", "warning", or "error".
 logging_level = "info"
 
+# mixxx database location
 mixxx_db = "/home/francois/.mixxx/mixxxdb.sqlite"
+# Folder and filename of the exported Rekordbox XML file.
 mixxx_to_rekordbox_xml = "/home/francois/Musique/mixxx_to_rekordbox.xml"
+# These two paths are used only for text replacement, not for reading or writing files.
+# Keep them as they are unless you know why they need to be changed.
 mixxx_library_folder = "/home/francois/Musique/"
 rekordbox_library_folder = "E:/"
+# Export all tracks or only tracks in playlists.
 export_only_tracks_in_playlists = true
+# Export only tracks with a locked beatgrid.
 export_only_locked_tracks = true
+# Should crates also be used to generate Rekordbox playlists?
 add_crates_as_playlist = true
+# Suffix used to create playlist names from crate names.
 crates_suffix = "_crates"
+# Number of beats used to define a bar when no time signature is mentioned in the comment.
 beats_per_bar = 8
+# If a hot cue is always at the start of a bar (for example, a hot cue for the drop),
+# it can be used to calculate the start of the bars. Some tracks do not start at the
+# beginning of a bar, so using the beatgrid start may be incorrect.
+# Set to 0 to use only the start of the beatgrid. If the hot cue is missing, the
+# beatgrid start is used. The hot cue must be exactly on the beatgrid; use snap_cues
+# to help with this.
 index_cue_bar_start = 3
+# Mixxx MP3 decoder used to calculate track offsets for Rekordbox.
+# Values: MAD, CoreAudio, or FFmpeg.
+# To find the decoder, launch Mixxx with --developer and look for the
+# "SoundSource providers for file type \"mp3\"" log line.
+# Example output:
+#   info [Main] SoundSourceProxy - SoundSource providers for file type "mp3"
+#   info [Main] SoundSourceProxy - 3 (default) : "MAD: MPEG Audio Decoder 0.15.1 (beta) NDEBUG FPM_64BIT"
+#   info [Main] SoundSourceProxy - 1 (lowest) : "FFmpeg 4.4.2-0ubuntu0.22.04.1"
+# The decoder with the highest probability is MAD.
 mp3_decoder = "MAD"

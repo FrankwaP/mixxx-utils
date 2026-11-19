@@ -1,6 +1,16 @@
+# Note: do not use variables such as "~", "$HOME" or "%TMP" in the paths.
+# For example, use /home/user/Music instead of $HOME/Music.
+
+
+# Confirm that this configuration is OK before continuing.
 confirm_config = true
+# Log level: "debug", "info", "warning", or "error".
 logging_level = "info"
 
+# Parameters for the mixxx_to_rekordbox_compare utility.
+# Path to the XML exported from Mixxx by mixxx_to_rekordbox.py.
 mixxx_to_rekordbox_xml = "/home/francois/Musique/mixxx_to_rekordbox.xml"
+# Path to the XML freshly exported from the Rekordbox collection.
 rekordbox_compare_export_xml = "/home/francois/Documents/francois/Pioneer_virtualbox/rekordbox_compare.xml"
+# Name of the playlist that will contain the updated tracks.
 playlist_updated_tracks = "TRACKS_TO_UPDATE"
