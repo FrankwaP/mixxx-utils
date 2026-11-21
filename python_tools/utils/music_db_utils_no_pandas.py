@@ -1,21 +1,38 @@
 import logging
-import os
 import sqlite3
 import sys
 from collections import Counter
 from pathlib import Path
 from shutil import copy
 from time import strftime
-from typing import Any, Final, Tuple
+from typing import Final, Tuple
 from urllib.parse import unquote
 
-Row = dict[str, Any]
-Rows = list[Row]
+from .dataclasses_operations_utils import get_match_key
+from .dataclasses_utils import (
+    CrateRow,
+    CrateTrackRow,
+    CuesRow,
+    LibraryRow,
+    PlaylistRow,
+    PlaylistTrackRow,
+    Row,
+    RowTypes,
+    Table,
+    TrackAnalysisRow,
+    TrackLocationsRow,
+)
 
 # columns used to relate the Mixxx and music player databases
 # also used to detect duplicate entries which would crash the database
 # due to a failed UNIQUE constraint
-COLS_FOR_DUP: Final[list[str]] = ["tracknumber", "artist", "album", "title"]
+
+COLS_FOR_DUP: Final[tuple[str, str, str, str]] = (
+    "tracknumber",
+    "artist",
+    "album",
+    "title",
+)
 
 
 def propose_fix_foreign_key_constraints(db_path: Path) -> None:
@@ -30,140 +47,24 @@ def propose_fix_foreign_key_constraints(db_path: Path) -> None:
     fix_foreign_key_constraints(db_path)
 
 
-# def _quote_identifier(identifier: str) -> str:
-#     return '"' + identifier.replace('"', '""') + '"'
+def _read_table(db_path: Path, query: str, row_type: type[Row]) -> Table[Row]:
 
-
-def _dict_factory(cursor, row) -> Row:
-    # Delete duplicate columns created by JOIN
-    # The user must define aliases to still access the column
-    names = [column[0] for column in cursor.description]
-    counts = Counter(names)
-    return {name: row[index] for index, name in enumerate(names) if counts[name] == 1}
-
-
-def _read_table(db_path: Path, query: str) -> Rows:
     # https://www.zetcode.com/python/sqlite3-connection-row-factory/
+    def dict_factory(cursor, row) -> RowTypes:
+        # Delete duplicate columns created by JOIN
+        # The user must define aliases to still access the column
+        names = [column[0] for column in cursor.description]
+        return row_type(**{name: row[index] for index, name in enumerate(names)})
+
+    class UserListCursor(sqlite3.Cursor):
+        def fetchall(self):
+            return Table(super().fetchall())
+
     with sqlite3.connect(db_path) as conn:
-        conn.row_factory = _dict_factory
-        cursor = conn.execute(query)
-        return cursor.fetchall()
-
-
-def _read_table_error_handling(db_path: Path, query: str) -> Rows:
-    """Read a table as a list of dictionaries (the pandas-free row format)."""
-    try:
-        return _read_table(db_path, query)
-    except sqlite3.OperationalError as error:
-        if "no such table:" in str(error):
-            raise error
-        propose_fix_foreign_key_constraints(db_path)
-        return _read_table(db_path, query)
-
-
-def _query_table(table_name: str) -> str:
-    return f"SELECT * FROM {table_name}"
-
-
-def _open_table_as_df(db_path: Path, table_name: str) -> Rows:
-    query = _query_table(table_name)
-    return _read_table_error_handling(db_path, query)
-
-
-def _query_joined_tables(
-    table_name_1: str, table_name_2: str, on_1: str, on_2: str, common_cols: set[str]
-) -> str:
-    select = ["*"]
-    # generate aliases for common columns
-    if common_cols:
-        select += [f't1.{a} AS "{table_name_1}.{a}"' for a in common_cols]
-        select += [f't2.{a} AS "{table_name_2}.{a}"' for a in common_cols]
-
-    return f"""
-        SELECT {','.join(select)}
-        FROM {table_name_1} AS t1
-        JOIN {table_name_2} AS t2
-            ON t1.{on_1} = t2.{on_2}
-        """.strip()
-
-
-def _get_colnames(db_path: Path, table_name: str) -> list[str]:
-    conn = sqlite3.connect(db_path)
-    cursor = conn.execute(f"select * from {table_name}")
-    return [description[0] for description in cursor.description]
-
-
-def _open_joined_tables_as_df(
-    db_path: Path, table_name_1: str, table_name_2: str, on_1: str, on_2: str
-) -> Rows:
-    cols1 = _get_colnames(db_path, table_name_1)
-    cols2 = _get_colnames(db_path, table_name_2)
-    common_cols = set(cols1).intersection(cols2)
-    query = _query_joined_tables(table_name_1, table_name_2, on_1, on_2, common_cols)
-    return _read_table_error_handling(db_path, query)
-
-
-def _query_duplicates() -> str:
-    join_cols = ",".join(COLS_FOR_DUP)
-    return f"""
-        SELECT {join_cols},COUNT(*) AS duplicate_count
-        FROM library
-        WHERE instr(lower(coalesce(comment, '')), 'stem') = 0
-        GROUP BY {join_cols}
-        HAVING COUNT(*) > 1;
-        """
-
-
-def _quit_if_duplicates(db_path: Path):
-    query = _query_duplicates()
-    dup = _read_table_error_handling(db_path, query)
-    if dup:
-        raise UserWarning(
-            "Duplicated tracks found! "
-            "Please open Mixxx and clean them manually <3\n"
-            f"{dup}"
-        )
-
-
-def open_mixxx_library_and_location(
-    db_path: Path,
-    *,
-    quit_if_duplicates: bool,
-    existing_tracks: bool,
-    missing_tracks: bool,
-) -> Rows:
-    # Used for fixing the track path
-    # We check for duplicates because they make the final SQL fusion fail due
-    # to a unique constraint. This can happen when paths are corrected.
-    if quit_if_duplicates:
-        _quit_if_duplicates(db_path)
-
-    rows = _open_joined_tables_as_df(
-        db_path, "library", "track_locations", "location", "id"
-    )
-
-    if os.environ.get("PYTEST_VERSION"):
-        for r in rows:
-            r["track_locations.location"] = (
-                Path(r["track_locations.location"]).resolve().as_posix()
-            )
-
-    if existing_tracks and missing_tracks:
-        return rows
-    if existing_tracks:
-        out = []
-        for row in rows:
-            tloc = Path(row["track_locations.location"])
-            if tloc.exists():
-                out.append(row)
-            else:
-                logging.warning("Removing entry with missing location: %s", tloc)
-        return out
-    if missing_tracks:
-        return [
-            row for row in rows if not Path(row["track_locations.location"]).exists()
-        ]
-    raise UserWarning("You do not want to return existing nor missing tracks ?!")
+        conn.row_factory = dict_factory
+        cursor = conn.cursor(factory=UserListCursor)
+        results = cursor.execute(query)
+        return results.fetchall()
 
 
 def fix_foreign_key_constraints(db_path: Path) -> None:
@@ -202,15 +103,89 @@ def fix_foreign_key_constraints(db_path: Path) -> None:
     connection.close()
 
 
-def open_mixxx_cues(db_path: Path, *, only_hot_cues: bool) -> Rows:
-    rows = _open_table_as_df(db_path, "cues")
-    if only_hot_cues:
-        rows = [row for row in rows if row["hotcue"] is not None and row["hotcue"] >= 0]
+def _read_table_error_handling(
+    db_path: Path, query: str, row_type: type[Row]
+) -> Table[Row]:
+    """Read a table as a list of dictionaries (the pandas-free row format)."""
+    try:
+        return _read_table(db_path, query, row_type)
+    except sqlite3.OperationalError as error:
+        if "no such table:" in str(error):
+            raise error
+        propose_fix_foreign_key_constraints(db_path)
+        return _read_table(db_path, query, row_type)
+
+
+def _open_table_as_df(
+    db_path: Path, table_name: str, row_type: type[Row]
+) -> Table[Row]:
+    query = f"SELECT * FROM {table_name}"
+    return _read_table_error_handling(db_path, query, row_type)
+
+
+def _quit_if_duplicates(rows: Table[LibraryRow]):
+    mtch = [get_match_key(r, COLS_FOR_DUP) for r in rows]
+    cntr = Counter(mtch)
+    cntr_ = {k: v for k, v in cntr.items() if v > 1}
+    if cntr_:
+        dups = [r for m, r in zip(mtch, rows) if m in cntr_]
+        raise RuntimeError(
+            "Duplicated tracks found! "
+            "Please open Mixxx and clean them manually <3\n"
+            f"{dups}"
+        )
+
+
+def _filter_stems(rows: Table[LibraryRow]) -> Table[LibraryRow]:
+    out = Table(r for r in rows if r.comment is None or "stem" not in r.comment.lower())
+    diff = len(rows) - len(out)
+    if diff:
+        logging.info("Filtered out %d tracks with STEM in comments", diff)
+    return out
+
+
+def open_mixxx_library(db_path: Path, *, quit_if_duplicates: bool) -> Table[LibraryRow]:
+    rows = _open_table_as_df(db_path, "library", LibraryRow)
+    if quit_if_duplicates:
+        _quit_if_duplicates(rows)
+    rows = _filter_stems(rows)
     return rows
 
 
-def open_mixxx_track_analysis(db_path: Path) -> Rows:
-    return _open_table_as_df(db_path, "track_analysis")
+def open_mixxx_track_locations(
+    db_path: Path, *, existing_tracks: bool, missing_tracks: bool
+) -> Table[TrackLocationsRow]:
+    rows = _open_table_as_df(db_path, "track_locations", TrackLocationsRow)
+
+    if existing_tracks and missing_tracks:
+        return rows
+    if existing_tracks:
+        word = "missing"
+    elif missing_tracks:
+        word = "existing"
+    else:
+        raise RuntimeError("You do not want to return existing nor missing tracks ?!")
+
+    out: Table[TrackLocationsRow] = Table()
+    for r in rows:
+        tloc = r.location
+        if Path(tloc).exists() == existing_tracks:
+            out.append(r)
+        else:
+            logging.warning("Removing entry with %s location: %s", word, tloc)
+
+    return out
+
+
+def open_mixxx_cues(db_path: Path, *, only_hot_cues: bool) -> Table[CuesRow]:
+    rows = _open_table_as_df(db_path, "cues", CuesRow)
+    if only_hot_cues:
+        rows = Table(row for row in rows if row.hotcue is not None and row.hotcue >= 0)
+    return rows
+
+
+def open_mixxx_track_analysis(db_path: Path) -> Table[TrackAnalysisRow]:
+    return _open_table_as_df(db_path, "track_analysis", TrackAnalysisRow)
 
 
 def open_mixxx_playlists_with_tracks(
@@ -219,22 +194,23 @@ def open_mixxx_playlists_with_tracks(
     filter_hidden: bool,
     add_crates_as_playlist: bool,
     crate_suffix: str,
-) -> Tuple[Rows, Rows]:
+) -> Tuple[Table[PlaylistRow], Table[PlaylistTrackRow]]:
+    # this tool is used to handle adding crates as playlist
     rows_playlists = _open_mixxx_playlists(db_path, filter_hidden)
     rows_playlist_tracks = _open_mixxx_playlist_tracks(db_path)
-    playlist_ids = {row["id"] for row in rows_playlists}
-    rows_playlist_tracks = [
-        row for row in rows_playlist_tracks if row["playlist_id"] in playlist_ids
-    ]
+    playlist_ids = {row.id for row in rows_playlists}
+    rows_playlist_tracks = Table(
+        row for row in rows_playlist_tracks if row.playlist_id in playlist_ids
+    )
 
     if add_crates_as_playlist:
         rows_crates = _open_mixxx_crates(db_path, filter_hidden)
         rows_crate_tracks = _open_mixxx_crate_tracks(db_path)
-        crate_ids = {row["id"] for row in rows_crates}
-        rows_crate_tracks = [
-            row for row in rows_crate_tracks if row["crate_id"] in crate_ids
-        ]
-        playlist_id_increment = max((row["id"] for row in rows_playlists), default=0)
+        crate_ids = {row.id for row in rows_crates}
+        rows_crate_tracks = Table(
+            row for row in rows_crate_tracks if row.crate_id in crate_ids
+        )
+        playlist_id_increment = max((row.id for row in rows_playlists), default=0)
         rows_playlists.extend(
             _crates_to_playlists(
                 rows_crates,
@@ -251,44 +227,61 @@ def open_mixxx_playlists_with_tracks(
     return rows_playlists, rows_playlist_tracks
 
 
-def _open_mixxx_playlists(db_path: Path, filter_hidden: bool) -> Rows:
-    rows = _open_table_as_df(db_path, "Playlists")
+def _open_mixxx_playlists(db_path: Path, filter_hidden: bool) -> Table[PlaylistRow]:
+    rows = _open_table_as_df(db_path, "Playlists", PlaylistRow)
     if filter_hidden:
-        rows = [row for row in rows if row["hidden"] == 0]
+        rows = Table(row for row in rows if row.hidden == 0)
     return rows
 
 
-def _open_mixxx_playlist_tracks(db_path: Path) -> Rows:
-    return _open_table_as_df(db_path, "PlaylistTracks")
+def _open_mixxx_playlist_tracks(db_path: Path) -> Table[PlaylistTrackRow]:
+    return _open_table_as_df(db_path, "PlaylistTracks", PlaylistTrackRow)
 
 
-def _open_mixxx_crates(db_path: Path, filter_hidden: bool) -> Rows:
-    rows = _open_table_as_df(db_path, "crates")
+def _open_mixxx_crates(db_path: Path, filter_hidden: bool) -> Table[CrateRow]:
+    rows = _open_table_as_df(db_path, "crates", CrateRow)
     if filter_hidden:
-        rows = [row for row in rows if row["show"] == 1]
+        rows = Table(row for row in rows if row.show == 1)
     return rows
 
 
-def _open_mixxx_crate_tracks(db_path: Path) -> Rows:
-    return _open_table_as_df(db_path, "crate_tracks")
+def _open_mixxx_crate_tracks(db_path: Path) -> Table[CrateTrackRow]:
+    return _open_table_as_df(db_path, "crate_tracks", CrateTrackRow)
 
 
-def _crates_to_playlists(rows_crates: Rows, idx_increment: int, suffix: str) -> Rows:
+def _crates_to_playlists(
+    rows_crates: Table[CrateRow], idx_increment: int, suffix: str
+) -> Table[PlaylistRow]:
+    playlist: Table[PlaylistRow] = Table()
     for row in rows_crates:
-        row["id"] += idx_increment
-        row["name"] += suffix
-    return rows_crates
+        playlist.append(
+            PlaylistRow(
+                id=row.id + idx_increment,
+                name=row.name + suffix,
+                position=None,
+                hidden=1,
+                date_created=None,
+                date_modified=None,
+                locked=row.locked,
+            )
+        )
+    return playlist
 
 
 def _crate_tracks_to_playlist_tracks(
-    rows_crate_tracks: Rows, idx_increment: int
-) -> Rows:
-    rows_playlist_tracks: Rows = []
+    rows_crate_tracks: Table[CrateTrackRow], idx_increment: int
+) -> Table[PlaylistTrackRow]:
+    rows_playlist_tracks: Table[PlaylistTrackRow] = Table()
     for crate_track in rows_crate_tracks:
-        playlist_track = dict(crate_track)
-        playlist_track["playlist_id"] = playlist_track.pop("crate_id") + idx_increment
-        playlist_track["position"] = 0
-        rows_playlist_tracks.append(playlist_track)
+        rows_playlist_tracks.append(
+            PlaylistTrackRow(
+                id=0,
+                track_id=crate_track.track_id,
+                playlist_id=crate_track.crate_id + idx_increment,
+                position=0,
+                pl_datetime_added=None,
+            )
+        )
     return rows_playlist_tracks
 
 
@@ -312,16 +305,22 @@ def create_mixxx_db_backup(db_path: Path) -> None:
 
 def update_mixxx_db_table(
     db_path: Path,
-    rows: Rows,
+    rows: Table[Row],
     table_name: str,
     set_cols: list[str],
     where_cols: list[str],
 ) -> None:
     """Update a Mixxx table using a list of dictionaries."""
     assert isinstance(set_cols, list)
-    assert all(column in rows[0] for column in set_cols) if rows else True
+    assert (
+        all(column in rows[0].__annotations__ for column in set_cols) if rows else True
+    )
     assert isinstance(where_cols, list)
-    assert all(column in rows[0] for column in where_cols) if rows else True
+    assert (
+        all(column in rows[0].__annotations__ for column in where_cols)
+        if rows
+        else True
+    )
     if not rows:
         return
     create_mixxx_db_backup(db_path)
@@ -333,7 +332,8 @@ def update_mixxx_db_table(
         + " AND ".join(f"{column} = ?" for column in where_cols)
     )
     params = [
-        [row[column] for column in set_cols] + [row[column] for column in where_cols]
+        [getattr(row, column) for column in set_cols]
+        + [getattr(row, column) for column in where_cols]
         for row in rows
     ]
 
@@ -342,10 +342,10 @@ def update_mixxx_db_table(
 
 
 def delete_rows_mixxx_db_table(
-    db_path: Path, rows: Rows, table_name: str, where_cols: list[str]
+    db_path: Path, rows: list[LibraryRow], table_name: str, where_cols: list[str]
 ) -> None:
     assert isinstance(where_cols, list)
-    assert all(column in row for row in rows for column in where_cols)
+    assert all(column in row.__annotations__ for row in rows for column in where_cols)
     if not rows:
         return
     create_mixxx_db_backup(db_path)
@@ -354,7 +354,7 @@ def delete_rows_mixxx_db_table(
         + " WHERE "
         + " AND ".join(f"{column} = ?" for column in where_cols)
     )
-    params = [[row[column] for column in where_cols] for row in rows]
+    params = [[getattr(row, column) for column in where_cols] for row in rows]
 
     with sqlite3.connect(db_path) as connection:
         connection.executemany(sql, params)

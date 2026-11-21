@@ -1,10 +1,4 @@
-from math import prod
-from re import sub
-
-import pandas as pd
-from jellyfish import levenshtein_distance
-
-from .music_db_utils_no_pandas import Row
+from .dataclasses_utils import LibraryRow
 from .proto import beats_pb2  # type: ignore
 
 
@@ -22,39 +16,16 @@ def beatgrid_frame_to_sec(frame: int, samplerate: float) -> float:
 
 class BeatGridInfo:
 
-    def __init__(self, library_row: Row):
+    def __init__(self, library_row: LibraryRow):
+        if library_row.beats is None or library_row.samplerate is None:
+            raise TypeError("Beatgrid data and samplerate are required")
         beatgrid = beats_pb2.BeatGrid()  # type: ignore
-        beatgrid.ParseFromString(library_row["beats"])
+        beatgrid.ParseFromString(library_row.beats)
         self.start_frame = beatgrid.first_beat.frame_position
         self.start_sec = beatgrid_frame_to_sec(
-            self.start_frame, library_row["samplerate"]
+            self.start_frame, float(library_row.samplerate)
         )
         self.bpm = beatgrid.bpm.bpm
-
-
-def remove_feat(name: str) -> str:
-    return sub(r" \(*f(?:ea)?t\. .+", "", name)
-
-
-def levenshtein_distance_sum(
-    row1: pd.Series, row2: pd.Series, col_names: list[str]
-) -> int:
-    return prod(1 + levenshtein_distance(row1[c], row2[c]) for c in col_names)
-
-
-def get_closest_matches_indices(
-    row: pd.Series,
-    search_df: pd.DataFrame,
-    col_names: list[str],
-    max_distance: int,
-    n_results: int,
-) -> pd.Index:
-    distance_serie = search_df.apply(
-        lambda t: levenshtein_distance_sum(t, row, col_names), axis=1
-    )
-    distance_serie = distance_serie[distance_serie <= max_distance]
-    distance_serie = distance_serie.sort_values()
-    return distance_serie[:n_results].index
 
 
 def snap_cue_frame(
