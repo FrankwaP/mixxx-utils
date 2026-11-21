@@ -54,6 +54,8 @@ def pseudo_inner_join_product(
 
     Rows are matched by comparing values from ``on_left`` in the left table
     with values from ``on_right`` in the right table.
+
+    The order of the left table is preserved
     """
 
     dict_match_left = get_match_dict(left, on_left, assert_unique_left)
@@ -61,7 +63,8 @@ def pseudo_inner_join_product(
 
     out_left: Table[Row] = Table()
     out_right: Table[_OtherRow] = Table()
-    for key in sorted(dict_match_left.keys() & dict_match_right.keys()):
+    # I use this loop to make sure preserve the order of the left table
+    for key in (k for k in dict_match_left.keys() if k in dict_match_right.keys()):
         for left_row in dict_match_left[key]:
             for right_row in dict_match_right[key]:
                 out_left.append(left_row)

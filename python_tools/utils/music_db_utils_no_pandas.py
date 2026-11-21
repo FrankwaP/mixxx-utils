@@ -290,12 +290,6 @@ def file_url_to_path(file_url: str) -> str:
     return unquote(file_url).replace("file://", "")
 
 
-def db_path_to_url(db_path: Path) -> str:
-    # sqlite:///relative/path/to/file.db
-    # sqlite:////absolute/path/to/file.db
-    return "sqlite:///" + db_path.as_posix()
-
-
 def create_mixxx_db_backup(db_path: Path) -> None:
     now = strftime("%y%m%d.%H%M%S")
     backup = db_path.with_suffix(db_path.suffix + ".bak." + now)

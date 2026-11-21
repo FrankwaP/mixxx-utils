@@ -36,9 +36,6 @@ TEMPO_FIELDS: Final[tuple[str, ...]] = (
     # "Metro",
 )
 
-MIXXX_SUFFIX = "_mixxx"
-RKBOX_SUFFIX = "_rkbox"
-
 
 STR_TUPLE = tuple[str, ...]
 STR_TUTUPLE = tuple[STR_TUPLE, ...]
@@ -77,7 +74,7 @@ def _extract_tracks_with_marks_and_tempo(
         #
         tuple_track = _get_tuple(track, TRACK_FIELDS)
         tuple_mark = _get_tuple_tuple(track, "POSITION_MARK", MARK_FIELDS)
-        tuple_tempo = _get_tuple_tuple(track, "POSITION_MARK", MARK_FIELDS)
+        tuple_tempo = _get_tuple_tuple(track, "POSITION_MARK", TEMPO_FIELDS)
 
         dict_track[track.attrib[MATCHING_KEY]] = (tuple_track, tuple_mark, tuple_tempo)
         dict_track_id[track.attrib[MATCHING_KEY]] = track.attrib[TRACK_ID]

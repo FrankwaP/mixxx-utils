@@ -39,11 +39,3 @@ def snap_cue_frame(
     snaped_position = round(scaled_position)
     unscaled_position = snaped_position * beat_interval_sec + beatgrid_start_sec
     return position_sec_to_frame(unscaled_position, samplerate)
-
-
-def guess_inizio_sec(
-    hot_cue_frame_pos: int, samplerate: float, bpm: float, beats_per_bar: int
-) -> float:
-    hot_cue_sec = position_frame_to_sec(hot_cue_frame_pos, samplerate)
-    interval_sec = 60 / bpm
-    return hot_cue_sec % (beats_per_bar * interval_sec)
