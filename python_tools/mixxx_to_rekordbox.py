@@ -9,19 +9,19 @@ from xml.etree import ElementTree as ET
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from python_tools.mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
-from python_tools.mixxx_to_rekordbox_utils.xml_utils import AttribDict, get_elem
-from python_tools.utils.config import (
+from .mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
+from .mixxx_to_rekordbox_utils.xml_utils import AttribDict, get_elem
+from .utils.config import (
     MixxxToRekordboxConfig,
     get_mixxx_to_rekordbox_config,
 )
-from python_tools.utils.dataclasses_operations_utils import (
-    filter_right_using_left,
+from .utils.dataclasses_operations_utils import (
+    filter_left_using_right,
     get_match_key,
     pseudo_inner_join_left_to_right_mapping,
     pseudo_inner_join_product,
 )
-from python_tools.utils.dataclasses_utils import (
+from .utils.dataclasses_utils import (
     CuesRow,
     LibraryRow,
     PlaylistRow,
@@ -29,14 +29,14 @@ from python_tools.utils.dataclasses_utils import (
     Table,
     TrackLocationsRow,
 )
-from python_tools.utils.misc import KEY_ID_LANCELOT, RATING_MAPING
-from python_tools.utils.music_db_utils_no_pandas import (
+from .utils.misc import KEY_ID_LANCELOT, RATING_MAPING
+from .utils.music_db_utils_no_pandas import (
     open_mixxx_cues,
     open_mixxx_library,
     open_mixxx_playlists_with_tracks,
     open_mixxx_track_locations,
 )
-from python_tools.utils.track_utils import BeatGridInfo
+from .utils.track_utils import BeatGridInfo
 
 NOT_ALLOWED = "ogg", "opus"
 REKORDBOX_COLORS = {
@@ -113,14 +113,14 @@ def _get_time_signature_in_comment(
     return match[0]
 
 
-def _position_frame_to_sec(frame: int, samplerate: float) -> float:
-    assert isinstance(frame, int)
+def _position_frame_to_sec(frame: int | float, samplerate: float) -> float:
+    assert isinstance(frame, (int, float)), frame
     assert isinstance(samplerate, float), samplerate
     return frame / (2 * samplerate)
 
 
 def _guess_inizio_from_hotcue(
-    hot_cue_frame_pos: int, samplerate: float, bpm: float, beats_per_bar: int
+    hot_cue_frame_pos: int | float, samplerate: float, bpm: float, beats_per_bar: int
 ) -> float:
     assert isinstance(bpm, float)
     assert isinstance(beats_per_bar, int)
@@ -149,7 +149,7 @@ def _get_inizio(
             cue_row for cue_row in cue_rows if cue_row.hotcue == hotcue_bar_index
         ]
         if not matching_cues:
-            logging.info(
+            logging.warning(
                 "No hotcue #%d been found for file %s. "
                 "You might want to add one to make sure the start of the bars are detected.",
                 config.index_cue_bar_start,
@@ -339,7 +339,7 @@ def _filter_locked_tracks(rows: Table[LibraryRow]) -> Table[LibraryRow]:
 def _filter_only_in_playlist(
     rows_lib: Table[LibraryRow], rows_plst_trks: Table[PlaylistTrackRow]
 ) -> Table[LibraryRow]:
-    out_lib = filter_right_using_left(
+    out_lib = filter_left_using_right(
         rows_lib, rows_plst_trks, on_left=("id",), on_right=("track_id",)
     )
     diff = len(rows_lib) - len(out_lib)

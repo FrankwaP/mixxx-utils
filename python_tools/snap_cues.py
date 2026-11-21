@@ -9,7 +9,7 @@ from python_tools.utils.dataclasses_utils import CuesRow, Table
 from python_tools.utils.music_db_utils_no_pandas import (
     open_mixxx_cues,
     open_mixxx_library,
-    update_mixxx_db_table,
+    update_mixxx_db_with_table,
 )
 from python_tools.utils.track_utils import BeatGridInfo, snap_cue_frame
 
@@ -71,10 +71,10 @@ def main():
                     cue_row.position = new_pos
                     cues_update.append(cue_row)
 
-        update_mixxx_db_table(
-            snap_config.mixxx_db,
-            cues_update,
-            "cues",
+        update_mixxx_db_with_table(
+            db_path=snap_config.mixxx_db,
+            db_table_name="cues",
+            table=cues_update,
             set_cols=["position"],
             where_cols=["id"],
         )

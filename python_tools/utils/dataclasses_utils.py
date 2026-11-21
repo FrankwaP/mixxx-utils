@@ -1,12 +1,42 @@
 from collections import UserList
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
+from math import log10
 from typing import TypeAlias, TypeVar
 
 
+@dataclass
 class _BaseRow:
-    def get_str_fields(self) -> tuple:
-        raise NotImplementedError
-        return tuple()
+
+    @classmethod
+    def get_fields(cls) -> tuple[str, ...]:
+        return tuple(f.name for f in fields(cls))
+
+    def get_print_fields(self) -> tuple[str, ...]:
+        return self.get_fields()
+
+    def __str__(self) -> str:
+        return "\n".join(f"{f}: {getattr(self,f)}" for f in self.get_print_fields())
+
+
+@dataclass
+class CloseMatchRow(_BaseRow):
+    artist: str
+    title: str
+
+
+@dataclass
+class PerfectMatchRow(CloseMatchRow):
+    tracknumber: str
+    album: str
+
+
+@dataclass
+class TrackFixRow(PerfectMatchRow):
+
+    player_path: str
+
+
+#
 
 
 @dataclass
@@ -61,11 +91,8 @@ class LibraryRow(_BaseRow):
     source_synchronized_ms: int | None
     tuning_frequency_hz: float | None
 
-    def get_str_fields(self) -> tuple:
-        return (self.artist, self.title, self.album)
-
-    def __str__(self) -> str:
-        return "\t".join(str(i) for i in self.get_str_fields())
+    def get_print_fields(self) -> tuple:
+        return ("artist", "title", "album")
 
 
 @dataclass
@@ -79,13 +106,16 @@ class TrackLocationsRow(_BaseRow):
     needs_verification: int | None
     saved_indices_mixxx_location: int | None
 
+    def get_print_fields(self) -> tuple:
+        return ("location",)
+
 
 @dataclass
 class CuesRow(_BaseRow):
     id: int
     track_id: int
     type: int
-    position: int
+    position: int | float  # https://github.com/mixxxdj/mixxx/pull/1108
     length: int
     hotcue: int
     label: str
@@ -143,23 +173,49 @@ class TrackAnalysisRow(_BaseRow):
 
 
 @dataclass
-class CloseMatchRow(_BaseRow):
-    artist: str
-    title: str
-
-
-@dataclass
-class PerfectMatchRow(CloseMatchRow):
-    tracknumber: str
-    album: str
-
-
-@dataclass
-class TrackFixRow(PerfectMatchRow):
-    player_path: str
-
-
-# %%
+class ClementineSongRow(_BaseRow):
+    title: str | None
+    album: str | None
+    artist: str | None
+    albumartist: str | None
+    composer: str | None
+    track: int | None
+    disc: int | None
+    bpm: float | None
+    year: int | None
+    genre: str | None
+    comment: str | None
+    compilation: int | None
+    length: int | None
+    bitrate: int | None
+    samplerate: int | None
+    directory: int
+    filename: bytes
+    mtime: int
+    ctime: int
+    filesize: int
+    sampler: int
+    art_automatic: str | None
+    art_manual: str | None
+    filetype: int
+    playcount: int
+    lastplayed: int | None
+    rating: int | None
+    forced_compilation_on: int
+    forced_compilation_off: int
+    effective_compilation: int
+    skipcount: int
+    score: int
+    beginning: int
+    cue_path: str | None
+    unavailable: int | None
+    effective_albumartist: str | None
+    etag: str | None
+    performer: str | None
+    grouping: str | None
+    lyrics: str | None
+    originalyear: int | None
+    effective_originalyear: int | None
 
 
 RowTypes: TypeAlias = (
@@ -172,14 +228,42 @@ RowTypes: TypeAlias = (
     | CrateTrackRow
     | TrackAnalysisRow
     | TrackFixRow
+    | ClementineSongRow
 )
 
 Row = TypeVar("Row", bound=RowTypes)
 
 
 class Table(UserList[Row]):
+
+    def get_fields(self) -> tuple[str, ...]:
+        if not self:
+            return ()
+        return self[0].get_fields()
+
+    def get_print_fields(self) -> tuple[str, ...]:
+        if not self:
+            return ()
+        return self[0].get_print_fields()
+
     def __str__(self) -> str:
-        columns = tuple(zip(i for i in r.get_str_fields()) for r in self)
-        columns_width = (max(len(r) for r in c) for c in columns)
-        str_frmt = "  |  ".join(f"%{c}s" for c in columns_width)
-        return str_frmt.format(columns)
+        if not self:
+            return ""
+        lidx = int(log10(len(self))) + 1
+
+        colnames = self.get_print_fields()
+
+        rows = [[" "] + list(colnames)]
+        rows += [
+            [idx] + [getattr(row, name) for name in colnames]
+            for idx, row in enumerate(self)
+        ]
+        widths = [lidx] + [
+            max(len(str(r[i + 1])) for r in rows) for i in range(len(colnames))
+        ]
+
+        print_rows = [
+            " | ".join(f"{str(value):>{width}}" for value, width in zip(row, widths))
+            for row in rows
+        ]
+        return "\n".join(print_rows)

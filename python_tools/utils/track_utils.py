@@ -2,7 +2,7 @@ from .dataclasses_utils import LibraryRow
 from .proto import beats_pb2  # type: ignore
 
 
-def position_frame_to_sec(frame: int, samplerate: float) -> float:
+def position_frame_to_sec(frame: int | float, samplerate: float) -> float:
     return frame / (2 * samplerate)
 
 
@@ -29,7 +29,7 @@ class BeatGridInfo:
 
 
 def snap_cue_frame(
-    cue_position_frame: int,
+    cue_position_frame: int | float,
     samplerate: float,
     beatgrid_start_sec: float,
     beat_interval_sec: float,

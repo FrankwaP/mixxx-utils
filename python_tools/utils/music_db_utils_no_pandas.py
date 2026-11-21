@@ -116,9 +116,7 @@ def _read_table_error_handling(
         return _read_table(db_path, query, row_type)
 
 
-def _open_table_as_df(
-    db_path: Path, table_name: str, row_type: type[Row]
-) -> Table[Row]:
+def _open_table(db_path: Path, table_name: str, row_type: type[Row]) -> Table[Row]:
     query = f"SELECT * FROM {table_name}"
     return _read_table_error_handling(db_path, query, row_type)
 
@@ -145,7 +143,7 @@ def _filter_stems(rows: Table[LibraryRow]) -> Table[LibraryRow]:
 
 
 def open_mixxx_library(db_path: Path, *, quit_if_duplicates: bool) -> Table[LibraryRow]:
-    rows = _open_table_as_df(db_path, "library", LibraryRow)
+    rows = _open_table(db_path, "library", LibraryRow)
     if quit_if_duplicates:
         _quit_if_duplicates(rows)
     rows = _filter_stems(rows)
@@ -155,14 +153,16 @@ def open_mixxx_library(db_path: Path, *, quit_if_duplicates: bool) -> Table[Libr
 def open_mixxx_track_locations(
     db_path: Path, *, existing_tracks: bool, missing_tracks: bool
 ) -> Table[TrackLocationsRow]:
-    rows = _open_table_as_df(db_path, "track_locations", TrackLocationsRow)
+    rows = _open_table(db_path, "track_locations", TrackLocationsRow)
 
     if existing_tracks and missing_tracks:
         return rows
     if existing_tracks:
         word = "missing"
+        log = logging.warning
     elif missing_tracks:
         word = "existing"
+        log = logging.debug
     else:
         raise RuntimeError("You do not want to return existing nor missing tracks ?!")
 
@@ -172,20 +172,20 @@ def open_mixxx_track_locations(
         if Path(tloc).exists() == existing_tracks:
             out.append(r)
         else:
-            logging.warning("Removing entry with %s location: %s", word, tloc)
+            log("Removing entry with %s location: %s", word, tloc)
 
     return out
 
 
 def open_mixxx_cues(db_path: Path, *, only_hot_cues: bool) -> Table[CuesRow]:
-    rows = _open_table_as_df(db_path, "cues", CuesRow)
+    rows = _open_table(db_path, "cues", CuesRow)
     if only_hot_cues:
         rows = Table(row for row in rows if row.hotcue is not None and row.hotcue >= 0)
     return rows
 
 
 def open_mixxx_track_analysis(db_path: Path) -> Table[TrackAnalysisRow]:
-    return _open_table_as_df(db_path, "track_analysis", TrackAnalysisRow)
+    return _open_table(db_path, "track_analysis", TrackAnalysisRow)
 
 
 def open_mixxx_playlists_with_tracks(
@@ -228,25 +228,25 @@ def open_mixxx_playlists_with_tracks(
 
 
 def _open_mixxx_playlists(db_path: Path, filter_hidden: bool) -> Table[PlaylistRow]:
-    rows = _open_table_as_df(db_path, "Playlists", PlaylistRow)
+    rows = _open_table(db_path, "Playlists", PlaylistRow)
     if filter_hidden:
         rows = Table(row for row in rows if row.hidden == 0)
     return rows
 
 
 def _open_mixxx_playlist_tracks(db_path: Path) -> Table[PlaylistTrackRow]:
-    return _open_table_as_df(db_path, "PlaylistTracks", PlaylistTrackRow)
+    return _open_table(db_path, "PlaylistTracks", PlaylistTrackRow)
 
 
 def _open_mixxx_crates(db_path: Path, filter_hidden: bool) -> Table[CrateRow]:
-    rows = _open_table_as_df(db_path, "crates", CrateRow)
+    rows = _open_table(db_path, "crates", CrateRow)
     if filter_hidden:
         rows = Table(row for row in rows if row.show == 1)
     return rows
 
 
 def _open_mixxx_crate_tracks(db_path: Path) -> Table[CrateTrackRow]:
-    return _open_table_as_df(db_path, "crate_tracks", CrateTrackRow)
+    return _open_table(db_path, "crate_tracks", CrateTrackRow)
 
 
 def _crates_to_playlists(
@@ -303,29 +303,49 @@ def create_mixxx_db_backup(db_path: Path) -> None:
     logging.info(f"Backup created: {backup}")
 
 
-def update_mixxx_db_table(
+def _get_table_column_names(db_path: Path, table_name: str) -> list[str]:
+    with sqlite3.connect(db_path) as connection:
+        rows = connection.execute(
+            "SELECT name FROM pragma_table_info(?) ORDER BY cid",
+            (table_name,),
+        ).fetchall()
+    return [row[0] for row in rows]
+
+
+def _check_db_table_and_table(
     db_path: Path,
-    rows: Table[Row],
-    table_name: str,
+    db_table_name: str,
+    table: Table[Row],
+    set_cols: list[str],
+    where_cols: list[str],
+) -> None:
+
+    assert isinstance(set_cols, list)
+    assert isinstance(where_cols, list)
+
+    cols_db = _get_table_column_names(db_path, db_table_name)
+    cols_table = table.get_fields()
+    assert set(cols_db) == set(cols_table)
+    assert all(column in cols_db for column in set_cols + where_cols)
+
+
+def update_mixxx_db_with_table(
+    *,
+    db_path: Path,
+    db_table_name: str,
+    table: Table[Row],
     set_cols: list[str],
     where_cols: list[str],
 ) -> None:
     """Update a Mixxx table using a list of dictionaries."""
-    assert isinstance(set_cols, list)
-    assert (
-        all(column in rows[0].__annotations__ for column in set_cols) if rows else True
-    )
-    assert isinstance(where_cols, list)
-    assert (
-        all(column in rows[0].__annotations__ for column in where_cols)
-        if rows
-        else True
-    )
-    if not rows:
+
+    _check_db_table_and_table(db_path, db_table_name, table, set_cols, where_cols)
+
+    if not table:
         return
     create_mixxx_db_backup(db_path)
     sql = (
-        f"UPDATE {table_name}"
+        f"UPDATE {db_table_name}"
         + " SET "
         + ", ".join(f"{column} = ?" for column in set_cols)
         + " WHERE "
@@ -334,7 +354,7 @@ def update_mixxx_db_table(
     params = [
         [getattr(row, column) for column in set_cols]
         + [getattr(row, column) for column in where_cols]
-        for row in rows
+        for row in table
     ]
 
     with sqlite3.connect(db_path) as connection:
@@ -342,19 +362,23 @@ def update_mixxx_db_table(
 
 
 def delete_rows_mixxx_db_table(
-    db_path: Path, rows: list[LibraryRow], table_name: str, where_cols: list[str]
+    *,
+    db_path: Path,
+    db_table_name: str,
+    table: Table[Row],
+    where_cols: list[str],
 ) -> None:
-    assert isinstance(where_cols, list)
-    assert all(column in row.__annotations__ for row in rows for column in where_cols)
-    if not rows:
+    _check_db_table_and_table(db_path, db_table_name, table, [], where_cols)
+
+    if not table:
         return
     create_mixxx_db_backup(db_path)
     sql = (
-        f"DELETE FROM {table_name}"
+        f"DELETE FROM {db_table_name}"
         + " WHERE "
         + " AND ".join(f"{column} = ?" for column in where_cols)
     )
-    params = [[getattr(row, column) for column in where_cols] for row in rows]
+    params = [[getattr(row, column) for column in where_cols] for row in table]
 
     with sqlite3.connect(db_path) as connection:
         connection.executemany(sql, params)
