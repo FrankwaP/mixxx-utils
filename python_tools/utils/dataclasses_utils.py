@@ -15,7 +15,9 @@ class _BaseRow:
         return self.get_fields()
 
     def __str__(self) -> str:
-        return "\n".join(f"{f}: {getattr(self,f)}" for f in self.get_print_fields())
+        return "  " + " | ".join(
+            f"{f}: {getattr(self,f)}" for f in self.get_print_fields()
+        )
 
 
 @dataclass
