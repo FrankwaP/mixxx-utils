@@ -128,8 +128,8 @@ def filter_left_using_right(
     This is a filter, not a join: matching left rows are returned once each,
     even when the right table contains multiple rows with the same key.
     """
-    mapping = pseudo_inner_join_left_to_right_mapping(left, right, on_left, on_right)
-    return Table(r for r in left if get_match_key(r, on_left) in mapping)
+    dict_match_right = get_match_dict(right, on_right, False)
+    return Table(row for row in left if get_match_key(row, on_left) in dict_match_right)
 
 
 def filter_left_using_right_outer(
@@ -143,5 +143,7 @@ def filter_left_using_right_outer(
     This function is just to propose an interface coherent to filter_left_using_right,
     as "join outer" does not duplicate rows as "join product"
     """
-    mapping = pseudo_inner_join_left_to_right_mapping(left, right, on_left, on_right)
-    return Table(r for r in left if get_match_key(r, on_left) not in mapping)
+    dict_match_right = get_match_dict(right, on_right, False)
+    return Table(
+        row for row in left if get_match_key(row, on_left) not in dict_match_right
+    )
