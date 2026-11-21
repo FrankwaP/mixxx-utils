@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Final
 from urllib.parse import unquote
 
-from python_tools.utils.config import (
+from .utils.config import (
     MixxxToRekordboxCompareConfig,
     get_mixxx_to_rekordbox_compare_config,
 )

@@ -3,15 +3,15 @@ import logging
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from python_tools.utils.config import get_snap_cues_config
-from python_tools.utils.dataclasses_operations_utils import pseudo_inner_join_product
-from python_tools.utils.dataclasses_utils import CuesRow, Table
-from python_tools.utils.music_db_utils_no_pandas import (
+from .utils.config import get_snap_cues_config
+from .utils.dataclasses_operations_utils import pseudo_inner_join_product
+from .utils.dataclasses_utils import CuesRow, Table
+from .utils.music_db_utils_no_pandas import (
     open_mixxx_cues,
     open_mixxx_library,
     update_mixxx_db_with_table,
 )
-from python_tools.utils.track_utils import BeatGridInfo, snap_cue_frame
+from .utils.track_utils import BeatGridInfo, snap_cue_frame
 
 
 def main():

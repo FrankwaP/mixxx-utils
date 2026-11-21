@@ -4,15 +4,7 @@ from pathlib import Path
 from re import sub
 from typing import TypeVar
 
-from python_tools.utils.config import FixTrackPathsUtilsConfig
-from python_tools.utils.music_db_utils_no_pandas import (
-    delete_rows_mixxx_db_table,
-    open_mixxx_library,
-    open_mixxx_track_analysis,
-    open_mixxx_track_locations,
-    update_mixxx_db_with_table,
-)
-
+from ..utils.config import FixTrackPathsUtilsConfig
 from ..utils.dataclasses_operations_utils import (
     filter_left_using_right,
     filter_left_using_right_outer,
@@ -24,6 +16,13 @@ from ..utils.dataclasses_utils import (
     PerfectMatchRow,
     Table,
     TrackFixRow,
+)
+from ..utils.music_db_utils_no_pandas import (
+    delete_rows_mixxx_db_table,
+    open_mixxx_library,
+    open_mixxx_track_analysis,
+    open_mixxx_track_locations,
+    update_mixxx_db_with_table,
 )
 from .close_match_utils import join_close_match
 
