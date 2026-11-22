@@ -61,7 +61,7 @@ repos:
   hooks:
     - id: mypy
       name: mypy
-      entry: mypy --check-untyped-defs
+      entry: mypy
       language: system
       types: [python]
       pass_filenames: true
