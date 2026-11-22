@@ -22,7 +22,8 @@ def _ask_match_index(row_lib: LibraryRow, table_player_cm: Table[TrackFixRow]) -
     choices = [""] + [str(i) for i in range(len(table_player_cm))]
     while True:
         ans = input(
-            f"Please choose an index or leave empty to skip the operation ({choices}) : "
+            "Please choose an index or leave empty "
+            f"to skip the operation ({choices}) : "
         )
         if ans in choices:
             break

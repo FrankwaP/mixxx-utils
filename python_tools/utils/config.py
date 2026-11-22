@@ -76,10 +76,12 @@ def _get_config_path(config_file: str, config_env_var: str) -> Path:
         config_path = Path(os.environ[config_env_var])
         if not config_path.exists():
             raise FileNotFoundError(
-                f"The file defined in {config_env_var} environment variable does not exist: {config_path}"
+                f"The file defined in {config_env_var} environment variable "
+                f" does not exist: {config_path}"
             )
         print(
-            f"Reading the config file defined in {config_env_var} environment variable: {config_path}"
+            f"Reading the config file defined in {config_env_var} "
+            f"environment variable: {config_path}"
         )
     else:
         # https://nuitka.net/user-documentation/common-issue-solutions.html#onefile-finding-files

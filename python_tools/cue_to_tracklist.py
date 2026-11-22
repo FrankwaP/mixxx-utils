@@ -48,9 +48,6 @@ def genereate_tracklist_file(cue_file: Path) -> None:
 def remove_file_quotes(path: str) -> str:
     """
     Remove the quotes around the file name.
-
-    When using drag and drop to easily get a file name in a terminal, quotes can be added
-    to this file name.
     """
     if path[0] in ["'", '"'] and path[-1] in ["'", '"']:
         path = path[1:-1]

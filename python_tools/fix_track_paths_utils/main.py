@@ -28,7 +28,8 @@ from .close_match_utils import join_close_match
 
 
 def _check_and_format_df_player(df_player: Table[TrackFixRow]) -> Table[TrackFixRow]:
-    """Check that the provided DataFrame contains the necessary columns and that they are consistent with each other."""
+    """Check that the provided DataFrame contains the necessary columns
+    and that they are consistent with each other."""
 
     assert all(Path(r.player_path).is_absolute() for r in df_player)
 
@@ -41,7 +42,8 @@ def _check_and_format_df_player(df_player: Table[TrackFixRow]) -> Table[TrackFix
     ), "Error: the player database is empty after filtering for existing locations!"
     if cleaned_len < init_len:
         logging.info(
-            "%d tracks with missing locations have been removed from the player database ",
+            "%d tracks with missing locations have been removed "
+            "from the player database.",
             init_len - cleaned_len,
         )
     return df_player
@@ -105,7 +107,7 @@ def fix_with_player_db(
         logging.info("No missing tracks, congratulation!")
         return
 
-    # removing the "feat." (sometimes in the artist field of one track and the title field of the other)
+    # removing the "feat." in  artist and title
     table_lib = Table(_clean_feat(r) for r in table_lib)
     table_player = Table(_clean_feat(r) for r in table_player)
 
@@ -153,7 +155,8 @@ def fix_with_player_db(
         assert_unique_right=True,
     )
     # this test can be removed… let's say in 2027
-    # the obj. is to check table_lib is unchanged and therefore table_loc is aligned with table_player
+    # the obj. is to check table_lib is unchanged
+    # and therefore table_loc is aligned with table_player
     assert table_lib == table_lib_copy
 
     for r_loc, r_play in zip(table_loc, table_player):

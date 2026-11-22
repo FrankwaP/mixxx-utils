@@ -37,7 +37,8 @@ COLS_FOR_DUP: Final[tuple[str, str, str, str]] = (
 
 def propose_fix_foreign_key_constraints(db_path: Path) -> None:
     answer = input(
-        "The Mixxx database cannot be opened and we must fix the foreign key constraints...\n"
+        "The Mixxx database cannot be opened "
+        "and we must fix the foreign key constraints...\n"
         "A backup file will be created.\n\n"
         "Are you OK with that? (y/*)"
     )

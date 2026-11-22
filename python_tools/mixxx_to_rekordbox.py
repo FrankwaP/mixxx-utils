@@ -150,8 +150,7 @@ def _get_inizio(
         ]
         if not matching_cues:
             logging.warning(
-                "No hotcue #%d been found for file %s. "
-                "You might want to add one to make sure the start of the bars are detected.",
+                "No hotcue #%d been found for file %s to find the start of the bars.",
                 config.index_cue_bar_start,
                 track_location.location,
             )
@@ -282,7 +281,7 @@ def _mixxx_cue_row_to_rekbox_xml(
     )
     if start < 0:
         logging.info(
-            "A negative cue start position has been found and ignored for hotcue #%d of file %s",
+            "Negative cue start position ignored for hotcue #%d of file %s",
             cue_row_.hotcue + 1,
             track_location.location,
         )
