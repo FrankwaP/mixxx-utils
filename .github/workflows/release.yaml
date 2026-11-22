@@ -27,32 +27,26 @@ jobs:
         run: |
           python -m pip install -r python_tools/requirements-pip-build.txt
 
-      - name: Build mixxx_to_rekordbox with Nuitka
+      - name: Build executables with Nuitka
+        shell: bash
         run: |
-          python -m nuitka --onefile --nofollow-import-to=numpy --assume-yes-for-downloads mixxx_to_rekordbox.py
+          for script in \
+            mixxx_to_rekordbox.py \
+            mixxx_to_rekordbox_compare.py \
+            snap_cues.py
+          do
+            python -m nuitka \
+              --onefile \
+              --nofollow-import-to=numpy \
+              --nofollow-import-to=pandas \
+              --assume-yes-for-downloads \
+              "$script"
+          done
 
-      - name: Upload mixxx_to_rekordbox binary to release
+      - name: Upload executables
         uses: softprops/action-gh-release@v2
         with:
           files: |
             mixxx_to_rekordbox${{ runner.os == 'Windows' && '.exe' || '.bin' }}
-
-      - name: Build mixxx_to_rekordbox_compare with Nuitka
-        run: |
-          python -m nuitka --onefile --nofollow-import-to=numpy --assume-yes-for-downloads mixxx_to_rekordbox_compare.py
-
-      - name: Upload binary to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
             mixxx_to_rekordbox_compare${{ runner.os == 'Windows' && '.exe' || '.bin' }}
-
-      - name: Build snap_cues with Nuitka
-        run: |
-          python -m nuitka --onefile --nofollow-import-to=numpy --assume-yes-for-downloads snap_cues.py
-
-      - name: Upload binary to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
             snap_cues${{ runner.os == 'Windows' && '.exe' || '.bin' }}
