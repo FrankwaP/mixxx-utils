@@ -1,5 +1,11 @@
-# 0 star = "0", 1 star = "51", 2 stars = "102", 3 stars = "153", 4 stars = "204", 5 stars = "255"
-RATING_MAPING = {0: 0, 1: 51, 2: 102, 3: 153, 4: 204, 5: 255}
+RATING_MAPING = {
+    0: 0,  # 0 star
+    1: 51,
+    2: 102,
+    3: 153,
+    4: 204,
+    5: 255,  # … 5 stars
+}
 
 # made using the SQL command "SELECT DISTINCT key_id, key FROM library"
 # then some Regex…

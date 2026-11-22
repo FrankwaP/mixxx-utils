@@ -1,15 +1,12 @@
 from sys import exit as sysexit
 
-import pandas as pd
-
-from python_tools.utils.config import get_fix_track_paths_config
-from python_tools.utils.music_db_utils import open_table_as_df
-
-from .main import PLAYER_PATH, fix_with_player_db
+from ..utils.config import FixTrackPathsUtilsConfig
+from ..utils.dataclasses_utils import ClementineSongRow, Table, TrackFixRow
+from ..utils.music_db_utils_no_pandas import _open_table, file_url_to_path
+from .main import fix_with_player_db
 
 
-def get_clementine_db() -> pd.DataFrame:
-    config = get_fix_track_paths_config()
+def get_clementine_db(config: FixTrackPathsUtilsConfig) -> Table[TrackFixRow]:
     clem_db = config.clem_db
 
     """Load and prepare the Clementine database as a pandas DataFrame."""
@@ -18,13 +15,21 @@ def get_clementine_db() -> pd.DataFrame:
         if answer != "y":
             print("Well do it <3")
             sysexit()
-    df_clem = open_table_as_df(clem_db, "songs")
-    df_clem.rename(columns={"filename": PLAYER_PATH}, inplace=True)
-    df_clem["tracknumber"] = df_clem["track"].apply(lambda x: str(x))
-    return df_clem
+    df_clem = _open_table(clem_db, "songs", ClementineSongRow)
+
+    return Table(
+        TrackFixRow(
+            tracknumber="" if r.track is None else str(r.track),
+            artist=r.artist or "",
+            album=r.album or "",
+            title=r.title or "",
+            player_path=file_url_to_path(r.filename.decode()),
+        )
+        for r in df_clem
+    )
 
 
-def fix_with_clementine_db():
+def fix_with_clementine_db(config: FixTrackPathsUtilsConfig):
     """Fix the Mixxx library using the Clementine database."""
-    df_clem = get_clementine_db()
-    fix_with_player_db(df_clem)
+    df_clem = get_clementine_db(config)
+    fix_with_player_db(config, df_clem)

@@ -76,10 +76,12 @@ def _get_config_path(config_file: str, config_env_var: str) -> Path:
         config_path = Path(os.environ[config_env_var])
         if not config_path.exists():
             raise FileNotFoundError(
-                f"The file defined in {config_env_var} environment variable does not exist: {config_path}"
+                f"The file defined in {config_env_var} environment variable "
+                f" does not exist: {config_path}"
             )
         print(
-            f"Reading the config file defined in {config_env_var} environment variable: {config_path}"
+            f"Reading the config file defined in {config_env_var} "
+            f"environment variable: {config_path}"
         )
     else:
         # https://nuitka.net/user-documentation/common-issue-solutions.html#onefile-finding-files
@@ -112,7 +114,8 @@ def _get_config(
     toml = tomllib.loads(config_path.read_text())
     try:
         config = model.model_validate(toml)
-        _set_logging_level(config)
+        log_path = Path(sys.argv[0]).parent / Path(config_file).with_suffix(".log")
+        _set_logging_level(config, log_path)
         if config.confirm_config:
             _confirm_config(config)
         return config
@@ -154,7 +157,7 @@ def get_fix_track_paths_config() -> FixTrackPathsUtilsConfig:
     )
 
 
-def _set_logging_level(config: _MyBaseModel) -> None:
+def _set_logging_level(config: _MyBaseModel, log_path: Path) -> None:
     loglev = config.logging_level
     if loglev == "debug":
         level = logging.DEBUG
@@ -164,7 +167,7 @@ def _set_logging_level(config: _MyBaseModel) -> None:
         level = logging.WARNING
     elif loglev == "error":
         level = logging.ERROR
-    logging.basicConfig(level=level)
+    logging.basicConfig(level=level, filename=log_path)
 
 
 def _pprint(config_dict: dict, indent=0) -> None:

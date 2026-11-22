@@ -1,317 +1,215 @@
+import logging
+from copy import copy
 from pathlib import Path
-from sys import exit as sysexit
-from typing import Final
+from re import sub
+from typing import TypeVar
 
-import pandas as pd
-
-from python_tools.utils.config import (
-    FixTrackPathsUtilsConfig,
-    get_fix_track_paths_config,
+from ..utils.config import FixTrackPathsUtilsConfig
+from ..utils.dataclasses_operations_utils import (
+    filter_left_using_right,
+    filter_left_using_right_outer,
+    pseudo_inner_join_outer,
+    pseudo_inner_join_product,
 )
-from python_tools.utils.music_db_utils import (
-    COLS_FOR_DUP,
-    create_mixxx_db_backup,
+from ..utils.dataclasses_utils import LibraryRow, PerfectMatchRow, Table, TrackFixRow
+from ..utils.music_db_utils_no_pandas import (
     delete_rows_mixxx_db_table,
-    file_url_to_path,
     open_mixxx_library,
     open_mixxx_track_analysis,
     open_mixxx_track_locations,
-    update_mixxx_db_table,
+    update_mixxx_db_with_table,
 )
-from python_tools.utils.track_utils import get_closest_matches_indices, remove_feat
-
-COLS_PERFECT_MATCH: Final[list[str]] = COLS_FOR_DUP
-COLS_CLOSE_MATCH: Final[list[str]] = ["artist", "title"]
-IDX_MIXXX_LIB: Final[str] = "saved_indices_mixxx_library"
-IDX_PLAYER: Final[str] = "saved_indices_player"
-IDX_MIXXX_TLOC: Final[str] = "saved_indices_mixxx_location"
-IDX_MIXXX_TANA: Final[str] = "saved_indices_mixxx_analysis"
-
-PLAYER_PATH = "PLAYER_PATH"
+from .close_match_utils import join_close_match
 
 
-pd.set_option("display.max_rows", 100)
+def _check_and_format_df_player(df_player: Table[TrackFixRow]) -> Table[TrackFixRow]:
+    """Check that the provided DataFrame contains the necessary columns
+    and that they are consistent with each other."""
 
+    assert all(Path(r.player_path).is_absolute() for r in df_player)
 
-def _check_and_format_df_player(df_player: pd.DataFrame) -> pd.DataFrame:
-    """Check that the provided DataFrame contains the necessary columns and that they are consistent with each other."""
-    assert all(
-        col in df_player.columns for col in COLS_PERFECT_MATCH
-    ), f"Error: the provided database must contain the following columns for matching: {COLS_PERFECT_MATCH}"
-    assert (
-        PLAYER_PATH in df_player.columns
-    ), "Error: the provided database must contain a 'absolute_path' column with the absolute path of the tracks."
-    #
-    df_player[PLAYER_PATH] = df_player[PLAYER_PATH].apply(file_url_to_path)
-    #
-    check_path = df_player[PLAYER_PATH].iloc[0]
-    assert Path(
-        check_path
-    ).is_absolute(), f"Error: the 'absolute_path' column must contain absolute paths. Here is the first path checked: {check_path}"
     # checking/cleaning missing files
     init_len = len(df_player)
-    df_player = df_player[df_player[PLAYER_PATH].apply(lambda p: Path(p).exists())]
+    df_player = Table(r for r in df_player if Path(r.player_path).exists())
     cleaned_len = len(df_player)
-    assert 0 < cleaned_len, (
-        "Error: the player database is empty after filtering for existing locations."
-        f"Here is the first path checked: {check_path}"
-    )
+    assert (
+        0 < cleaned_len
+    ), "Error: the player database is empty after filtering for existing locations!"
     if cleaned_len < init_len:
-        print(
-            f"Warning: {init_len - cleaned_len} tracks have been removed from the player database "
-            "because their locations do not exist on the filesystem."
+        logging.info(
+            "%d tracks with missing locations have been removed "
+            "from the player database.",
+            init_len - cleaned_len,
         )
     return df_player
 
 
-def _clean_feat(df: pd.DataFrame) -> pd.DataFrame:
+LibOrPlayerRow = TypeVar("LibOrPlayerRow", LibraryRow, TrackFixRow)
+
+
+def _clean_feat(row: LibOrPlayerRow) -> LibOrPlayerRow:
     """Clean the 'feat.' from the artist and title columns of the provided DataFrame."""
-    for col in COLS_CLOSE_MATCH:
-        df.loc[:, col] = df[col].apply(remove_feat)
-    df.loc[:, COLS_CLOSE_MATCH] = df[COLS_CLOSE_MATCH].fillna("")
-    return df
+    row.artist = remove_feat(row.artist)
+    row.title = remove_feat(row.title)
+    return row
 
 
-def _ask_match_index(df_player_nomatch: pd.DataFrame, close_indices: pd.Index) -> str:
-    df_choices = df_player_nomatch.loc[close_indices, COLS_PERFECT_MATCH].reset_index(
-        drop=True
-    )
-    print(f"Available choices:\n{df_choices}")
-    choices = [""] + [str(i) for i in df_choices.index]
-    while True:
-        ans = input(
-            "Please choose an index or leave empty to skip the operation "
-            f"({choices}) : "
-        )
-        if ans in choices:
-            break
-    return ans
+def remove_feat(name: None | str) -> str:
+    if name:
+        return sub(r" \(*f(?:ea)?t\. .+", "", name)
+    return ""
 
 
-def _get_perfect_match(
-    df_mixxx_missing: pd.DataFrame, df_player: pd.DataFrame
-) -> pd.DataFrame:
-    df_match = pd.merge(
-        left=df_player,
-        right=df_mixxx_missing,
-        how="inner",
-        on=None,
-        left_on=COLS_PERFECT_MATCH,
-        right_on=COLS_PERFECT_MATCH,
-        suffixes=["_player", None],
-    )
-    #
-    df_dup = df_match[df_match.duplicated(COLS_PERFECT_MATCH)]
-    if len(df_dup):
-        print(
-            "\nDuplicate (perfect) matches have been found!\n"
-            f"They are likely from duplicated {COLS_PERFECT_MATCH} information in the player database.\n"
-            "Please clean them manually <3\n\n"
-            f"{df_dup[COLS_PERFECT_MATCH]}"
-        )
-        sysexit(47)
+def fix_with_player_db(
+    config: FixTrackPathsUtilsConfig, table_player: Table[TrackFixRow]
+) -> None:
+    """Fix the Mixxx tracks locations using the ones from a music player database."""
 
-    if len(df_match) > 0:
-        print(
-            f"\n{len(df_match)} perfect matches found! They will be automatically fixed.\n",
-            df_match[COLS_PERFECT_MATCH],
-        )
-    return df_match
-
-
-def _get_close_match(
-    config_fix: FixTrackPathsUtilsConfig,
-    df_mixxx_missing: pd.DataFrame,
-    df_player: pd.DataFrame,
-    df_perfect_match: pd.DataFrame,
-) -> pd.DataFrame:
-    # we work on the tracks with no perfect match (nm)
-    df_mixxx_nomatch = df_mixxx_missing.drop(
-        index=pd.Index(df_perfect_match[IDX_MIXXX_LIB])
-    )
-    df_player_nomatch = df_player.drop(index=pd.Index(df_perfect_match[IDX_PLAYER]))
-
-    if len(df_mixxx_nomatch) == 0:
-        return pd.DataFrame()
-
-    print(
-        f"\n\n{len(df_mixxx_nomatch)} tracks have not been found: "
-        "let's find the closest match for each one…"
-    )
-    df_close = [
-        _get_close_track_match(config_fix, track_row, df_player_nomatch)
-        for _, track_row in df_mixxx_nomatch.iterrows()
-    ]
-    return pd.concat(df_close)
-
-
-def _get_close_track_match(
-    config_fix: FixTrackPathsUtilsConfig,
-    track_row: pd.Series,
-    df_player_nomatch: pd.DataFrame,
-) -> pd.DataFrame:
-    print(
-        "\nFinding the closest match for Mixxx entry: \n"
-        f"{track_row[COLS_PERFECT_MATCH].to_frame().T}\n"
-    )
-    close_indices = get_closest_matches_indices(
-        track_row,
-        df_player_nomatch,
-        COLS_CLOSE_MATCH,
-        config_fix.threshold_name_similarity,
-        config_fix.n_similar_track_proposal,
+    # open Mixxx library and keep only the missing tracks (i.e. the ones we want to fix)
+    table_lib = open_mixxx_library(config.mixxx_db, quit_if_duplicates=True)
+    table_loc = open_mixxx_track_locations(
+        config.mixxx_db, existing_tracks=True, missing_tracks=True
     )
 
-    if len(close_indices) == 0:
-        print(
-            f"\tCould not find a track with similar name with actual setting "
-            f"of max similarity distance ({config_fix.threshold_name_similarity})."
+    # open the player database and check that it is consistent with the expected format
+    table_player = _check_and_format_df_player(table_player)
+
+    # we do not want to use good locations of both tables
+    # this avoid unique constraint failing
+    # (probably can remove the check at the opening of the library,
+    #  as it works only with avoiding unique constraint failing with perfect matches)
+    table_loc, table_player = pseudo_inner_join_outer(
+        table_loc,
+        table_player,
+        on_left=("location",),
+        on_right=("player_path",),
+        assert_unique_left=True,
+        assert_unique_right=True,
+    )
+
+    table_lib, table_loc = pseudo_inner_join_product(
+        table_lib,
+        table_loc,
+        on_left=("location",),
+        on_right=("id",),
+        assert_unique_left=True,
+        assert_unique_right=True,
+    )
+
+    if table_lib:
+        logging.info("%d missing tracks found!\n%s", len(table_lib), table_lib)
+    else:
+        logging.info("No missing tracks, congratulation!")
+        return
+
+    # removing the "feat." in  artist and title
+    table_lib = Table(_clean_feat(r) for r in table_lib)
+    table_player = Table(_clean_feat(r) for r in table_player)
+
+    # exact-matching the tracks
+    key_pm = PerfectMatchRow.get_fields()
+    table_lib_pm, table_player_pm = pseudo_inner_join_product(
+        table_lib,
+        table_player,
+        on_left=key_pm,
+        on_right=key_pm,
+        assert_unique_left=True,
+        assert_unique_right=True,
+    )
+    if table_lib_pm:
+        logging.info(
+            "Perfect matches found for the following tracks:\n%s", table_lib_pm
         )
     else:
-        ans = _ask_match_index(df_player_nomatch, close_indices)
-        if ans != "":
-            player_idx = close_indices[int(ans)]
-            track_row[PLAYER_PATH] = df_player_nomatch.loc[player_idx, PLAYER_PATH]
-            return track_row.to_frame().T
+        logging.info("No perfect matches found…")
 
-    return pd.DataFrame()
-
-
-def _update_mixxx_track_location(
-    config_fix: FixTrackPathsUtilsConfig, df_match: pd.DataFrame
-) -> None:
-    df_mixxx_loc = open_mixxx_track_locations(config_fix.mixxx_db)
-    df_mixxx_loc[IDX_MIXXX_TLOC] = df_mixxx_loc.index
-    df_merge = pd.merge(
-        left=df_match,
-        right=df_mixxx_loc,
-        how="inner",
-        on=None,
-        left_on="location",
-        right_on="id",
-        suffixes=["_match", None],
+    # close-matching the remaining tracks
+    table_lib = filter_left_using_right_outer(
+        table_lib, table_lib_pm, on_left=key_pm, on_right=key_pm
     )
+    table_player = filter_left_using_right_outer(
+        table_player, table_player_pm, on_left=key_pm, on_right=key_pm
+    )
+    table_lib_cm, table_player_cm = join_close_match(config, table_lib, table_player)
 
-    df_merge.loc[:, "location"] = df_merge[PLAYER_PATH].values
-    df_merge.loc[:, "filename"] = (
-        df_merge[PLAYER_PATH].apply(lambda x: Path(x).name).values
+    # full matching
+    table_lib = table_lib_pm + table_lib_cm
+    table_player = table_player_pm + table_player_cm
+    if not table_lib:
+        return
+
+    # update track_location
+
+    table_lib_copy = copy(table_lib)
+    table_lib, table_loc = pseudo_inner_join_product(
+        table_lib,
+        table_loc,
+        on_left=("location",),
+        on_right=("id",),
+        assert_unique_left=True,
+        assert_unique_right=True,
     )
-    df_merge.loc[:, "directory"] = (
-        df_merge[PLAYER_PATH].apply(lambda x: Path(x).parent.as_posix()).values
-    )
-    df_merge.loc[:, "fs_deleted"] = 0
-    update_mixxx_db_table(
-        config_fix.mixxx_db,
-        df_merge,
-        "track_locations",
-        set_cols=["location", "filename", "directory", "fs_deleted"],
+    # this test can be removed… let's say in 2027
+    # the obj. is to check table_lib is unchanged
+    # and therefore table_loc is aligned with table_player
+    assert table_lib == table_lib_copy
+
+    for r_loc, r_play in zip(table_loc, table_player):
+        r_loc.location = r_play.player_path
+
+    update_mixxx_db_with_table(
+        db_path=config.mixxx_db,
+        table=table_loc,
+        db_table_name="track_locations",
+        set_cols=["location"],
         where_cols=["id"],
     )
 
+    # delete the gain and key info in the library table
 
-def _update_mixxx_library(
-    config_fix: FixTrackPathsUtilsConfig,
-    df_match: pd.DataFrame,
-) -> None:
-    if not (config_fix.delete_keys or config_fix.delete_gains):
-        return
-    #
-    if config_fix.delete_keys:
-        print(
-            "Deleting keys information corresponding to the updated track locations..."
+    updt_cols = []
+    if config.delete_gains:
+        logging.info("Deleting %d gain info", len(table_lib))
+        for r_lib in table_lib:
+            r_lib.replaygain = 0
+            r_lib.replaygain_peak = -1
+            updt_cols.extend(["replaygain", "replaygain_peak"])
+    if config.delete_keys:
+        logging.info("Deleting %d key info", len(table_lib))
+        for r_lib in table_lib:
+            r_lib.key = ""
+            r_lib.keys = b""
+            r_lib.key_id = 0
+            r_lib.keys_version = ""
+            r_lib.keys_sub_version = ""
+            updt_cols.extend(
+                ["key", "keys", "key_id", "keys_version", "keys_sub_version"]
+            )
+
+    update_mixxx_db_with_table(
+        db_path=config.mixxx_db,
+        db_table_name="library",
+        table=table_lib,
+        set_cols=updt_cols,
+        where_cols=["id"],
+    )
+
+    # delete the waveforms
+
+    if config.delete_waveforms:
+        table_wform = open_mixxx_track_analysis(config.mixxx_db)
+        table_wform = filter_left_using_right(
+            table_wform, table_lib, on_left=("track_id",), on_right=("id",)
         )
-        df_match.loc[:, "key"] = ""
-        df_match.loc[:, "keys"] = b""
-        df_match.loc[:, "key_id"] = 0
-        df_match.loc[:, "keys_version"] = ""
-        df_match.loc[:, "keys_sub_version"] = ""
-        update_mixxx_db_table(
-            config_fix.mixxx_db,
-            df_match,
-            "library",
-            set_cols=["key", "keys", "key_id", "keys_version", "keys_sub_version"],
+        logging.info("Deleting %d waveforms", len(table_wform))
+        dir_ana = Path(config.mixxx_db).parent / "analysis"
+        for r_wform in table_wform:
+            ana_path = dir_ana / f"{r_wform.id}"
+            ana_path.unlink(missing_ok=True)
+
+        delete_rows_mixxx_db_table(
+            db_path=config.mixxx_db,
+            db_table_name="track_analysis",
+            table=table_wform,
             where_cols=["id"],
         )
-
-    if config_fix.delete_gains:
-        print(
-            "Deleting gains information corresponding to the updated track locations..."
-        )
-        df_match.loc[:, "replaygain"] = 0
-        df_match.loc[:, "replaygain_peak"] = -1
-        update_mixxx_db_table(
-            config_fix.mixxx_db,
-            df_match,
-            "library",
-            set_cols=["replaygain", "replaygain_peak"],
-            where_cols=["id"],
-        )
-
-
-def _update_mixxx_analysis(
-    config_fix: FixTrackPathsUtilsConfig,
-    df_match: pd.DataFrame,
-) -> None:
-    if not config_fix.delete_waveforms:
-        return
-    #
-    print("Deleting waveforms corresponding to the updated track locations...")
-    df_mixxx_analysis = open_mixxx_track_analysis(config_fix.mixxx_db)
-    df_mixxx_analysis[IDX_MIXXX_TANA] = df_mixxx_analysis.index
-    df_merge = pd.merge(
-        left=df_match,
-        right=df_mixxx_analysis,
-        how="inner",
-        on=None,
-        left_on="location",
-        right_on="track_id",
-        suffixes=("_match", None),
-    )
-    dir_ana = Path(config_fix.mixxx_db).parent / "analysis"
-    for id_ana in df_merge["id"].values:
-        ana_path = dir_ana / f"{id_ana}"
-        ana_path.unlink(missing_ok=True)
-    delete_rows_mixxx_db_table(
-        config_fix.mixxx_db, df_merge, "track_analysis", where_cols=["id"]
-    )
-
-
-def fix_with_player_db(df_player: pd.DataFrame):
-    """Fix the Mixxx tracks locations using the ones from a music player database."""
-
-    config_fix = get_fix_track_paths_config()
-
-    # open Mixxx library and keep only the missing tracks (i.e. the ones we want to fix)
-    df_mixxx_missing = open_mixxx_library(
-        config_fix.mixxx_db, existing_tracks=False, missing_tracks=True
-    )
-    if len(df_mixxx_missing) == 0:
-        print("No missing tracks, congratulation!")
-        sysexit()
-
-    # open the player database and check that it is consistent with the expected format
-    df_player = _check_and_format_df_player(df_player)
-
-    # removing the "feat." (sometimes in the artist field of one track and the title field of the other)
-    df_mixxx_missing = _clean_feat(df_mixxx_missing)
-    df_player = _clean_feat(df_player)
-
-    # saving the table indices for the "close match" step
-    df_mixxx_missing[IDX_MIXXX_LIB] = df_mixxx_missing.index
-    df_player[IDX_PLAYER] = df_player.index
-
-    # matching the tracks between Mixxx and player
-    df_perfect_match = _get_perfect_match(df_mixxx_missing, df_player)
-    df_close_match = _get_close_match(
-        config_fix, df_mixxx_missing, df_player, df_perfect_match
-    )
-    df_match = pd.concat([df_perfect_match, df_close_match])
-    assert (
-        df_match["location"].duplicated().sum() == 0
-    ), "Error: there are duplicated locations IDs in the matched DataFrame, this should not happen."
-
-    # update Mixxx database
-    create_mixxx_db_backup(config_fix.mixxx_db)
-    _update_mixxx_track_location(config_fix, df_match)
-    _update_mixxx_library(config_fix, df_match)
-    _update_mixxx_analysis(config_fix, df_match)

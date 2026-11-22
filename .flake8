@@ -1,4 +1,13 @@
 [flake8]
+# configurations for compatibility with black:
+# https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#flake8
+#
+# Set the base limit; B950 allows a small margin before reporting long code lines.
 max-line-length = 80
+# Use B950 for line length checks; it can report long docstring lines.
 extend-select = B950
+# Add these exceptions to Flake8's default ignored checks:
+# E203: whitespace before ':' (compatible with Black formatting)
+# E501: standard line-length check, replaced here by B950
+# E701: multiple statements on one line separated by a colon
 extend-ignore = E203,E501,E701

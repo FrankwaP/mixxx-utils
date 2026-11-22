@@ -7,8 +7,8 @@ mixxx_db = "/home/francois/.mixxx/mixxxdb.sqlite"
 # clementine database lcoation
 clem_db = "/home/francois/.config/Clementine/clementine.db"
 
-# Minimum name similarity score required for a potential track match (0-100).
-threshold_name_similarity = 50
+# Maximum distance to consider tracks tags are similar (0-100).
+threshold_name_similarity = 20
 # Number of similar track matches to propose.
 n_similar_track_proposal = 3
 # Changing a track's file can affect its key, gain, and waveform.
