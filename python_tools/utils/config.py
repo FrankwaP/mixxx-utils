@@ -71,29 +71,36 @@ class FixTrackPathsUtilsConfig(_MyBaseModel):
     delete_waveforms: bool = True
 
 
-def _get_config_path(config_file: str, config_env_var: str) -> Path:
-    if config_env_var in os.environ:
-        config_path = Path(os.environ[config_env_var])
-        if not config_path.exists():
-            raise FileNotFoundError(
-                f"The file defined in {config_env_var} environment variable "
-                f" does not exist: {config_path}"
-            )
-        print(
-            f"Reading the config file defined in {config_env_var} "
-            f"environment variable: {config_path}"
-        )
-    else:
-        # https://nuitka.net/user-documentation/common-issue-solutions.html#onefile-finding-files
-        config_path = Path(sys.argv[0]).parent / config_file
-        if not config_path.exists():
-            raise FileNotFoundError(
-                "No config file detected either using:\n",
-                f" - a path specified in the {config_env_var} environment variable\n",
-                f" - or the path {config_path}",
-            )
-        logging.info(f"Reading the config file {config_path}")
-    return config_path
+def get_mixxx_to_rekordbox_config() -> MixxxToRekordboxConfig:
+    return _get_and_check_config(
+        MIXXX_TO_REKORDBOX_CONFIG_FILE,
+        MIXXX_TO_REKORDBOX_CONFIG_ENV_VAR,
+        MixxxToRekordboxConfig,
+    )
+
+
+def get_mixxx_to_rekordbox_compare_config() -> MixxxToRekordboxCompareConfig:
+    return _get_and_check_config(
+        MIXXX_TO_REKORDBOX_COMPARE_CONFIG_FILE,
+        MIXXX_TO_REKORDBOX_COMPARE_CONFIG_ENV_VAR,
+        MixxxToRekordboxCompareConfig,
+    )
+
+
+def get_snap_cues_config() -> SnapCuesConfig:
+    return _get_and_check_config(
+        SNAP_CUES_CONFIG_FILE,
+        SNAP_CUES_CONFIG_ENV_VAR,
+        SnapCuesConfig,
+    )
+
+
+def get_fix_track_paths_config() -> FixTrackPathsUtilsConfig:
+    return _get_and_check_config(
+        FIX_TRACK_PATHS_CONFIG_FILE,
+        FIX_TRACK_PATHS_CONFIG_ENV_VAR,
+        FixTrackPathsUtilsConfig,
+    )
 
 
 def _err_msg(err: ErrorDetails) -> str:
@@ -105,17 +112,47 @@ def _err_msg(err: ErrorDetails) -> str:
 TConfig = TypeVar("TConfig", bound=_MyBaseModel)
 
 
-def _get_config(
-    config_file: str,
-    config_env_var: str,
-    model: type[TConfig],
+def _get_config(config_file: str, config_env_var: str, model: type[TConfig]) -> TConfig:
+    # https://nuitka.net/user-documentation/common-issue-solutions.html#onefile-finding-files
+    root_path = Path(sys.argv[0]).parent
+    log_path = Path(sys.argv[0]).with_suffix(".log")
+    if config_env_var in os.environ:
+        config_path = Path(os.environ[config_env_var])
+        try:
+            toml = tomllib.loads(config_path.read_text())
+            config = model.model_validate(toml)
+            _set_logging_level(config, log_path)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"The file defined in {config_env_var} environment variable "
+                f" does not exist: {config_path}"
+            )
+        logging.info(
+            "Reading the config file defined in %s environment variable %s",
+            config_env_var,
+            config_path,
+        )
+    else:
+        config_path = root_path / config_file
+        try:
+            toml = tomllib.loads(config_path.read_text())
+            config = model.model_validate(toml)
+            _set_logging_level(config, log_path)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                "No config file detected either using:\n",
+                f" - a path specified in the {config_env_var} environment variable\n",
+                f" - or the path {config_path}",
+            )
+        logging.info(f"Reading the config file {config_path}")
+    return config
+
+
+def _get_and_check_config(
+    config_file: str, config_env_var: str, model: type[TConfig]
 ) -> TConfig:
-    config_path = _get_config_path(config_file, config_env_var)
-    toml = tomllib.loads(config_path.read_text())
+    config = _get_config(config_file, config_env_var, model)
     try:
-        config = model.model_validate(toml)
-        log_path = Path(sys.argv[0]).parent / Path(config_file).with_suffix(".log")
-        _set_logging_level(config, log_path)
         if config.confirm_config:
             _confirm_config(config)
         return config
@@ -123,38 +160,6 @@ def _get_config(
         raise ValueError(
             "Invalid configuration" + "".join(_err_msg(e) for e in err.errors())
         ) from None
-
-
-def get_mixxx_to_rekordbox_config() -> MixxxToRekordboxConfig:
-    return _get_config(
-        MIXXX_TO_REKORDBOX_CONFIG_FILE,
-        MIXXX_TO_REKORDBOX_CONFIG_ENV_VAR,
-        MixxxToRekordboxConfig,
-    )
-
-
-def get_mixxx_to_rekordbox_compare_config() -> MixxxToRekordboxCompareConfig:
-    return _get_config(
-        MIXXX_TO_REKORDBOX_COMPARE_CONFIG_FILE,
-        MIXXX_TO_REKORDBOX_COMPARE_CONFIG_ENV_VAR,
-        MixxxToRekordboxCompareConfig,
-    )
-
-
-def get_snap_cues_config() -> SnapCuesConfig:
-    return _get_config(
-        SNAP_CUES_CONFIG_FILE,
-        SNAP_CUES_CONFIG_ENV_VAR,
-        SnapCuesConfig,
-    )
-
-
-def get_fix_track_paths_config() -> FixTrackPathsUtilsConfig:
-    return _get_config(
-        FIX_TRACK_PATHS_CONFIG_FILE,
-        FIX_TRACK_PATHS_CONFIG_ENV_VAR,
-        FixTrackPathsUtilsConfig,
-    )
 
 
 def _set_logging_level(config: _MyBaseModel, log_path: Path) -> None:
@@ -167,7 +172,14 @@ def _set_logging_level(config: _MyBaseModel, log_path: Path) -> None:
         level = logging.WARNING
     elif loglev == "error":
         level = logging.ERROR
-    logging.basicConfig(level=level, filename=log_path)
+    logging.basicConfig(
+        level=level,
+        handlers=[
+            logging.FileHandler(log_path, encoding="utf-8"),
+            logging.StreamHandler(),
+        ],
+        force=True,
+    )
 
 
 def _pprint(config_dict: dict, indent=0) -> None:

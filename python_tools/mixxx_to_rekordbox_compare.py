@@ -111,7 +111,7 @@ def _write_new_playlist(
         encoding="utf-8",
         xml_declaration=True,
     )
-    print(
+    logging.info(
         f"A new playlist {mtr_config.playlist_updated_tracks} has been added to "
         f"the Mixxx to Rekordbox XML file {mtr_config.mixxx_to_rekordbox_xml}."
     )
@@ -138,5 +138,5 @@ def main():
             logging.info("This track is updated: %s", match_key)
             track_ids.append(tracks_ids_mixxx[match_key])
 
-    print(f"After combining, {len(track_ids)} tracks need to be (re-)imported")
+    logging.info("After combining, %d tracks need to be (re-)imported.", len(track_ids))
     _write_new_playlist(mtr_config, track_ids)
