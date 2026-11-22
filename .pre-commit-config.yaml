@@ -36,6 +36,7 @@ repos:
     rev: 7.3.0
     hooks:
     -   id: flake8
+        additional_dependencies: [flake8-bugbear]
 -   repo: https://github.com/sqlfluff/sqlfluff
     rev: 3.0.7
     hooks:
