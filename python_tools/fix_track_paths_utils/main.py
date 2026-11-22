@@ -11,12 +11,7 @@ from ..utils.dataclasses_operations_utils import (
     pseudo_inner_join_outer,
     pseudo_inner_join_product,
 )
-from ..utils.dataclasses_utils import (
-    LibraryRow,
-    PerfectMatchRow,
-    Table,
-    TrackFixRow,
-)
+from ..utils.dataclasses_utils import LibraryRow, PerfectMatchRow, Table, TrackFixRow
 from ..utils.music_db_utils_no_pandas import (
     delete_rows_mixxx_db_table,
     open_mixxx_library,

@@ -11,10 +11,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 
 from .mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
 from .mixxx_to_rekordbox_utils.xml_utils import AttribDict, get_elem
-from .utils.config import (
-    MixxxToRekordboxConfig,
-    get_mixxx_to_rekordbox_config,
-)
+from .utils.config import MixxxToRekordboxConfig, get_mixxx_to_rekordbox_config
 from .utils.dataclasses_operations_utils import (
     filter_left_using_right,
     get_match_key,

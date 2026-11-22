@@ -6,10 +6,9 @@ readme = {file = "README.md", content-type = "text/markdown"}
 keywords = ["mixxx", "rekordbox", "export", "tools"]
 
 [tool.mypy]
-exclude = '^python_tools/utils/proto/keys_pb2\.py$'
+exclude = '^python_tools/utils/proto/'
 check_untyped_defs = true
 show_traceback = true
-no_incremental = true
 
 [tool.pytest.ini_options]
 pythonpath = '.'

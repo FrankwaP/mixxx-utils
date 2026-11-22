@@ -64,9 +64,10 @@ repos:
     - id: mypy
       name: mypy
       entry: mypy
+      args: [.]
       language: system
       types: [python]
-      pass_filenames: true
+      pass_filenames: false
       always_run: false
 - repo: local  # use requirements-pip-dev.txt
   hooks:
@@ -76,6 +77,7 @@ repos:
       language: system
       types: [python]
       pass_filenames: true
+      require_serial: true
       always_run: false
 - repo: local
   hooks:
