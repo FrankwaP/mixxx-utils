@@ -32,11 +32,12 @@ repos:
 #     rev: v1.19.1
 #     hooks:
 #     -   id: mypy
--   repo: https://github.com/pycqa/flake8
-    rev: 7.3.0
-    hooks:
-    -   id: flake8
-        additional_dependencies: [flake8-bugbear]
+#   I run it locally else I have to define the stubs here AND in the requirements (and I don't like the idea)
+# -   repo: https://github.com/pycqa/flake8
+#     rev: 7.3.0
+#     hooks:
+#     -   id: flake8
+#         additional_dependencies: [flake8-bugbear]
 -   repo: https://github.com/sqlfluff/sqlfluff
     rev: 3.0.7
     hooks:
@@ -58,11 +59,21 @@ repos:
       - id: isort
         name: isort (python)
 # local runs
-- repo: local  # use requirements-pip-mypy.txt
+- repo: local  # use requirements-pip-dev.txt
   hooks:
     - id: mypy
       name: mypy
       entry: mypy
+      language: system
+      types: [python]
+      pass_filenames: true
+      always_run: false
+      stages: [pre-commit]
+- repo: local  # use requirements-pip-dev.txt
+  hooks:
+    - id: flake8
+      name: flake8
+      entry: flake8
       language: system
       types: [python]
       pass_filenames: true
