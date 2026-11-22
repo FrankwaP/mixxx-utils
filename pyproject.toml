@@ -9,6 +9,7 @@ keywords = ["mixxx", "rekordbox", "export", "tools"]
 exclude = '^python_tools/utils/proto/keys_pb2\.py$'
 check_untyped_defs = true
 show_traceback = true
+no_incremental = true
 
 [tool.pytest.ini_options]
 pythonpath = '.'
