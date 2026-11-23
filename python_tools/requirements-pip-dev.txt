@@ -2,7 +2,6 @@
 
 mypy
 types-protobuf
-pandas-stubs
 types-tqdm
 
 flake8
