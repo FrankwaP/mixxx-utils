@@ -1,24 +1,27 @@
 # mixxx-utils
 
-This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx) and its database.
-They are stored in language specific "*language*-tools" folders.
+This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx)
+and its database. They are stored in language specific "*language*-tools"
+folders.
 
-They work on Linux. For Windows there might be a few adaptations needed to make it work…
-I'm all ears.
+They work on Linux. For Windows there might be a few adaptations needed to make
+it work… I'm all ears.
 
 **IMPORTANT**: Mixxx's database might need to be fixed so the Python tools work.
 Please see the [fix_mixxx_db.md](fix_mixxx_db.md) file.
 
-**NOTE TO DEVELOPERS**: There is an additional requirements file (`python_tools/requirements-pip-dev.txt`).
-After installing the requirements, please run `pre-commit install` to prepare the different "hooks" that will be executed when you commit stuff.
-**Watch out** as one hook enforces to not commit on the `main` branch so start by creating a branch to work in it!
-
+**NOTE TO DEVELOPERS**: There is an additional requirements file
+(`python_tools/requirements-pip-dev.txt`). After installing the requirements,
+please run `pre-commit install` to prepare the different "hooks" that will be
+executed when you commit stuff. **Watch out** as one hook enforces to not commit
+on the `main` branch so start by creating a branch to work in it!
 
 ## Python tools
 
 ### Configuration
 
-Each executable uses a separate TOML configuration file. For each this file, you can either:
+Each executable uses a separate TOML configuration file. For each this file, you
+can either:
 
 - set the corresponding environement variable to declare its full path
 - or simply place it:
@@ -32,53 +35,63 @@ Here is the list of the configuration file with their environment variable:
 - `snap_cues.toml`: `SNAP_CUES_CONF`
 - `fix_track_paths.toml`: `FIX_TRACK_PATHS_CONF`
 
-
 ### Tools with a Linux/Windows binary executables
 
-You will find the executables for Linux (`.bin` files) and Windows (`.exe` files) in the [release](https://github.com/FrankwaP/mixxx-utils/releases).
+You will find the executables for Linux (`.bin` files) and Windows (`.exe`
+files) in the [release](https://github.com/FrankwaP/mixxx-utils/releases).
 
-`mixxx_to_rekordbox_xml` exports your Mixxx library into the [Rekordbox XML format](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf) and
-**YES IT EXPORTS THE PLAYLISTS, HOT CUES, BEATGRIDS, COLORS, RATING/ENERGY** :-)
-Then you can import the XML file in Rekordbox to prepare a USB key (no license needed).
-Please read the [README](python_tools/mixxx_to_rekordbox_utils/README.md) for more details.
+`mixxx_to_rekordbox_xml` exports your Mixxx library into the
+[Rekordbox XML format](https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf)
+and **YES IT EXPORTS THE PLAYLISTS, HOT CUES, BEATGRIDS, COLORS, RATING/ENERGY**
+:-) Then you can import the XML file in Rekordbox to prepare a USB key (no
+license needed). Please read the
+[README](python_tools/mixxx_to_rekordbox_utils/README.md) for more details.
 
-`mixxx_to_rekordbox_xml_compare` creates a Rekordbox playlist with the tracks updated in Mixxx
-since the last Mixxx to Rekordbox import. This makes updating tracks, tempo or cues information very simple and fast.
-Please read the [README](python_tools/mixxx_to_rekordbox_compare_utils/README.md) for more details.
+`mixxx_to_rekordbox_xml_compare` creates a Rekordbox playlist with the tracks
+updated in Mixxx since the last Mixxx to Rekordbox import. This makes updating
+tracks, tempo or cues information very simple and fast. Please read the
+[README](python_tools/mixxx_to_rekordbox_compare_utils/README.md) for more
+details.
 
 `snap_cues` snaps all the cue points to the closest beat.
 
-
 ### Tools without binary executable (yet?)
 
+`cue_to_tracklist.py` is a Python tool to generate the tracklist corresponding
+to the cue file automatically generated when recording a mix on Mixxx, so you
+can add it in the description of the Soundcloud/Youtube/… page.
 
-`cue_to_tracklist.py` is a Python tool to generate the tracklist corresponding to the cue file
-automatically generated when recording a mix on Mixxx, so you can add it in the description of the Soundcloud/Youtube/… page.
-
-`fix_track_paths.py` is a Python tool to fix the tracks paths, using the informations from your music player database.
-It is useful when the file has been renamed or if the track is now in another format
-(for example you wanted a better quality format and went from a mp3 to a flac file).
-It works with Clementine's database so far, but it won't be hard to add other players' databases.
+`fix_track_paths.py` is a Python tool to fix the tracks paths, using the
+informations from your music player database. It is useful when the file has
+been renamed or if the track is now in another format (for example you wanted a
+better quality format and went from a mp3 to a flac file). It works with
+Clementine's database so far, but it won't be hard to add other players'
+databases.
 
 ## SQL tools
 
+I personally use [DB Browser for SQLite](https://sqlitebrowser.org/) aka
+`sqlitebrowser`. Open the database, then go to "Execute SQL" and copy-paste the
+commands from the script.
 
-I personally use [DB Browser for SQLite](https://sqlitebrowser.org/) aka `sqlitebrowser`. Open the database, then go to "Execute SQL" and copy-paste the commands from the script.
+`delete_old_keys.sql` is used when you want to delete keys that were calculated
+with a specific detector. I used it because I had a mix of keys calculated with
+"Queen Mary (qm-keydetector)" and "KeyFinder", and I selectively deleted the QM
+keys so they could be recalculated with KF.
 
+`fix_convert_keys_to_lancelot.sql` is used to change the stored keys formats
+from standard ("BMaj") to Lancelot/Camelot ("1B").
 
-`delete_old_keys.sql` is used when you want to delete keys that were calculated with a specific detector.
-I used it because I had a mix of keys calculated with "Queen Mary (qm-keydetector)" and "KeyFinder",
-and I selectively deleted the QM keys so they could be recalculated with KF.
-
-`fix_convert_keys_to_lancelot.sql` is used to change the stored keys formats from standard ("BMaj") to Lancelot/Camelot ("1B").
-
-`fix_false_missing_tracks.sql` is useful when Mixxx incorrectly detects tracks as missing
-(you can still use them with a drag-and-drop from the library). It simply resets all the "missing" field.
-
+`fix_false_missing_tracks.sql` is useful when Mixxx incorrectly detects tracks
+as missing (you can still use them with a drag-and-drop from the library). It
+simply resets all the "missing" field.
 
 ## Bash tools
 
-`mixxx_prepare.sh` uses the commands recommended in the [wiki](https://github.com/mixxxdj/mixxx/wiki/Adjusting%20Audio%20Latency)
-in order to minimize the latency problems in Linux. I call it before launching Mixxx (at least for live mixing).
+`mixxx_prepare.sh` uses the commands recommended in the
+[wiki](https://github.com/mixxxdj/mixxx/wiki/Adjusting%20Audio%20Latency) in
+order to minimize the latency problems in Linux. I call it before launching
+Mixxx (at least for live mixing).
 
-`mixxx_compile.sh` uses the commands I use to compile my git forks on my Ubuntu (should work on Debian too).
+`mixxx_compile.sh` uses the commands I use to compile my git forks on my Ubuntu
+(should work on Debian too).

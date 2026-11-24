@@ -43,12 +43,10 @@ repos:
     hooks:
     -   id: sqlfluff-lint
         args: [--dialect, sqlite]
--   repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.47.0
+-   repo: https://github.com/hukkin/mdformat
+    rev: 1.0.0
     hooks:
-    -   id: markdownlint-fix
-        files: '.*\.md'
-        args: [--disable, MD013]
+      - id: mdformat
 -   repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
     hooks:
