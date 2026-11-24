@@ -11,7 +11,7 @@ from ..utils.dataclasses_operations_utils import (
     pseudo_inner_join_outer,
     pseudo_inner_join_product,
 )
-from ..utils.dataclasses_utils import LibraryRow, PerfectMatchRow, Table, TrackFixRow
+from ..utils.dataclasses_utils import LibraryRow, Table
 from ..utils.music_db_utils_no_pandas import (
     delete_rows_mixxx_db_table,
     open_mixxx_library,
@@ -20,6 +20,7 @@ from ..utils.music_db_utils_no_pandas import (
     update_mixxx_db_with_table,
 )
 from .close_match_utils import join_close_match
+from .dataclasses_utils import PerfectMatchRow, TrackFixRow
 
 
 def _check_and_format_df_player(df_player: Table[TrackFixRow]) -> Table[TrackFixRow]:

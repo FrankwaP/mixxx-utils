@@ -5,7 +5,7 @@ from collections import Counter
 from pathlib import Path
 from shutil import copy
 from time import strftime
-from typing import Final, Tuple
+from typing import Final
 from urllib.parse import unquote
 
 from .dataclasses_operations_utils import get_match_key
@@ -17,10 +17,10 @@ from .dataclasses_utils import (
     PlaylistRow,
     PlaylistTrackRow,
     Row,
-    RowTypes,
     Table,
     TrackAnalysisRow,
     TrackLocationsRow,
+    TypeRow,
 )
 
 # columns used to relate the Mixxx and music player databases
@@ -48,30 +48,26 @@ def propose_fix_foreign_key_constraints(db_path: Path) -> None:
     fix_foreign_key_constraints(db_path)
 
 
-def _read_table(db_path: Path, query: str, row_type: type[Row]) -> Table[Row]:
+def _read_table(db_path: Path, query: str, row_type: type[TypeRow]) -> Table[TypeRow]:
 
     # https://www.zetcode.com/python/sqlite3-connection-row-factory/
-    def dict_factory(cursor, row) -> RowTypes:
+    def dict_factory(cursor, row) -> Row:
         # Delete duplicate columns created by JOIN
         # The user must define aliases to still access the column
         names = [column[0] for column in cursor.description]
         return row_type(**{name: row[index] for index, name in enumerate(names)})
 
-    class UserListCursor(sqlite3.Cursor):
-        def fetchall(self):
-            return Table(super().fetchall())
-
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = dict_factory
-        cursor = conn.cursor(factory=UserListCursor)
+        cursor = conn.cursor()
         results = cursor.execute(query)
-        return results.fetchall()
+        return Table(results.fetchall())
 
 
 def fix_foreign_key_constraints(db_path: Path) -> None:
     """Fix incorrect foreign key constraints in the database."""
     create_mixxx_db_backup(db_path)
-    logging.info(f"Fixing foreign key constraints in database: {db_path}")
+    logging.info("Fixing foreign key constraints in database: %", db_path)
 
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
@@ -95,9 +91,9 @@ def fix_foreign_key_constraints(db_path: Path) -> None:
         new_schema = schema.replace('REFERENCES "library_old"', 'REFERENCES "library"')
         new_table = f"{table}_new"
         cursor.execute(new_schema.replace(table, new_table))
-        cursor.execute(f"INSERT INTO {new_table} " f"SELECT * FROM {table};")
+        cursor.execute(f"INSERT INTO {new_table} SELECT * FROM {table};")
         cursor.execute(f"DROP TABLE {table};")
-        cursor.execute(f"ALTER TABLE {new_table} " f"RENAME TO {table};")
+        cursor.execute(f"ALTER TABLE {new_table} RENAME TO {table};")
 
     cursor.execute("PRAGMA foreign_keys = ON;")
     connection.commit()
@@ -105,8 +101,8 @@ def fix_foreign_key_constraints(db_path: Path) -> None:
 
 
 def _read_table_error_handling(
-    db_path: Path, query: str, row_type: type[Row]
-) -> Table[Row]:
+    db_path: Path, query: str, row_type: type[TypeRow]
+) -> Table[TypeRow]:
     """Read a table as a list of dictionaries (the pandas-free row format)."""
     try:
         return _read_table(db_path, query, row_type)
@@ -117,7 +113,9 @@ def _read_table_error_handling(
         return _read_table(db_path, query, row_type)
 
 
-def _open_table(db_path: Path, table_name: str, row_type: type[Row]) -> Table[Row]:
+def _open_table(
+    db_path: Path, table_name: str, row_type: type[TypeRow]
+) -> Table[TypeRow]:
     query = f"SELECT * FROM {table_name}"
     return _read_table_error_handling(db_path, query, row_type)
 
@@ -195,7 +193,7 @@ def open_mixxx_playlists_with_tracks(
     filter_hidden: bool,
     add_crates_as_playlist: bool,
     crate_suffix: str,
-) -> Tuple[Table[PlaylistRow], Table[PlaylistTrackRow]]:
+) -> tuple[Table[PlaylistRow], Table[PlaylistTrackRow]]:
     # this tool is used to handle adding crates as playlist
     rows_playlists = _open_mixxx_playlists(db_path, filter_hidden)
     rows_playlist_tracks = _open_mixxx_playlist_tracks(db_path)
@@ -310,7 +308,7 @@ def _get_table_column_names(db_path: Path, table_name: str) -> list[str]:
 def _check_db_table_and_table(
     db_path: Path,
     db_table_name: str,
-    table: Table[Row],
+    table: Table[TypeRow],
     set_cols: list[str],
     where_cols: list[str],
 ) -> None:
@@ -328,7 +326,7 @@ def update_mixxx_db_with_table(
     *,
     db_path: Path,
     db_table_name: str,
-    table: Table[Row],
+    table: Table[TypeRow],
     set_cols: list[str],
     where_cols: list[str],
 ) -> None:
@@ -360,7 +358,7 @@ def delete_rows_mixxx_db_table(
     *,
     db_path: Path,
     db_table_name: str,
-    table: Table[Row],
+    table: Table[TypeRow],
     where_cols: list[str],
 ) -> None:
     _check_db_table_and_table(db_path, db_table_name, table, [], where_cols)

@@ -5,7 +5,8 @@ from typing import Optional
 from jellyfish import levenshtein_distance
 
 from ..utils.config import FixTrackPathsUtilsConfig
-from ..utils.dataclasses_utils import CloseMatchRow, LibraryRow, Table, TrackFixRow
+from ..utils.dataclasses_utils import LibraryRow, Table
+from .dataclasses_utils import CloseMatchRow, TrackFixRow
 
 
 def _rows_levenshtein_distance(row1: LibraryRow, row2: TrackFixRow) -> int:
@@ -16,7 +17,7 @@ def _rows_levenshtein_distance(row1: LibraryRow, row2: TrackFixRow) -> int:
 
 
 def _ask_match_index(row_lib: LibraryRow, table_player_cm: Table[TrackFixRow]) -> str:
-    print("\nFinding the closest match for Mixxx entry: \n" f"{row_lib}\n")
+    print(f"\nFinding the closest match for Mixxx entry: \n{row_lib}\n")
     print("Available choices:")
     print(table_player_cm)
     choices = [""] + [str(i) for i in range(len(table_player_cm))]
