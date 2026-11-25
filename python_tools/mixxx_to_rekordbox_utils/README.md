@@ -24,14 +24,15 @@ from recomputing these, going to "settings > analysis" to:
 - untick BPM/key/etc...
 - (don't worry the waveform will still be computed during the export)
 
-### Import In the navigation panel of Rekordbox.
+### Import In the navigation panel of Rekordbox
 
 1. Refresh the XML information.
 2. Right-click on the main playlist field and import all the playlists.
 3. The new tracks will be imported by this process… but the modified ones won't,
    so you need to right click and import them. How to remember which tracks are
    updated? And how to quickly select them? Well someone very kind has written
-   the `mixxx_to_rekordbox_compare` tool and you should have a look.
+   the `mixxx_to_rekordbox_compare` utility and you should have a look at it
+   [READMDE](../mixxx_to_rekordbox_compare_utils/READMDE.md).
 
 ## Exporting the Rekordbox collection to a USB device
 
@@ -43,11 +44,14 @@ tracks from the USB key… before writing them again. And it will do it so slowl
 that it's embarrassing. (You'd better off deleting the `export.pdb` file
 directly…)
 
-So I recommend you simply right-click on the playlists you want to export in
-Rekordbox collection, and export to the USB device.
+So I recommend you simply use "right-click > export".
 
-If you have a lot of playlists, you might want to know which playlist has been
-updated… and yes `mixxx_to_rekordbox_compare` will be helpful.
+The fastest will be to export all your playlists (at once).
+
+If you want to export some of your playlists, I think the fastest way is to
+delete the playlists you do not want to export from Rekordbox library (it will
+not delete the tracks), so you can export all your playlists at once. If you
+find a faster workflow, please let me know.
 
 ## Updating the tracks
 
@@ -87,7 +91,7 @@ Windows:
 2. Having your music on an external drive.
 
 In both cases **make sure that Windows will give the same letter to the drive
-each time!** (you can do it in *Disk Management*). Else each time the drive
+each time!** (you can do it in _Disk Management_). Else each time the drive
 letter changes (let's say from `D:` to `E:`), your songs will be considered as
 new ones, and Rekordbox will analyse them once again: you'll end up with one
 analysis for `D:\some_track` and one analysis for `E:\some_track`.
