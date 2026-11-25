@@ -52,8 +52,6 @@ def _read_table(db_path: Path, query: str, row_type: type[TypeRow]) -> Table[Typ
 
     # https://www.zetcode.com/python/sqlite3-connection-row-factory/
     def dict_factory(cursor, row) -> Row:
-        # Delete duplicate columns created by JOIN
-        # The user must define aliases to still access the column
         names = [column[0] for column in cursor.description]
         return row_type(**{name: row[index] for index, name in enumerate(names)})
 
