@@ -50,8 +50,9 @@ The fastest will be to export all your playlists (at once).
 
 If you want to export some of your playlists, I think the fastest way is to
 delete the playlists you do not want to export from Rekordbox library (it will
-not delete the tracks), so you can export all your playlists at once. If you
-find a faster workflow, please let me know.
+not delete the tracks), so you can export all your playlists at once. To delete
+a playlist, use "click on the playlist > press delete key/ press enter key". If
+you find a faster workflow, please let me know.
 
 ## Updating the tracks
 
