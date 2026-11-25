@@ -1,10 +1,7 @@
 import logging
 import xml.etree.ElementTree as ET
 
-from .mixxx_to_rekordbox_compare_utils.dataclasses_utils import (
-    XmlTrackRow,
-    XmlTrackTable,
-)
+from .mixxx_to_rekordbox_compare_utils.dataclasses_utils import XmlTrackTable
 from .utils.config import (
     MixxxToRekordboxCompareConfig,
     get_mixxx_to_rekordbox_compare_config,
@@ -13,7 +10,6 @@ from .utils.dataclasses_operations_utils import (
     filter_left_using_right_outer,
     pseudo_inner_join_product,
 )
-from .utils.dataclasses_utils import Table
 
 
 def _write_new_playlist(
@@ -76,7 +72,7 @@ def main():
         assert_unique_right=True,
     )
 
-    table_updated = Table[XmlTrackRow](t_m for t_m, t_r in zip(t_m, t_r) if t_m != t_r)
+    table_updated = XmlTrackTable(t_m for t_m, t_r in zip(t_m, t_r) if t_m != t_r)
 
     for t_updt in table_updated:
         logging.info("Updated track found: %s", t_updt)
