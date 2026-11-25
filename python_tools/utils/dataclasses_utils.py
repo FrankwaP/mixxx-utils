@@ -10,8 +10,9 @@ class Row:
     def get_fields(cls) -> tuple[str, ...]:
         return tuple(f.name for f in fields(cls))
 
-    def get_print_fields(self) -> tuple[str, ...]:
-        return self.get_fields()
+    @classmethod
+    def get_print_fields(cls) -> tuple[str, ...]:
+        return cls.get_fields()
 
     def __str__(self) -> str:
         return "  " + " | ".join(
@@ -71,7 +72,8 @@ class LibraryRow(Row):
     source_synchronized_ms: int | None
     tuning_frequency_hz: float | None
 
-    def get_print_fields(self) -> tuple:
+    @classmethod
+    def get_print_fields(cls) -> tuple:
         return ("artist", "title", "album")
 
 
@@ -86,7 +88,8 @@ class TrackLocationsRow(Row):
     needs_verification: int | None
     saved_indices_mixxx_location: int | None
 
-    def get_print_fields(self) -> tuple:
+    @classmethod
+    def get_print_fields(cls) -> tuple:
         return ("location",)
 
 
