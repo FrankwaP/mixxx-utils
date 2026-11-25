@@ -1,10 +1,9 @@
-import logging
 from math import prod
 from typing import Optional
 
 from jellyfish import levenshtein_distance
 
-from ..utils.config import FixTrackPathsUtilsConfig
+from ..utils.config import FixTrackPathsUtilsConfig, logger
 from ..utils.dataclasses_utils import LibraryRow, Table
 from .dataclasses_utils import CloseMatchRow, TrackFixRow
 
@@ -45,7 +44,7 @@ def _indice_close_match(
         (i, j) for i, j in idx_and_dist if j < config.threshold_name_similarity
     ]
     if not idx_and_dist_close:
-        logging.info(
+        logger.info(
             "No close match found using a max distance of %f for track:\n%s",
             config.threshold_name_similarity,
             row_lib,
@@ -55,7 +54,7 @@ def _indice_close_match(
     idx_and_dist_close = idx_and_dist_close[: config.n_similar_track_proposal]
 
     if len(idx_and_dist_close) == 0:
-        logging.warning("Could not find a similar track for track %s\n", row_lib)
+        logger.warning("Could not find a similar track for track %s\n", row_lib)
     else:
         idx = [i for i, j in idx_and_dist_close]
         ans = _ask_match_index(row_lib, Table(df_player[i] for i in idx))

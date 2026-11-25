@@ -1,4 +1,3 @@
-import logging
 import sqlite3
 import sys
 from collections import Counter
@@ -8,6 +7,7 @@ from time import strftime
 from typing import Final
 from urllib.parse import unquote
 
+from .config import logger
 from .dataclasses_operations_utils import get_match_key
 from .dataclasses_utils import (
     CrateRow,
@@ -65,7 +65,7 @@ def _read_table(db_path: Path, query: str, row_type: type[TypeRow]) -> Table[Typ
 def fix_foreign_key_constraints(db_path: Path) -> None:
     """Fix incorrect foreign key constraints in the database."""
     create_mixxx_db_backup(db_path)
-    logging.info("Fixing foreign key constraints in database: %", db_path)
+    logger.info("Fixing foreign key constraints in database: %", db_path)
 
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
@@ -79,7 +79,7 @@ def fix_foreign_key_constraints(db_path: Path) -> None:
     tables_to_fix = [row[0] for row in cursor.fetchall()]
 
     for table in tables_to_fix:
-        logging.info(f"Fixing foreign key constraints in table: {table}")
+        logger.info(f"Fixing foreign key constraints in table: {table}")
         cursor.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name=?;",
             (table,),
@@ -135,7 +135,7 @@ def _filter_stems(rows: Table[LibraryRow]) -> Table[LibraryRow]:
     out = Table(r for r in rows if r.comment is None or "stem" not in r.comment.lower())
     diff = len(rows) - len(out)
     if diff:
-        logging.info("Filtered out %d tracks with STEM in comments", diff)
+        logger.info("Filtered out %d tracks with STEM in comments", diff)
     return out
 
 
@@ -156,10 +156,10 @@ def open_mixxx_track_locations(
         return rows
     if existing_tracks:
         word = "missing"
-        log = logging.warning
+        log = logger.warning
     elif missing_tracks:
         word = "existing"
-        log = logging.debug
+        log = logger.debug
     else:
         raise RuntimeError("You do not want to return existing nor missing tracks ?!")
 
@@ -291,7 +291,7 @@ def create_mixxx_db_backup(db_path: Path) -> None:
     now = strftime("%y%m%d.%H%M%S")
     backup = db_path.with_suffix(db_path.suffix + ".bak." + now)
     copy(db_path, backup)
-    logging.info(f"Backup created: {backup}")
+    logger.info(f"Backup created: {backup}")
 
 
 def _get_table_column_names(db_path: Path, table_name: str) -> list[str]:

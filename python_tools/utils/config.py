@@ -1,7 +1,16 @@
-import logging
 import os
 import sys
 import tomllib
+from logging import (
+    DEBUG,
+    ERROR,
+    INFO,
+    WARNING,
+    FileHandler,
+    StreamHandler,
+    basicConfig,
+    getLogger,
+)
 from pathlib import Path, PureWindowsPath
 from typing import Annotated, Literal, TypeVar
 
@@ -22,13 +31,15 @@ SNAP_CUES_CONFIG_ENV_VAR = "SNAP_CUES_CONF"
 FIX_TRACK_PATHS_CONFIG_FILE = "fix_track_paths.toml"
 FIX_TRACK_PATHS_CONFIG_ENV_VAR = "FIX_TRACK_PATHS_CONF"
 
+logger = getLogger(__name__)
+
 
 def _resolve(path: Path) -> Path:
     return path.resolve()
 
 
 class _MyBaseModel(BaseModel):
-    model_config = {"extra": "forbid"}
+    model_config = {"extra": "forbid"}  # pydantic stuff
     confirm_config: bool = True
     logging_level: Literal["debug", "info", "warning", "error"] = "info"
 
@@ -127,7 +138,7 @@ def _get_config(config_file: str, config_env_var: str, model: type[TConfig]) -> 
                 f"The file defined in {config_env_var} environment variable "
                 f" does not exist: {config_path}"
             )
-        logging.info(
+        logger.info(
             "Reading the config file defined in %s environment variable %s",
             config_env_var,
             config_path,
@@ -144,7 +155,7 @@ def _get_config(config_file: str, config_env_var: str, model: type[TConfig]) -> 
                 f" - a path specified in the {config_env_var} environment variable\n",
                 f" - or the path {config_path}",
             )
-        logging.info(f"Reading the config file {config_path}")
+        logger.info(f"Reading the config file {config_path}")
     return config
 
 
@@ -163,20 +174,14 @@ def _get_and_check_config(
 
 
 def _set_logging_level(config: _MyBaseModel, log_path: Path) -> None:
-    loglev = config.logging_level
-    if loglev == "debug":
-        level = logging.DEBUG
-    elif loglev == "info":
-        level = logging.INFO
-    elif loglev == "warning":
-        level = logging.WARNING
-    elif loglev == "error":
-        level = logging.ERROR
-    logging.basicConfig(
+    level = {"debug": DEBUG, "info": INFO, "warning": WARNING, "error": ERROR}[
+        config.logging_level
+    ]
+    basicConfig(
         level=level,
         handlers=[
-            logging.FileHandler(log_path, encoding="utf-8"),
-            logging.StreamHandler(),
+            FileHandler(log_path, mode="w", encoding="utf-8"),
+            StreamHandler(),
         ],
         force=True,
     )

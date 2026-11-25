@@ -1,9 +1,7 @@
-import logging
-
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from .utils.config import get_snap_cues_config
+from .utils.config import get_snap_cues_config, logger
 from .utils.dataclasses_operations_utils import pseudo_inner_join_product
 from .utils.dataclasses_utils import CuesRow, Table
 from .utils.music_db_utils_no_pandas import (
@@ -34,18 +32,18 @@ def main():
             zip(rows_lib_join, rows_cues_join), total=len(rows_lib_join)
         ):
             if lib_row.samplerate is None:
-                logging.warning("Skipping track with no sample rate: %s", str(lib_row))
+                logger.warning("Skipping track with no sample rate: %s", str(lib_row))
                 continue
             try:
                 beatgrid_info = BeatGridInfo(lib_row)
             except TypeError:
-                logging.warning(
+                logger.warning(
                     "Skipping track with cue points defined but no BeatGrid !?: %s",
                     str(lib_row),
                 )
                 continue
             if beatgrid_info.bpm <= 0:
-                logging.warning(
+                logger.warning(
                     "Skipping track with invalid BPM (%s): %s",
                     beatgrid_info.bpm,
                     str(lib_row),
@@ -65,7 +63,7 @@ def main():
                     beat_interval_sec,
                 )
                 if new_pos != old_pos:
-                    logging.info(
+                    logger.info(
                         "Snapping cue %s for track %s", hotcue_idx, str(lib_row)
                     )
                     cue_row.position = new_pos
