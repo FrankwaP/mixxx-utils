@@ -30,7 +30,7 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run pre-commit [pre-commit]
-        run: SKIP=no-commit-to-branch pre-commit run --all-files --hook-stage pre-commit
+        run: SKIP=no-commit-to-branch  uv run --extra dev pre-commit run --all-files --hook-stage pre-commit
 
       - name: Run pre-commit [pre-push]
-        run: SKIP=no-commit-to-branch pre-commit run --all-files --hook-stage pre-push
+        run: SKIP=no-commit-to-branch  uv run --extra dev pre-commit run --all-files --hook-stage pre-push
