@@ -1,19 +1,19 @@
 from collections.abc import Hashable
 from typing import TypeVar
 
-from .dataclasses_utils import Row, RowTypes, Table
+from .dataclasses_utils import Row, Table, TypeRow
 
-_OtherRow = TypeVar("_OtherRow", bound=RowTypes)
+_OtherRow = TypeVar("_OtherRow", bound=Row)
 
 
 MatchKey = tuple[Hashable, ...]
 
 
-def get_match_key(row: RowTypes, on: tuple[str, ...]) -> MatchKey:
+def get_match_key(row: Row, on: tuple[str, ...]) -> MatchKey:
     return tuple(getattr(row, i) for i in on)
 
 
-def _assert_fields_exist(table: Table[Row], fields: tuple[str, ...]) -> None:
+def _assert_fields_exist(table: Table[TypeRow], fields: tuple[str, ...]) -> None:
     if table:
         assert all(
             i in table[0].get_fields() for i in fields
@@ -21,11 +21,11 @@ def _assert_fields_exist(table: Table[Row], fields: tuple[str, ...]) -> None:
 
 
 def get_match_dict(
-    table: Table[Row], on: tuple[str, ...], assert_unique: bool
-) -> dict[MatchKey, Table[Row]]:
+    table: Table[TypeRow], on: tuple[str, ...], assert_unique: bool
+) -> dict[MatchKey, Table[TypeRow]]:
 
     _assert_fields_exist(table, on)
-    out: dict[MatchKey, Table[Row]] = {}
+    out: dict[MatchKey, Table[TypeRow]] = {}
     for r in table:
         key = get_match_key(r, on)
         if key in out:
@@ -43,13 +43,13 @@ def get_match_dict(
 
 
 def pseudo_inner_join_product(
-    left: Table[Row],
+    left: Table[TypeRow],
     right: Table[_OtherRow],
     on_left: tuple[str, ...],
     on_right: tuple[str, ...],
     assert_unique_left: bool,
     assert_unique_right: bool,
-) -> tuple[Table[Row], Table[_OtherRow]]:
+) -> tuple[Table[TypeRow], Table[_OtherRow]]:
     """Return matching rows from the left and right tables.
 
     Rows are matched by comparing values from ``on_left`` in the left table
@@ -61,7 +61,7 @@ def pseudo_inner_join_product(
     dict_match_left = get_match_dict(left, on_left, assert_unique_left)
     dict_match_right = get_match_dict(right, on_right, assert_unique_right)
 
-    out_left: Table[Row] = Table()
+    out_left: Table[TypeRow] = Table()
     out_right: Table[_OtherRow] = Table()
     # I use this loop to make sure preserve the order of the left table
     for key in (k for k in dict_match_left.keys() if k in dict_match_right.keys()):
@@ -73,13 +73,13 @@ def pseudo_inner_join_product(
 
 
 def pseudo_inner_join_outer(
-    left: Table[Row],
+    left: Table[TypeRow],
     right: Table[_OtherRow],
     on_left: tuple[str, ...],
     on_right: tuple[str, ...],
     assert_unique_left: bool,
     assert_unique_right: bool,
-) -> tuple[Table[Row], Table[_OtherRow]]:
+) -> tuple[Table[TypeRow], Table[_OtherRow]]:
     """Return rows whose join keys are not present in the other table.
 
     Left-only rows are returned as the left result and right-only rows as the
@@ -89,7 +89,7 @@ def pseudo_inner_join_outer(
     dict_match_left = get_match_dict(left, on_left, assert_unique_left)
     dict_match_right = get_match_dict(right, on_right, assert_unique_right)
 
-    out_left: Table[Row] = Table()
+    out_left: Table[TypeRow] = Table()
     out_right: Table[_OtherRow] = Table()
     for key in sorted(dict_match_left.keys() - dict_match_right.keys()):
         for left_row in dict_match_left[key]:
@@ -101,7 +101,7 @@ def pseudo_inner_join_outer(
 
 
 def pseudo_inner_join_left_to_right_mapping(
-    left: Table[Row],
+    left: Table[TypeRow],
     right: Table[_OtherRow],
     on_left: tuple[str, ...],
     on_right: tuple[str, ...],
@@ -121,11 +121,11 @@ def pseudo_inner_join_left_to_right_mapping(
 
 
 def filter_left_using_right(
-    left: Table[Row],
+    left: Table[TypeRow],
     right: Table[_OtherRow],
     on_left: tuple[str, ...],
     on_right: tuple[str, ...],
-) -> Table[Row]:
+) -> Table[TypeRow]:
     """Filter the left table to rows with a join key in the right table.
 
     This is a filter, not a join: matching left rows are returned once each,
@@ -136,11 +136,11 @@ def filter_left_using_right(
 
 
 def filter_left_using_right_outer(
-    left: Table[Row],
+    left: Table[TypeRow],
     right: Table[_OtherRow],
     on_left: tuple[str, ...],
     on_right: tuple[str, ...],
-) -> Table[Row]:
+) -> Table[TypeRow]:
     """Filter the left table to rows without a join key in the right table.
 
     This function is just to propose an interface coherent to filter_left_using_right,

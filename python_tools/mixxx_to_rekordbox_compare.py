@@ -1,84 +1,15 @@
-import logging
 import xml.etree.ElementTree as ET
-from pathlib import Path
-from typing import Final
-from urllib.parse import unquote
 
+from .mixxx_to_rekordbox_compare_utils.dataclasses_utils import XmlTrackTable
 from .utils.config import (
     MixxxToRekordboxCompareConfig,
     get_mixxx_to_rekordbox_compare_config,
+    logger,
 )
-
-TRACK_ID = "TrackID"
-MATCHING_KEY = "Location"
-TRACK_FIELDS: Final[tuple[str, ...]] = (
-    "Name",
-    "Artist",
-    "Album",
-    "Rating",
-    # "Location",
-    "Tonality",
-    "Colour",
+from .utils.dataclasses_operations_utils import (
+    filter_left_using_right_outer,
+    pseudo_inner_join_product,
 )
-
-MARK_FIELDS: Final[tuple[str, ...]] = (
-    "Type",
-    "Start",
-    "End",
-    "Num",
-)
-
-TEMPO_FIELDS: Final[tuple[str, ...]] = (
-    "Location",
-    "Inizio",
-    "Bpm",
-    # DO NOT use Metro as RkBox does not export it correctly (always "4/4")
-    # "Metro",
-)
-
-
-STR_TUPLE = tuple[str, ...]
-STR_TUTUPLE = tuple[STR_TUPLE, ...]
-
-
-def _get_tuple(xml_element: ET.Element, fields: tuple[str, ...]) -> STR_TUPLE:
-    return tuple(xml_element.attrib.get(field, "") for field in fields)
-
-
-def _get_tuple_tuple(
-    xml_element: ET.Element, path: str, fields: tuple[str, ...]
-) -> STR_TUTUPLE:
-    out = []
-    for elem in xml_element.findall(path):
-        out.append(_get_tuple(elem, fields))
-    return tuple(sorted(out))
-
-
-def _normalize_location(loc: str) -> str:
-    loc = unquote(loc)
-    loc = loc.removeprefix("file://localhost/")
-    loc = loc.replace("\\", "/")
-    return loc
-
-
-def _extract_tracks_with_marks_and_tempo(
-    xml_path: Path,
-) -> tuple[dict[str, tuple[STR_TUPLE, STR_TUTUPLE, STR_TUTUPLE]], dict[str, str]]:
-    tree = ET.parse(xml_path)
-    root = tree.getroot()
-
-    dict_track = {}
-    dict_track_id = {}
-    for track in root.findall(".//COLLECTION/TRACK"):
-        track.attrib["Location"] = _normalize_location(track.attrib["Location"])
-        #
-        tuple_track = _get_tuple(track, TRACK_FIELDS)
-        tuple_mark = _get_tuple_tuple(track, "POSITION_MARK", MARK_FIELDS)
-        tuple_tempo = _get_tuple_tuple(track, "POSITION_MARK", TEMPO_FIELDS)
-
-        dict_track[track.attrib[MATCHING_KEY]] = (tuple_track, tuple_mark, tuple_tempo)
-        dict_track_id[track.attrib[MATCHING_KEY]] = track.attrib[TRACK_ID]
-    return dict_track, dict_track_id
 
 
 def _write_new_playlist(
@@ -111,9 +42,10 @@ def _write_new_playlist(
         encoding="utf-8",
         xml_declaration=True,
     )
-    logging.info(
-        f"A new playlist {mtr_config.playlist_updated_tracks} has been added to "
-        f"the Mixxx to Rekordbox XML file {mtr_config.mixxx_to_rekordbox_xml}."
+    logger.info(
+        "A new playlist %s has been added to the Mixxx to Rekordbox XML file %s.",
+        mtr_config.playlist_updated_tracks,
+        mtr_config.mixxx_to_rekordbox_xml,
     )
 
 
@@ -121,22 +53,30 @@ def main():
 
     mtr_config = get_mixxx_to_rekordbox_compare_config()
 
-    tracks_mixxx, tracks_ids_mixxx = _extract_tracks_with_marks_and_tempo(
-        mtr_config.mixxx_to_rekordbox_xml
+    table_mixxx = XmlTrackTable.from_xml(mtr_config.mixxx_to_rekordbox_xml)
+    table_rkbox = XmlTrackTable.from_xml(mtr_config.rekordbox_compare_export_xml)
+
+    table_new = filter_left_using_right_outer(
+        table_mixxx, table_rkbox, on_left=("location",), on_right=("location",)
     )
 
-    tracks_rkbox, _ = _extract_tracks_with_marks_and_tempo(
-        mtr_config.rekordbox_compare_export_xml
+    for t_new in table_new:
+        logger.info("New track found: %s", t_new)
+
+    t_m, t_r = pseudo_inner_join_product(
+        table_mixxx,
+        table_rkbox,
+        on_left=("location",),
+        on_right=("location",),
+        assert_unique_left=True,
+        assert_unique_right=True,
     )
 
-    track_ids = []
-    for match_key in tracks_mixxx.keys():
-        if match_key not in tracks_rkbox.keys():
-            logging.info("This track is new: %s", match_key)
-            track_ids.append(tracks_ids_mixxx[match_key])
-        elif tracks_mixxx[match_key] != tracks_rkbox[match_key]:
-            logging.info("This track is updated: %s", match_key)
-            track_ids.append(tracks_ids_mixxx[match_key])
+    table_updated = XmlTrackTable(t_m for t_m, t_r in zip(t_m, t_r) if t_m != t_r)
 
-    logging.info("After combining, %d tracks need to be (re-)imported.", len(track_ids))
+    for t_updt in table_updated:
+        logger.info("Updated track found: %s", t_updt)
+
+    track_ids = [track.trackID for track in table_new + table_updated]
+
     _write_new_playlist(mtr_config, track_ids)

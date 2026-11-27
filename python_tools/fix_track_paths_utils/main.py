@@ -1,17 +1,16 @@
-import logging
 from copy import copy
 from pathlib import Path
 from re import sub
 from typing import TypeVar
 
-from ..utils.config import FixTrackPathsUtilsConfig
+from ..utils.config import FixTrackPathsUtilsConfig, logger
 from ..utils.dataclasses_operations_utils import (
     filter_left_using_right,
     filter_left_using_right_outer,
     pseudo_inner_join_outer,
     pseudo_inner_join_product,
 )
-from ..utils.dataclasses_utils import LibraryRow, PerfectMatchRow, Table, TrackFixRow
+from ..utils.dataclasses_utils import LibraryRow, Table
 from ..utils.music_db_utils_no_pandas import (
     delete_rows_mixxx_db_table,
     open_mixxx_library,
@@ -20,6 +19,7 @@ from ..utils.music_db_utils_no_pandas import (
     update_mixxx_db_with_table,
 )
 from .close_match_utils import join_close_match
+from .dataclasses_utils import PerfectMatchRow, TrackFixRow
 
 
 def _check_and_format_df_player(df_player: Table[TrackFixRow]) -> Table[TrackFixRow]:
@@ -36,7 +36,7 @@ def _check_and_format_df_player(df_player: Table[TrackFixRow]) -> Table[TrackFix
         0 < cleaned_len
     ), "Error: the player database is empty after filtering for existing locations!"
     if cleaned_len < init_len:
-        logging.info(
+        logger.info(
             "%d tracks with missing locations have been removed "
             "from the player database.",
             init_len - cleaned_len,
@@ -97,9 +97,9 @@ def fix_with_player_db(
     )
 
     if table_lib:
-        logging.info("%d missing tracks found!\n%s", len(table_lib), table_lib)
+        logger.info("%d missing tracks found!\n%s", len(table_lib), table_lib)
     else:
-        logging.info("No missing tracks, congratulation!")
+        logger.info("No missing tracks, congratulation!")
         return
 
     # removing the "feat." in  artist and title
@@ -117,11 +117,9 @@ def fix_with_player_db(
         assert_unique_right=True,
     )
     if table_lib_pm:
-        logging.info(
-            "Perfect matches found for the following tracks:\n%s", table_lib_pm
-        )
+        logger.info("Perfect matches found for the following tracks:\n%s", table_lib_pm)
     else:
-        logging.info("No perfect matches found…")
+        logger.info("No perfect matches found…")
 
     # close-matching the remaining tracks
     table_lib = filter_left_using_right_outer(
@@ -169,13 +167,13 @@ def fix_with_player_db(
 
     updt_cols = []
     if config.delete_gains:
-        logging.info("Deleting %d gain info", len(table_lib))
+        logger.info("Deleting %d gain info", len(table_lib))
         for r_lib in table_lib:
             r_lib.replaygain = 0
             r_lib.replaygain_peak = -1
             updt_cols.extend(["replaygain", "replaygain_peak"])
     if config.delete_keys:
-        logging.info("Deleting %d key info", len(table_lib))
+        logger.info("Deleting %d key info", len(table_lib))
         for r_lib in table_lib:
             r_lib.key = ""
             r_lib.keys = b""
@@ -201,7 +199,7 @@ def fix_with_player_db(
         table_wform = filter_left_using_right(
             table_wform, table_lib, on_left=("track_id",), on_right=("id",)
         )
-        logging.info("Deleting %d waveforms", len(table_wform))
+        logger.info("Deleting %d waveforms", len(table_wform))
         dir_ana = Path(config.mixxx_db).parent / "analysis"
         for r_wform in table_wform:
             ana_path = dir_ana / f"{r_wform.id}"

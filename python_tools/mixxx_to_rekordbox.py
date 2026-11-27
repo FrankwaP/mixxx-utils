@@ -1,8 +1,8 @@
-import logging
 import re
 import sys
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 from urllib.parse import quote
 from xml.etree import ElementTree as ET
 
@@ -11,7 +11,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 
 from .mixxx_to_rekordbox_utils.encoder_tools import get_offset_ms
 from .mixxx_to_rekordbox_utils.xml_utils import AttribDict, get_elem
-from .utils.config import MixxxToRekordboxConfig, get_mixxx_to_rekordbox_config
+from .utils.config import MixxxToRekordboxConfig, get_mixxx_to_rekordbox_config, logger
 from .utils.dataclasses_operations_utils import (
     filter_left_using_right,
     get_match_key,
@@ -96,13 +96,13 @@ def _get_time_signature_in_comment(
         return f"{config.beats_per_bar}/4"
     location = Path(track_location.location).resolve()
     if len(match) > 1:
-        logging.warning(
+        logger.warning(
             "More than one time signature candidates have been found in the "
             "comments of file %s (%s).",
             location,
             trk_row.comment,
         )
-    logging.info(
+    logger.info(
         "Time signature %s has been found in the comment of file %s.",
         match[0],
         location,
@@ -146,14 +146,14 @@ def _get_inizio(
             cue_row for cue_row in cue_rows if cue_row.hotcue == hotcue_bar_index
         ]
         if not matching_cues:
-            logging.warning(
+            logger.warning(
                 "No hotcue #%d been found for file %s to find the start of the bars.",
                 config.index_cue_bar_start,
                 track_location.location,
             )
         else:
             if len(matching_cues) > 1:
-                logging.warning(
+                logger.warning(
                     "More than one hotcue #%d has been found for file %s. "
                     "The first one has been kept to decide the start of the bars"
                     "… but you might want to re-create it!",
@@ -217,22 +217,22 @@ def _mixxx_track_row_to_rekbox_track_xml(
             config.mixxx_library_folder
         )
     except ValueError as err:
-        logging.warning("This track is not in the Mixxx library folder: %s", location)
+        logger.warning("This track is not in the Mixxx library folder: %s", location)
         raise err
 
     if not _is_non_empty_string(trk_row.artist):
-        logging.warning("Artist name is empty for file: %s", location)
+        logger.warning("Artist name is empty for file: %s", location)
     if not _is_non_empty_string(trk_row.title):
-        logging.warning("Track name is empty for file: %s", location)
+        logger.warning("Track name is empty for file: %s", location)
     if not (isinstance(trk_row.bpm, float) and trk_row.bpm > 50.0):
-        logging.warning("Incorrect BPM for file: %s", location)
+        logger.warning("Incorrect BPM for file: %s", location)
 
     try:
         if trk_row.key_id is None:
             raise KeyError(trk_row.key_id)
         tonality = KEY_ID_LANCELOT[trk_row.key_id]
     except KeyError:
-        logging.warning("Incorrect key id for file: %s", location)
+        logger.warning("Incorrect key id for file: %s", location)
         tonality = ""
 
     if trk_row.duration is None:
@@ -277,7 +277,7 @@ def _mixxx_cue_row_to_rekbox_xml(
         + offset_ms / 1000
     )
     if start < 0:
-        logging.info(
+        logger.info(
             "Negative cue start position ignored for hotcue #%d of file %s",
             cue_row_.hotcue + 1,
             track_location.location,
@@ -316,7 +316,7 @@ def _filter_filetypes(rows: Table[LibraryRow]) -> Table[LibraryRow]:
     out = Table(r for r in rows if r.filetype not in NOT_ALLOWED)
     diff = len(rows) - len(out)
     if diff:
-        logging.info(
+        logger.info(
             "Filtered out %d tracks with unallowed %s extensions",
             diff,
             str(NOT_ALLOWED),
@@ -328,7 +328,7 @@ def _filter_locked_tracks(rows: Table[LibraryRow]) -> Table[LibraryRow]:
     out = Table(r for r in rows if r.bpm_lock == 1)
     diff = len(rows) - len(out)
     if diff:
-        logging.info("Filtered out %d tracks with unlocked beatgrids", diff)
+        logger.info("Filtered out %d tracks with unlocked beatgrids", diff)
     return out
 
 
@@ -340,7 +340,7 @@ def _filter_only_in_playlist(
     )
     diff = len(rows_lib) - len(out_lib)
     if diff:
-        logging.info("Filtered out %d tracks not in playlists", diff)
+        logger.info("Filtered out %d tracks not in playlists", diff)
     return out_lib
 
 
@@ -390,7 +390,7 @@ def main() -> None:
         lib, cues, on_left=("id",), on_right=("track_id",)
     )
 
-    logging.info("Writing the tracks in the XML file")
+    logger.info("Writing the tracks in the XML file")
     collection_xml = _get_collection_xml(len(lib))
     with logging_redirect_tqdm():
         for lib_row, loc_row in tqdm(zip(lib, loc), total=len(lib)):
@@ -425,7 +425,7 @@ def main() -> None:
                 track_xml.append(tempo_xml)
             collection_xml.append(track_xml)
 
-    logging.info("Writing the playlists in the XML file")
+    logger.info("Writing the playlists in the XML file")
 
     playlists_xml = _get_playlists_xml()
     node_xml = _get_node_xml(len(plst))
@@ -457,7 +457,7 @@ def main() -> None:
     )
     tree.write(rekordbox_file, encoding="utf-8", xml_declaration=True)
 
-    logging.info("==> %s", rekordbox_file)
+    logger.info("==> %s", rekordbox_file)
 
 
 if __name__ == "__main__":

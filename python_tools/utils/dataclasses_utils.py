@@ -1,48 +1,27 @@
 from collections import UserList
 from dataclasses import dataclass, fields
 from math import log10
-from typing import TypeAlias, TypeVar
+from typing import TypeVar
 
 
 @dataclass
-class _BaseRow:
-
+class Row:
     @classmethod
     def get_fields(cls) -> tuple[str, ...]:
         return tuple(f.name for f in fields(cls))
 
-    def get_print_fields(self) -> tuple[str, ...]:
-        return self.get_fields()
+    @classmethod
+    def get_print_fields(cls) -> tuple[str, ...]:
+        return cls.get_fields()
 
     def __str__(self) -> str:
         return "  " + " | ".join(
-            f"{f}: {getattr(self,f)}" for f in self.get_print_fields()
+            f"{f}: {getattr(self, f)}" for f in self.get_print_fields()
         )
 
 
 @dataclass
-class CloseMatchRow(_BaseRow):
-    artist: str
-    title: str
-
-
-@dataclass
-class PerfectMatchRow(CloseMatchRow):
-    tracknumber: str
-    album: str
-
-
-@dataclass
-class TrackFixRow(PerfectMatchRow):
-
-    player_path: str
-
-
-#
-
-
-@dataclass
-class LibraryRow(_BaseRow):
+class LibraryRow(Row):
     id: int
     artist: str | None
     title: str | None
@@ -93,12 +72,13 @@ class LibraryRow(_BaseRow):
     source_synchronized_ms: int | None
     tuning_frequency_hz: float | None
 
-    def get_print_fields(self) -> tuple:
+    @classmethod
+    def get_print_fields(cls) -> tuple:
         return ("artist", "title", "album")
 
 
 @dataclass
-class TrackLocationsRow(_BaseRow):
+class TrackLocationsRow(Row):
     id: int
     location: str
     filename: str
@@ -108,12 +88,13 @@ class TrackLocationsRow(_BaseRow):
     needs_verification: int | None
     saved_indices_mixxx_location: int | None
 
-    def get_print_fields(self) -> tuple:
+    @classmethod
+    def get_print_fields(cls) -> tuple:
         return ("location",)
 
 
 @dataclass
-class CuesRow(_BaseRow):
+class CuesRow(Row):
     id: int
     track_id: int
     type: int
@@ -125,7 +106,7 @@ class CuesRow(_BaseRow):
 
 
 @dataclass
-class PlaylistRow(_BaseRow):
+class PlaylistRow(Row):
     id: int
     name: str
     position: int | None
@@ -136,7 +117,7 @@ class PlaylistRow(_BaseRow):
 
 
 @dataclass
-class PlaylistTrackRow(_BaseRow):
+class PlaylistTrackRow(Row):
     id: int
     playlist_id: int
     track_id: int
@@ -145,7 +126,7 @@ class PlaylistTrackRow(_BaseRow):
 
 
 @dataclass
-class CrateRow(_BaseRow):
+class CrateRow(Row):
     id: int
     name: str
     count: int
@@ -155,13 +136,13 @@ class CrateRow(_BaseRow):
 
 
 @dataclass
-class CrateTrackRow(_BaseRow):
+class CrateTrackRow(Row):
     crate_id: int
     track_id: int
 
 
 @dataclass
-class TrackAnalysisRow(_BaseRow):
+class TrackAnalysisRow(Row):
     id: int
     track_id: int
     type: str | None
@@ -171,73 +152,10 @@ class TrackAnalysisRow(_BaseRow):
     data_checksum: str | None
 
 
-# %%
+TypeRow = TypeVar("TypeRow", bound=Row)
 
 
-@dataclass
-class ClementineSongRow(_BaseRow):
-    title: str | None
-    album: str | None
-    artist: str | None
-    albumartist: str | None
-    composer: str | None
-    track: int | None
-    disc: int | None
-    bpm: float | None
-    year: int | None
-    genre: str | None
-    comment: str | None
-    compilation: int | None
-    length: int | None
-    bitrate: int | None
-    samplerate: int | None
-    directory: int
-    filename: bytes
-    mtime: int
-    ctime: int
-    filesize: int
-    sampler: int
-    art_automatic: str | None
-    art_manual: str | None
-    filetype: int
-    playcount: int
-    lastplayed: int | None
-    rating: int | None
-    forced_compilation_on: int
-    forced_compilation_off: int
-    effective_compilation: int
-    skipcount: int
-    score: int
-    beginning: int
-    cue_path: str | None
-    unavailable: int | None
-    effective_albumartist: str | None
-    etag: str | None
-    performer: str | None
-    grouping: str | None
-    lyrics: str | None
-    originalyear: int | None
-    effective_originalyear: int | None
-
-
-RowTypes: TypeAlias = (
-    LibraryRow
-    | TrackLocationsRow
-    | CuesRow
-    | PlaylistRow
-    | PlaylistTrackRow
-    | CrateRow
-    | CrateTrackRow
-    | TrackAnalysisRow
-    | TrackFixRow
-    | ClementineSongRow
-)
-
-Row = TypeVar("Row", bound=RowTypes)
-
-
-class Table(UserList[Row]):
-
+class Table(UserList[TypeRow]):
     def get_fields(self) -> tuple[str, ...]:
         if not self:
             return ()

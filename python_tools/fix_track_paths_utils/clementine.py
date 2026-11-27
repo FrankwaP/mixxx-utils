@@ -1,8 +1,9 @@
 from sys import exit as sysexit
 
 from ..utils.config import FixTrackPathsUtilsConfig
-from ..utils.dataclasses_utils import ClementineSongRow, Table, TrackFixRow
+from ..utils.dataclasses_utils import Table
 from ..utils.music_db_utils_no_pandas import _open_table, file_url_to_path
+from .dataclasses_utils import ClementineSongRow, TrackFixRow
 from .main import fix_with_player_db
 
 

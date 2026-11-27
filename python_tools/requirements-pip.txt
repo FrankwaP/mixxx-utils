@@ -1,6 +1,0 @@
-eyed3>=0.9
-protobuf
-jellyfish
-tqdm
-pydantic
-toml-cli

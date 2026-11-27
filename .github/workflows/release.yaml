@@ -21,11 +21,15 @@ jobs:
 
       - uses: actions/setup-python@v7
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d
+        with:
+          enable-cache: true
 
       - name: Install dependencies
-        run: |
-          python -m pip install -r python_tools/requirements-pip-build.txt
+        run: uv sync --extra dev --extra build
 
       - name: Build executables with Nuitka
         shell: bash
