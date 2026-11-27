@@ -1,5 +1,6 @@
 PERSO
 .vscode
+python_tools/utils/proto/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

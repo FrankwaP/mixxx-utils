@@ -2,11 +2,13 @@
 name = "python-tools"
 version = "0.1.0"
 requires-python = ">=3.11"
-readme = {file = "README.txt", content-type = "text/markdown"}
+readme = {file = "README.md", content-type = "text/markdown"}
 keywords = ["mixxx", "rekordbox", "export", "tools"]
 
 [tool.mypy]
-exclude = '^python_tools/utils/proto/keys_pb2\.py$'
+exclude = '^python_tools/utils/proto/'
+check_untyped_defs = true
+show_traceback = true
 
 [tool.pytest.ini_options]
 pythonpath = '.'

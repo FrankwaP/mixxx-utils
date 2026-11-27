@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Final
 from urllib.parse import unquote
 
-from python_tools.utils.config import MixxxToRekordboxConfig, get_config
+from .utils.config import (
+    MixxxToRekordboxCompareConfig,
+    get_mixxx_to_rekordbox_compare_config,
+)
 
 TRACK_ID = "TrackID"
 MATCHING_KEY = "Location"
@@ -32,9 +35,6 @@ TEMPO_FIELDS: Final[tuple[str, ...]] = (
     # DO NOT use Metro as RkBox does not export it correctly (always "4/4")
     # "Metro",
 )
-
-MIXXX_SUFFIX = "_mixxx"
-RKBOX_SUFFIX = "_rkbox"
 
 
 STR_TUPLE = tuple[str, ...]
@@ -74,7 +74,7 @@ def _extract_tracks_with_marks_and_tempo(
         #
         tuple_track = _get_tuple(track, TRACK_FIELDS)
         tuple_mark = _get_tuple_tuple(track, "POSITION_MARK", MARK_FIELDS)
-        tuple_tempo = _get_tuple_tuple(track, "POSITION_MARK", MARK_FIELDS)
+        tuple_tempo = _get_tuple_tuple(track, "POSITION_MARK", TEMPO_FIELDS)
 
         dict_track[track.attrib[MATCHING_KEY]] = (tuple_track, tuple_mark, tuple_tempo)
         dict_track_id[track.attrib[MATCHING_KEY]] = track.attrib[TRACK_ID]
@@ -82,7 +82,7 @@ def _extract_tracks_with_marks_and_tempo(
 
 
 def _write_new_playlist(
-    mtr_config: MixxxToRekordboxConfig, track_id_mixxx: list[str]
+    mtr_config: MixxxToRekordboxCompareConfig, track_id_mixxx: list[str]
 ) -> None:
     tree = ET.parse(mtr_config.mixxx_to_rekordbox_xml)
     root = tree.getroot()
@@ -111,7 +111,7 @@ def _write_new_playlist(
         encoding="utf-8",
         xml_declaration=True,
     )
-    print(
+    logging.info(
         f"A new playlist {mtr_config.playlist_updated_tracks} has been added to "
         f"the Mixxx to Rekordbox XML file {mtr_config.mixxx_to_rekordbox_xml}."
     )
@@ -119,8 +119,7 @@ def _write_new_playlist(
 
 def main():
 
-    config = get_config()
-    mtr_config = config.mixxx_to_rekordbox
+    mtr_config = get_mixxx_to_rekordbox_compare_config()
 
     tracks_mixxx, tracks_ids_mixxx = _extract_tracks_with_marks_and_tempo(
         mtr_config.mixxx_to_rekordbox_xml
@@ -139,5 +138,5 @@ def main():
             logging.info("This track is updated: %s", match_key)
             track_ids.append(tracks_ids_mixxx[match_key])
 
-    print(f"After combining, {len(track_ids)} tracks need to be (re-)imported")
+    logging.info("After combining, %d tracks need to be (re-)imported.", len(track_ids))
     _write_new_playlist(mtr_config, track_ids)

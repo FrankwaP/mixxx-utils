@@ -8,10 +8,10 @@ def _canonical_xml(path: Path) -> str:
     return ET.canonicalize(from_file=path, strip_text=True)
 
 
-def test_export_with_sqlite_rows(test_config) -> None:
+def test_export_with_sqlite_rows(mixxx_to_rekordbox_config) -> None:
     main()
 
-    xml_path = Path(test_config.mixxx_to_rekordbox.mixxx_to_rekordbox_xml)
+    xml_path = Path(mixxx_to_rekordbox_config.mixxx_to_rekordbox_xml)
 
     root = ET.parse(xml_path).getroot()
     collection = root.find("COLLECTION")

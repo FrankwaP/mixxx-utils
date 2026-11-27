@@ -1,0 +1,17 @@
+# Keep confirmation prompts disabled during tests.
+confirm_config = false
+confirm_snaped = false
+
+mixxx_db = "tests/test-mixxxdb.sqlite"
+mixxx_to_rekordbox_xml = "__TEMP_FOLDER__/mixxx_to_rekordbox.xml"
+
+# These paths are used only for text replacement; keep them unchanged.
+mixxx_library_folder = "tests/music/"
+rekordbox_library_folder = "E:/"
+
+export_only_tracks_in_playlists = true
+add_crates_as_playlist = true
+crates_suffix = "_crates"
+beats_per_bar = 8
+index_cue_bar_start = 3
+mp3_decoder = "MAD"
