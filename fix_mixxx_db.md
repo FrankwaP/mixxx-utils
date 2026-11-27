@@ -2,12 +2,12 @@
 
 As mentioned in
 [this GitHub issue](https://github.com/mixxxdj/mixxx/issues/12328), several
-foreign key constraints defined in Mixxx's database are incorrect, and
-SQLAlchemy (Python's library) does not like them.
+foreign key constraints defined in Mixxx's database are incorrect, so it is not
+possible to work cleanly with the database..
 
 Two methods are proposed:
 
-- using "mouse actions" on a graphical tool
+- using "mouse actions"
 - using SQL commands
 
 In both cases, please make a backup of the database!

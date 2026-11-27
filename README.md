@@ -1,24 +1,33 @@
 # mixxx-utils
 
 This repo offers tools that I use with [Mixxx](https://github.com/mixxxdj/mixxx)
-and its database. They are stored in language specific "*language*-tools"
+and its database. They are stored in language specific "_language_-tools"
 folders.
 
 They work on Linux. For Windows there might be a few adaptations needed to make
 it work… I'm all ears.
 
-**IMPORTANT**: Mixxx's database might need to be fixed so the Python tools work.
-Please see the [fix_mixxx_db.md](fix_mixxx_db.md) file.
+## NOTE TO DEVELOPERS
 
-**NOTE TO DEVELOPERS**: There is an additional requirements file
-(`python_tools/requirements-pip-dev.txt`). After installing the requirements,
-please run `pre-commit install` to prepare the different "hooks" that will be
-executed when you commit stuff. **Watch out** as one hook enforces to not commit
-on the `main` branch so start by creating a branch to work in it!
+I suggest you use [`uv`](https://docs.astral.sh/uv/), then all you need is:
+
+```bash
+git clone git@github.com:FrankwaP/mixxx-utils.git
+uv sync --extra dev --extra build
+pre-commit install
+```
+
+**Watch out** as one hook enforces to not commit on the `main` branch so start
+by creating a branch to work in it!
 
 ## Python tools
 
-### Configuration
+### Important note on Mixxx's database
+
+Mixxx's database might need to be fixed so the Python tools work. Please see the
+[fix_mixxx_db.md](fix_mixxx_db.md) file.
+
+### Utilities configurations
 
 Each executable uses a separate TOML configuration file. For each this file, you
 can either:
