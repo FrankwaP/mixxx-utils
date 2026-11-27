@@ -16,6 +16,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "mypy",
+    "types-protobuf",
+    "pandas-stubs",
+    "types-tqdm",
     "pytest",
     "black",
     "isort",
